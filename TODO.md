@@ -2,7 +2,7 @@
 
 - [x] G0 Data check — SF building footprints + heights, Sausalito OSM buildings, USGS 3DEP terrain, NOAA bathymetry; scripted, cached, checksummed, licences in CREDITS
 - [x] G1 Clean fork — D7 removals, build, ocean + sky in headless Dawn, dependency audit
-- [ ] G2a Terrain + bathymetry pipeline — raw → tiles, byte-identical ×2 from cache
+- [x] G2a Terrain + bathymetry pipeline — raw → tiles, byte-identical ×2 from cache
 - [ ] G2b Building pipeline — footprints + heights → extruded tiles, byte-identical ×2 from cache
 - [ ] G2c Landmarks + LOD — offline-Blender landmark GLBs, per-CDLOD-tile merge, triangle/draw caps (calibrate)
 - [ ] G3 Georeference — ≥5 control points within tolerance; shifted dataset fails

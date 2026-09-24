@@ -18,7 +18,7 @@ import { Clouds } from './sky/Clouds.js';
 import { SkyProClouds } from './sky/SkyProClouds.js';
 import { Environment } from './sky/Environment.js';
 
-import { HeightField } from './world/HeightField.js';
+import { loadBayHeightField } from './world/BayTerrain.js';
 import { TerrainGPU } from './world/TerrainGPU.js';
 import { Terrain } from './world/Terrain.js';
 import { computeShoreField } from './world/ShoreField.js';
@@ -122,10 +122,10 @@ export class App {
 		this.environment = new Environment( renderer, scene, this.sky );
 
 		// ---------------------------------------------------------------- bay floor
-		// The bay's terrain + seabed heightfield (a flat seabed until the G2a tiles fill it). The shore
-		// field, GPU textures and terrain mesh are all derived from it.
+		// The bay's terrain + seabed heightfield (3DEP land, NCEI seabed, local MSL; public/terrain/). The
+		// shore field, GPU textures and terrain mesh are all derived from it.
 		await progress( 0.06, 'Laying the bay floor…' );
-		this.terrainData = new HeightField( { size: WORLD.terrainSize, res: 2048 } );
+		this.terrainData = await loadBayHeightField();
 		this.colliders = new Colliders();
 		await progress( 0.19, 'Rolling in the swell…' );
 		this.shoreField = computeShoreField( this.terrainData, { res: 512, swellDir: [ WORLD.swellDir.x, WORLD.swellDir.y ] } );

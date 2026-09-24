@@ -16,7 +16,7 @@ const { minE, minN, maxE, maxN } = slice.extent;
 const G = slice.gridMetres, W = (maxE - minE) / G, H = (maxN - minN) / G;
 
 // Licence keywords CREDITS.md must pair with each cached file.
-const LICENCE_WORD = { 'sf-buildings.geojson': 'PDDL', 'sausalito-osm.json': 'ODbL', 'terrain-3dep.tif': 'Public domain', 'bathy-ncei.tif': 'Public domain' };
+const LICENCE_WORD = { 'sf-buildings.geojson': 'PDDL', 'sausalito-osm.json': 'ODbL', 'terrain-3dep.tif': 'Public domain', 'bathy-ncei.tif': 'Public domain', 'noaa-datums-9414290.json': 'Public domain' };
 
 function check(dir, credits) {
   const fail = [];
@@ -83,6 +83,10 @@ function check(dir, credits) {
   req(mid >= -30 && mid <= -5, `bathymetry: mid-bay ${mid.toFixed(1)} m, expected −30 to −5`);
   req(fb >= -5 && fb <= 10, `bathymetry: Ferry Building ${fb.toFixed(1)} m, expected −5 to 10`);
   let wet = 0; for (const v of bt.data) if (v < 0) wet++;
+  const datums = JSON.parse(readFileSync(join(dir, 'noaa-datums-9414290.json'), 'utf8'));
+  const dv = n => datums.datums?.find(d => d.name === n)?.value;
+  const mslAboveNavd = dv('MSL') - dv('NAVD88');
+  req(datums.OrthometricDatum === 'NAVD88' && mslAboveNavd > 0.5 && mslAboveNavd < 1.5, `datums: MSL − NAVD88 = ${mslAboveNavd}, expected 0.5–1.5 m`);
   req(wet / bt.data.length >= 0.4, `bathymetry: only ${(100 * wet / bt.data.length).toFixed(0)}% of cells below datum, expected ≥ 40%`);
   return fail;
 }
@@ -93,7 +97,7 @@ const rawDir = join(root, 'data/raw');
 if (!process.argv.includes('--negative')) {
   const fail = check(rawDir, credits);
   if (fail.length) { console.log('G0 FAIL\n- ' + fail.join('\n- ')); process.exit(1); }
-  console.log('G0 PASS — 4 sources cached, checksummed, plausible, licences recorded');
+  console.log('G0 PASS — 5 sources cached, checksummed, plausible, licences recorded');
   process.exit(0);
 }
 

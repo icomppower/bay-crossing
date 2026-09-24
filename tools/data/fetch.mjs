@@ -54,6 +54,12 @@ export const SOURCES = [
     licence: 'Public domain (US Government work, NOAA NCEI)', licenceUrl: 'https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ngdc.mgg.dem:999919',
     url: exportImage('https://gis.ngdc.noaa.gov/arcgis/rest/services/DEM_mosaics/DEM_all/ImageServer'),
   },
+  {
+    file: 'noaa-datums-9414290.json', key: 'noaa-datums',
+    title: 'NOAA CO-OPS tidal datums, San Francisco station 9414290 (MSL relative to NAVD88)',
+    licence: 'Public domain (US Government work, NOAA CO-OPS)', licenceUrl: 'https://tidesandcurrents.noaa.gov/datums.html?id=9414290',
+    url: 'https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/9414290/datums.json?units=metric',
+  },
 ];
 
 async function download(s) {

@@ -106,3 +106,35 @@ function lzw(input) {
   }
   return Buffer.from(out);
 }
+
+// Uncompressed single-strip Float32 GeoTIFF with the tie point / pixel scale tags readTiff() uses
+// (for test fixtures).
+export function writeTiff( { width, height, data, tie, scale } ) {
+
+	const tags = [
+		[ 256, 4, [ width ] ], [ 257, 4, [ height ] ], [ 258, 3, [ 32 ] ], [ 259, 3, [ 1 ] ], [ 262, 3, [ 1 ] ],
+		[ 273, 4, [ 0 ] ], [ 277, 3, [ 1 ] ], [ 278, 4, [ height ] ], [ 279, 4, [ width * height * 4 ] ], [ 339, 3, [ 3 ] ],
+		[ 33550, 12, scale ], [ 33922, 12, tie ],
+	];
+	const ifdSize = 2 + tags.length * 12 + 4;
+	let extra = 8 + ifdSize;
+	const extraBlocks = [];
+	for ( const t of tags ) if ( t[ 1 ] === 12 ) { t.push( extra ); extraBlocks.push( t ); extra += t[ 2 ].length * 8; }
+	const dataOff = extra;
+	const buf = Buffer.alloc( dataOff + width * height * 4 );
+	buf.write( 'II', 0, 'latin1' ); buf.writeUInt16LE( 42, 2 ); buf.writeUInt32LE( 8, 4 );
+	buf.writeUInt16LE( tags.length, 8 );
+	tags.forEach( ( [ tag, type, vals, off ], i ) => {
+
+		const e = 10 + i * 12;
+		buf.writeUInt16LE( tag, e ); buf.writeUInt16LE( type, e + 2 ); buf.writeUInt32LE( vals.length, e + 4 );
+		if ( type === 12 ) buf.writeUInt32LE( off, e + 8 );
+		else if ( type === 3 ) buf.writeUInt16LE( vals[ 0 ], e + 8 );
+		else buf.writeUInt32LE( tag === 273 ? dataOff : vals[ 0 ], e + 8 );
+
+	} );
+	for ( const [ , , vals, off ] of extraBlocks ) vals.forEach( ( v, k ) => buf.writeDoubleLE( v, off + k * 8 ) );
+	for ( let k = 0; k < width * height; k ++ ) buf.writeFloatLE( data[ k ], dataOff + k * 4 );
+	return buf;
+
+}

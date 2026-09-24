@@ -51,3 +51,17 @@ are in `docs/archive-hong-kong.md`.
 - **D19** `tools/headless/app.mjs` boots the real App in headless Dawn (DOM shim, offscreen canvas texture,
   fetch of `public/`). Gates measure its frames numerically, with one App per process. Reason: gate the
   product itself, not stub harnesses.
+- **D20** Game sea level (y = 0) is local mean sea level: NAVD88 + 0.969 m (NOAA station 9414290, MSL 2.773 −
+  NAVD88 1.804 on the station datum, epoch 1983–2001), fetched and cached as a fifth G0 source. Reason: the
+  DEMs are NAVD88, which sits near MLLW in SF; a y = 0 sea at NAVD88 would flood the waterfront by ~1 m.
+- **D21** Terrain tiles: one 3200² grid at 3 m over the 9.6 km world square (aligned to the source grid, 32-cell
+  clamp margins east and west), Int16 centimetres above MSL, 16 × 16 tiles of 200², zlib level 9, in
+  `public/terrain/` (12 MB, committed). Merge: NCEI below the waterline, 3DEP lidar above, blended over ±1 m
+  of NCEI height. The runtime `HeightField` uses the full 3200 grid; the `low` tier may decimate it at G5.
+  Reason: native source resolution, deterministic, small enough to commit.
+- **D22** Piers and wharves are structures, not terrain: both DEMs are bare-earth, so the Embarcadero piers
+  appear as water. They come back as geometry (G2b/G2c) and colliders. Reason: measured at G2a.
+- **D23** Gates that run pipelines run them as child processes with network access blocked
+  (`gates/lib/no-network.mjs`), and pipelines read raw files only through `tools/data/cache.mjs`, which
+  checks each file against the manifest. Reason: §4, "pipelines read from cache, not the network", becomes
+  checkable.

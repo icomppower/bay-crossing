@@ -6,3 +6,4 @@ Hong Kong run entries are archived in `docs/archive-hong-kong.md`.
 |------|------|--------|-----|-------|
 | 2026-09-24 | G0 | PASS | 30 | DataSF ynuv-fyni (8,489 footprints, PDDL), OSM Overpass Sausalito (1,828 bldgs, 23 with height/levels), 3DEP + NCEI DEM via ImageServer exportImage on UTM 10N 3 m grid. Salesforce Tower absent (2016 heights) — D16 |
 | 2026-09-24 | G1 | PASS | 45 | Removed game/vendors/island/village/reef/veg/swash + island-bound life (D17); HeightField replaces TerrainData (D18); headless real-App runner (D19). First negative missed the hidden ocean (sequential frames drift ~8); fixed by freezing time for the on/off pair |
+| 2026-09-24 | G2a | PASS | 35 | NOAA datums added as G0 source (MSL = NAVD88+0.969). 3200² @3 m, Int16 cm, 256 deflated tiles (12 MB). Offline double-run determinism, shipped = pipeline, plausibility, seam, loader. Fixed a G1 build fixture that silently stopped mutating |

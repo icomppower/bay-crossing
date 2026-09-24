@@ -199,7 +199,8 @@ for ( const f of [ 'index.html', 'vite.config.js', 'package.json' ] ) cpSync( jo
 cpSync( join( root, 'src' ), join( fx, 'src' ), { recursive: true } );
 mkdirSync( join( fx, 'src/game' ) );
 writeFileSync( join( fx, 'src/game/Game.js' ), 'export class Game {}\n' );
-writeFileSync( join( fx, 'src/App.js' ), readFileSync( join( fx, 'src/App.js' ), 'utf8' ).replace( "import { HeightField }", "import { Fishing } from './game/Fishing.js';\nimport { HeightField }" ) );
+// a deleted module imported at the top of App.js (prepended, so the fixture cannot silently miss)
+writeFileSync( join( fx, 'src/App.js' ), "import { Fishing } from './game/Fishing.js';\nconsole.log( Fishing );\n" + readFileSync( join( fx, 'src/App.js' ), 'utf8' ) );
 
 const MUTATIONS = [
 	[ 'removed path restored (src/game)', 'removals:', () => checkRemovals( fx ) ],
