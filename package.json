@@ -10,6 +10,7 @@
     "fetch-data": "node tools/data/fetch.mjs"
   },
   "devDependencies": {
+    "earcut": "^3.2.3",
     "vite": "^8.3.0",
     "webgpu": "^0.6.1"
   },

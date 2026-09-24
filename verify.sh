@@ -44,5 +44,5 @@ done
 echo
 echo "===== verify.sh summary ====="
 printf '%s' "$summary"
-if [ $fail -eq 0 ]; then echo "ALL REQUIRED GATES GREEN"; else echo "RED"; fi
+if [ $fail -ne 0 ]; then echo "RED"; elif [ $# -gt 0 ]; then echo "SELECTED GATES GREEN (run ./verify.sh with no arguments for DONE)"; else echo "ALL REQUIRED GATES GREEN"; fi
 exit $fail

@@ -1,0 +1,10 @@
+{
+  "note": "Landmarks modelled separately (D4, G2c). A building footprint containing an anchor with replacesFootprint is left out of the extruded tiles. Anchors: WGS84.",
+  "landmarks": [
+    { "name": "Ferry Building", "lat": 37.79555, "lon": -122.39365, "replacesFootprint": true },
+    { "name": "Coit Tower", "lat": 37.80239, "lon": -122.40582, "replacesFootprint": true },
+    { "name": "Transamerica Pyramid", "lat": 37.79520, "lon": -122.40280, "replacesFootprint": true },
+    { "name": "Golden Gate Bridge", "lat": 37.81990, "lon": -122.47850, "replacesFootprint": false },
+    { "name": "Alcatraz", "lat": 37.82670, "lon": -122.42300, "replacesFootprint": false }
+  ]
+}

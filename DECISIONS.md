@@ -65,3 +65,16 @@ are in `docs/archive-hong-kong.md`.
   (`gates/lib/no-network.mjs`), and pipelines read raw files only through `tools/data/cache.mjs`, which
   checks each file against the manifest. Reason: §4, "pipelines read from cache, not the network", becomes
   checkable.
+- **D24** Buildings: SF roof = LiDAR median first-return elevation (`median_1st_m`) converted to MSL, so rooftop
+  plant and spires are ignored; 34 footprints without it fall back to `hgt_median_m`. Sausalito: OSM `height`
+  (17), `building:levels` × 3 m (5), else a 6 m default (1,801 of 1,823, logged in `public/buildings/index.json`).
+  Base: lowest terrain under the footprint − 1 m, never deeper than 2 m below MSL, so pier sheds stand on the
+  water line. Tiles: the 600 m terrain grid by centroid, one deflated GLB each (`.glb.deflate`, 9 MB total,
+  committed). Facades are procedural in the material (storeys and bays from wall UVs; tint and class in vertex
+  colour; lit windows at night). Reason: LiDAR medians give believable massing; the default applies only where
+  OSM has nothing.
+- **D25** Footprints that contain a landmark anchor (`data/landmarks.json`: Ferry Building, Coit Tower,
+  Transamerica) are left out of the extruded tiles; the landmark models (G2c) replace them. Reason: the
+  Transamerica LiDAR median is 67.8 m against a 264 m peak, so an extruded prism would be a stub.
+- **D26** `earcut` (ISC) is a devDependency, used only by the offline building pipeline for roofs with holes.
+  Reason: robust, deterministic polygon triangulation; nothing ships at runtime.

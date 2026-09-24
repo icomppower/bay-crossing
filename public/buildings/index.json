@@ -1,0 +1,350 @@
+{
+ "format": "bay-buildings/1",
+ "tileSpan": 600,
+ "frame": "BayFrame (x east, z south); node translation = tile centre",
+ "heights": {
+  "log": {
+   "sfLidar": 8452,
+   "sfFallback": 34,
+   "osmHeight": 17,
+   "osmLevels": 5,
+   "osmDefault": 1801,
+   "skipped": 0
+  },
+  "defaultHeight": 6,
+  "levelHeight": 3,
+  "maxSink": -2
+ },
+ "landmarkExclusions": [
+  {
+   "landmark": "Ferry Building",
+   "id": "sf201006.0000058"
+  },
+  {
+   "landmark": "Transamerica Pyramid",
+   "id": "sf201006.0000687"
+  },
+  {
+   "landmark": "Coit Tower",
+   "id": "sf201006.0006230"
+  }
+ ],
+ "totals": {
+  "buildings": 10309,
+  "triangles": 568920
+ },
+ "files": [
+  {
+   "name": "b_0_1.glb.deflate",
+   "i": 0,
+   "j": 1,
+   "buildings": 123,
+   "triangles": 2721,
+   "sha256": "b1e845ac6e3767fe2af8337583d538711e4c19dfe76b9be4183e9753e28f98d1"
+  },
+  {
+   "name": "b_1_1.glb.deflate",
+   "i": 1,
+   "j": 1,
+   "buildings": 4,
+   "triangles": 55,
+   "sha256": "657f0b33706856764331709994390ac3794a94ca9493df6b725365761afc3770"
+  },
+  {
+   "name": "b_0_2.glb.deflate",
+   "i": 0,
+   "j": 2,
+   "buildings": 516,
+   "triangles": 13398,
+   "sha256": "0c7d34f9d0a8c805aa2af01b394bdde616b7cb63d5f59fa26b4c6fe26c48bd3d"
+  },
+  {
+   "name": "b_1_2.glb.deflate",
+   "i": 1,
+   "j": 2,
+   "buildings": 271,
+   "triangles": 7999,
+   "sha256": "de85d97b682e422726647a395ba7cc33f3027e82f3125c91241e6829fefc340e"
+  },
+  {
+   "name": "b_2_2.glb.deflate",
+   "i": 2,
+   "j": 2,
+   "buildings": 2,
+   "triangles": 74,
+   "sha256": "5971cc50f706f80417ab0bad5448c62931162e09d0ef5cd5760b6a2b84094879"
+  },
+  {
+   "name": "b_0_3.glb.deflate",
+   "i": 0,
+   "j": 3,
+   "buildings": 314,
+   "triangles": 9807,
+   "sha256": "8822d33c5d1fa782b1acfb46ce2f99995a0eb6e8264734183b2cb5350f23d8d3"
+  },
+  {
+   "name": "b_1_3.glb.deflate",
+   "i": 1,
+   "j": 3,
+   "buildings": 446,
+   "triangles": 14513,
+   "sha256": "59585a1aa815ce73a65d4040bd4336ec020f768ce89f82137d57dbfb949b867d"
+  },
+  {
+   "name": "b_0_4.glb.deflate",
+   "i": 0,
+   "j": 4,
+   "buildings": 33,
+   "triangles": 1101,
+   "sha256": "0c500cef2f4b71e634ca4bb439c140ec55c3940109090219fa4b97315983933c"
+  },
+  {
+   "name": "b_1_4.glb.deflate",
+   "i": 1,
+   "j": 4,
+   "buildings": 114,
+   "triangles": 2792,
+   "sha256": "107bfb91b4ca0ac02335381d479ba875a36dfa46145b371798f9cb685feda498"
+  },
+  {
+   "name": "b_10_10.glb.deflate",
+   "i": 10,
+   "j": 10,
+   "buildings": 1,
+   "triangles": 31,
+   "sha256": "5f634ca619fd8ba8bf176067db1c1d14b17710ad7787d0df0ce4b597b5ff2f8d"
+  },
+  {
+   "name": "b_10_11.glb.deflate",
+   "i": 10,
+   "j": 11,
+   "buildings": 132,
+   "triangles": 8919,
+   "sha256": "7db65d4c8b9be393cabe8c3a018e77f2242f2a10f60a324041bbd7a4ac71668b"
+  },
+  {
+   "name": "b_11_11.glb.deflate",
+   "i": 11,
+   "j": 11,
+   "buildings": 70,
+   "triangles": 7810,
+   "sha256": "5a319f85905f8831d9c180acdaa40708d9b44527dca95a589b653606a921fec0"
+  },
+  {
+   "name": "b_12_11.glb.deflate",
+   "i": 12,
+   "j": 11,
+   "buildings": 59,
+   "triangles": 4424,
+   "sha256": "57b295025921b9c142013c374776047bdf4c8630cbabd76d548bbfb99aa3a0f6"
+  },
+  {
+   "name": "b_13_11.glb.deflate",
+   "i": 13,
+   "j": 11,
+   "buildings": 4,
+   "triangles": 166,
+   "sha256": "8f8f2cb533ba67be4ea7c8e75dbb216dce3111bcddec1264d4191b6d433961b7"
+  },
+  {
+   "name": "b_9_12.glb.deflate",
+   "i": 9,
+   "j": 12,
+   "buildings": 26,
+   "triangles": 1866,
+   "sha256": "9f3c36428d1804569605abaa10d524a804fbc411cc99992cbdd81c311e0a0bc8"
+  },
+  {
+   "name": "b_10_12.glb.deflate",
+   "i": 10,
+   "j": 12,
+   "buildings": 650,
+   "triangles": 39747,
+   "sha256": "b8861267e8cdbf4e44aad778bcb109f4a2fcba035c325aecfdb791484289cae4"
+  },
+  {
+   "name": "b_11_12.glb.deflate",
+   "i": 11,
+   "j": 12,
+   "buildings": 735,
+   "triangles": 48301,
+   "sha256": "0d65f346d195cb3a4fde75481218090481a8f7890b0c475860f32e2f8e8381ec"
+  },
+  {
+   "name": "b_12_12.glb.deflate",
+   "i": 12,
+   "j": 12,
+   "buildings": 887,
+   "triangles": 46774,
+   "sha256": "8e9fc6402440d027d108aaec84aa215094493068ab39ddc022d93e2f53cbf85b"
+  },
+  {
+   "name": "b_13_12.glb.deflate",
+   "i": 13,
+   "j": 12,
+   "buildings": 45,
+   "triangles": 2366,
+   "sha256": "117f1ca328fe94b9f6f1d4a26878f629d54fef00f3418d3ff29ddd5e503c6f50"
+  },
+  {
+   "name": "b_9_13.glb.deflate",
+   "i": 9,
+   "j": 13,
+   "buildings": 61,
+   "triangles": 5455,
+   "sha256": "cba117e086c2d731819587b7ce9cf814eb71fab8ce12baa5edc5e582e908433a"
+  },
+  {
+   "name": "b_10_13.glb.deflate",
+   "i": 10,
+   "j": 13,
+   "buildings": 822,
+   "triangles": 54922,
+   "sha256": "51ef5e08ce1ed1a9310e07647c436359a6488a4698ac1d5d03108842df6a7c78"
+  },
+  {
+   "name": "b_11_13.glb.deflate",
+   "i": 11,
+   "j": 13,
+   "buildings": 981,
+   "triangles": 61767,
+   "sha256": "07733edab6798cf882f7f3383bd827d2af0db1b6fd18d8f1fe2caca88dd465d7"
+  },
+  {
+   "name": "b_12_13.glb.deflate",
+   "i": 12,
+   "j": 13,
+   "buildings": 704,
+   "triangles": 34289,
+   "sha256": "9d7b9c657f26a74c6734f4961e71c52ca4f5aacacd21f848d1b7e451ad9f5d99"
+  },
+  {
+   "name": "b_13_13.glb.deflate",
+   "i": 13,
+   "j": 13,
+   "buildings": 265,
+   "triangles": 12682,
+   "sha256": "b8765c08bf6df8ed67d07557b8783347fda6ca22720d70a680daf108a9ea06ea"
+  },
+  {
+   "name": "b_14_13.glb.deflate",
+   "i": 14,
+   "j": 13,
+   "buildings": 21,
+   "triangles": 3352,
+   "sha256": "4a42b7603bced86bafc91c4570e70bf410e5711ab7c3757c5b85e20bcf03b4d1"
+  },
+  {
+   "name": "b_9_14.glb.deflate",
+   "i": 9,
+   "j": 14,
+   "buildings": 53,
+   "triangles": 3555,
+   "sha256": "1f296e1f7d26eb768a9915cfdab7313170fdc12351dad034f3632c02ba21aa32"
+  },
+  {
+   "name": "b_10_14.glb.deflate",
+   "i": 10,
+   "j": 14,
+   "buildings": 515,
+   "triangles": 39003,
+   "sha256": "0f4f4e9ff03402ff30fe5d3e3c5d5cb53b377e5639992bb91fb5d19d0fdfe2fa"
+  },
+  {
+   "name": "b_11_14.glb.deflate",
+   "i": 11,
+   "j": 14,
+   "buildings": 585,
+   "triangles": 44214,
+   "sha256": "df7619d7519d39732e0e5286aaa5e971e779cafc445ff545ed1befe544f90790"
+  },
+  {
+   "name": "b_12_14.glb.deflate",
+   "i": 12,
+   "j": 14,
+   "buildings": 505,
+   "triangles": 21198,
+   "sha256": "4a4de9084ecd0f92b74b00dd51879c312a651802b9a531fed7ec7212fbc8a86a"
+  },
+  {
+   "name": "b_13_14.glb.deflate",
+   "i": 13,
+   "j": 14,
+   "buildings": 188,
+   "triangles": 9292,
+   "sha256": "9bfeff1641b2efcf088da85149bc896419f4a8ac2726d2c8bd0e153c2f99c01f"
+  },
+  {
+   "name": "b_14_14.glb.deflate",
+   "i": 14,
+   "j": 14,
+   "buildings": 90,
+   "triangles": 6192,
+   "sha256": "20bbeb189fe8724d515e3366e978dff69dd4c966428a7542e68bdc136d2370ce"
+  },
+  {
+   "name": "b_15_14.glb.deflate",
+   "i": 15,
+   "j": 14,
+   "buildings": 7,
+   "triangles": 585,
+   "sha256": "5ef7bbf1a1bff46c0728a2f7d535a547f948be636a69a6516b3f7f58e5acdec0"
+  },
+  {
+   "name": "b_9_15.glb.deflate",
+   "i": 9,
+   "j": 15,
+   "buildings": 35,
+   "triangles": 3133,
+   "sha256": "8c70e4dd8eae172a0ea3c5cfba10bf0063bc2bd972585e9377c04b9d217d4c84"
+  },
+  {
+   "name": "b_10_15.glb.deflate",
+   "i": 10,
+   "j": 15,
+   "buildings": 240,
+   "triangles": 11671,
+   "sha256": "62fcd421865ee265deae5b0461599d749adff7dcae0447808935c99b9fede81c"
+  },
+  {
+   "name": "b_11_15.glb.deflate",
+   "i": 11,
+   "j": 15,
+   "buildings": 363,
+   "triangles": 21662,
+   "sha256": "e20e00a46cacdf4994d51e4b141ba66659a32e503c2f31f410f23633a0d2e3b5"
+  },
+  {
+   "name": "b_12_15.glb.deflate",
+   "i": 12,
+   "j": 15,
+   "buildings": 203,
+   "triangles": 9952,
+   "sha256": "225964d7aa6c8b48a021e8b22e3a1ca502fd128e93a3dbeb66f260b45861d43a"
+  },
+  {
+   "name": "b_13_15.glb.deflate",
+   "i": 13,
+   "j": 15,
+   "buildings": 140,
+   "triangles": 5939,
+   "sha256": "7ff1a461d8f0d30751d0c416c0cde7a378f7bdac4420c738c2ec5a912fff1c8c"
+  },
+  {
+   "name": "b_14_15.glb.deflate",
+   "i": 14,
+   "j": 15,
+   "buildings": 84,
+   "triangles": 5502,
+   "sha256": "afe30bf34276111dce7679a0b5553995c10f313bfe0045f99c7eb8e35477aad7"
+  },
+  {
+   "name": "b_15_15.glb.deflate",
+   "i": 15,
+   "j": 15,
+   "buildings": 15,
+   "triangles": 1691,
+   "sha256": "b576468ec0e5d80ca73cbf34059c2a8b91edd7c987ec2c172ccfe9f1287b240e"
+  }
+ ]
+}

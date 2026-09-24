@@ -19,6 +19,7 @@ import { SkyProClouds } from './sky/SkyProClouds.js';
 import { Environment } from './sky/Environment.js';
 
 import { loadBayHeightField } from './world/BayTerrain.js';
+import { loadBayBuildings } from './world/BayBuildings.js';
 import { TerrainGPU } from './world/TerrainGPU.js';
 import { Terrain } from './world/Terrain.js';
 import { computeShoreField } from './world/ShoreField.js';
@@ -133,6 +134,10 @@ export class App {
 		// the terrain applies the heightfield sun shadow (long hill shadows) in its own lighting
 		this.terrain = new Terrain( { scene, terrainData: this.terrainData, terrainGPU: this.terrainGPU, renderer } );
 		this.terrain.mesh.material.appliesHillShadow = true;
+		// SF + Sausalito buildings, extruded from footprints and LiDAR / OSM heights (public/buildings/)
+		await progress( 0.22, 'Raising the city…' );
+		this.buildings = await loadBayBuildings();
+		scene.add( this.buildings );
 
 		this.boat = new BoatModel();
 		scene.add( this.boat.group );
@@ -160,6 +165,7 @@ export class App {
 
 		} );
 		underwaterMode( this.boat.group, 'lite' );
+		underwaterMode( this.buildings, 'lite' );
 
 		this.underwaterLighting = installUnderwaterLighting( {
 			fft: this.fft, caustics: this.caustics, clouds: this.clouds, terrain: this.terrainGPU,
