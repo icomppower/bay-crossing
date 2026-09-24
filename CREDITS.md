@@ -99,4 +99,12 @@ headless test harness are Tidewater's.
 Every source is fetched by script into `data/raw/` (checksums in `data/raw/MANIFEST.sha256`). Each entry's
 licence is checked at G0.
 
-<!-- data sources are added here as G0 verifies them -->
+| Cached file | Source | Licence |
+|---|---|---|
+| `sf-buildings.geojson` | [San Francisco Building Footprints](https://data.sf.gov/d/ynuv-fyni) (DataSF, City and County of San Francisco): footprints with LiDAR-derived heights (`hgt_median_m`, `peak_1st_m`) | ODC PDDL 1.0 — [public domain dedication](http://opendatacommons.org/licenses/pddl/1.0/) |
+| `sausalito-osm.json` | [OpenStreetMap](https://www.openstreetmap.org) buildings around the Sausalito waterfront, via the Overpass API | ODbL 1.0 — © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) |
+| `terrain-3dep.tif` | [USGS 3D Elevation Program](https://www.usgs.gov/3d-elevation-program) (3DEPElevation ImageServer), resampled to the slice grid | Public domain (US Government work) |
+| `bathy-ncei.tif` | [NOAA NCEI](https://www.ncei.noaa.gov/products/coastal-elevation-models) coastal DEM mosaic (topobathy; DEM_mosaics/DEM_all ImageServer), resampled to the slice grid | Public domain (US Government work) |
+
+Derived tiles in this repository are processed copies. Map data from OpenStreetMap is available under the Open
+Database License; derived building tiles for Sausalito are a Produced Work under ODbL.

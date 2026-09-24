@@ -1,0 +1,11 @@
+{
+  "crs": "EPSG:32610 (WGS84 / UTM zone 10N), metres; heights NAVD88 metres",
+  "extent": { "minE": 544800, "minN": 4182000, "maxE": 554208, "maxN": 4191600 },
+  "gridMetres": 3,
+  "boxes": {
+    "sfBuildings": { "south": 37.785, "west": -122.425, "north": 37.812, "east": -122.385,
+      "note": "Embarcadero Pier 1 to Pier 39 plus the FiDi / North Beach / Telegraph Hill skyline behind it" },
+    "sausalito": { "south": 37.848, "west": -122.492, "north": 37.866, "east": -122.472,
+      "note": "Sausalito waterfront strip around the ferry landing" }
+  }
+}

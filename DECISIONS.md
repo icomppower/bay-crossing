@@ -28,3 +28,14 @@ are in `docs/archive-hong-kong.md`.
   (must PASS). A gate is green only when both hold, so the negative fixture is re-proved on every run.
   Reason: §5 makes the negative fixture a precondition of every positive run.
 - **D12** G6 is advisory: `verify.sh` runs it but its result never changes the exit code.
+- **D13** SF footprints are published under ODC PDDL 1.0, not CC0 as §2 says. Both are public-domain
+  dedications; the portal's actual licence is what `CREDITS.md` records. Reason: record the licence as found.
+- **D14** One frame for everything: WGS84 / UTM 10N (EPSG:32610) metres, NAVD88 heights, slice extent
+  E 544800–554208, N 4182000–4191600, 3 m raster grid (`data/slice.json`). Both DEMs are fetched already
+  resampled onto that grid. Reason: one grid for terrain and seabed makes G2a and G3 simple.
+- **D15** Terrain comes from USGS 3DEP and seabed from the NOAA NCEI topobathy mosaic. Both services cover the
+  whole extent without gaps (G0 checks there are no no-data cells), so D5's gap fill isn't needed for run 1.
+  Reason: measured at G0.
+- **D16** Building heights are from 2016, so post-2016 towers (Salesforce Tower, 326 m, finished 2018) are
+  missing or wrong. Logged, not fixed in run 1. Reason: G0 found the tallest building is Transamerica
+  (260.8 m) and Salesforce Tower is absent.
