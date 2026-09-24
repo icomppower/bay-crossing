@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { readTiff } from '../tools/geo/tiff.mjs';
 import { toUTM } from '../tools/geo/utm.mjs';
 import { SOURCES } from '../tools/data/fetch.mjs';
+import { readZip, parseCSV } from '../tools/data/zip.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const slice = JSON.parse(readFileSync(join(root, 'data/slice.json'), 'utf8'));
@@ -16,7 +17,7 @@ const { minE, minN, maxE, maxN } = slice.extent;
 const G = slice.gridMetres, W = (maxE - minE) / G, H = (maxN - minN) / G;
 
 // Licence keywords CREDITS.md must pair with each cached file.
-const LICENCE_WORD = { 'sf-buildings.geojson': 'PDDL', 'sausalito-osm.json': 'ODbL', 'terrain-3dep.tif': 'Public domain', 'bathy-ncei.tif': 'Public domain', 'noaa-datums-9414290.json': 'Public domain', 'landmarks-osm.json': 'ODbL' };
+const LICENCE_WORD = { 'sf-buildings.geojson': 'PDDL', 'sausalito-osm.json': 'ODbL', 'terrain-3dep.tif': 'Public domain', 'bathy-ncei.tif': 'Public domain', 'noaa-datums-9414290.json': 'Public domain', 'landmarks-osm.json': 'ODbL', 'noaa-enc-landmarks.json': 'Public domain', 'noaa-enc-pylons.json': 'Public domain', 'ggt-gtfs.zip': 'No licence stated' };
 
 function check(dir, credits) {
   const fail = [];
@@ -89,6 +90,18 @@ function check(dir, credits) {
   has(e => e.tags?.['tower:type'] === 'bridge' && e.geometry?.[0]?.lat < 37.816, 'Golden Gate south tower');
   for (const n of ['Coit Tower', 'Transamerica Pyramid', 'Ferry Building', 'Pier 39', 'Sausalito Ferry Terminal', 'Alcatraz Island Lighthouse'])
     has(e => e.tags?.name === n, n);
+  has(e => e.tags?.name === 'San Francisco Ferry Building', 'San Francisco Ferry Building outline');
+  has(e => e.tags?.['building:part'] && parseFloat(e.tags.height) > 60, 'Ferry Building clock tower parts');
+  const enc = JSON.parse(readFileSync(join(dir, 'noaa-enc-landmarks.json'), 'utf8')).features || [];
+  for (const [what, pred] of [['Ferry Tower', a => /FERRY TOWER/i.test(a.INFORM || '')], ['Coit Tower', a => /COIT/i.test((a.OBJNAM || '') + (a.INFORM || ''))],
+    ['Transamerica (pyramidal building)', a => /PYRAMIDAL/i.test(a.INFORM || '')], ['Alcatraz Light', a => a.OBJNAM === 'Alcatraz Light'], ['Golden Gate Bridge North Light', a => a.OBJNAM === 'Golden Gate Bridge North Light']])
+    req(enc.some(f => pred(f.attributes)), `noaa-enc-landmarks: no ${what}`);
+  const pyl = JSON.parse(readFileSync(join(dir, 'noaa-enc-pylons.json'), 'utf8')).features || [];
+  req(pyl.some(f => f.attributes.OBJNAM === 'Golden Gate Bridge South Pier'), 'noaa-enc-pylons: no Golden Gate Bridge South Pier');
+  const gtfs = readZip(readFileSync(join(dir, 'ggt-gtfs.zip')));
+  const stops = gtfs['stops.txt'] ? parseCSV(gtfs['stops.txt'].toString('utf8')) : [];
+  for (const id of ['SFFT', 'SFT']) req(stops.some(st => st.stop_id === id), `ggt-gtfs: no stop ${id}`);
+  req(gtfs['stop_times.txt'] && gtfs['trips.txt'], 'ggt-gtfs: no stop_times / trips');
   const datums = JSON.parse(readFileSync(join(dir, 'noaa-datums-9414290.json'), 'utf8'));
   const dv = n => datums.datums?.find(d => d.name === n)?.value;
   const mslAboveNavd = dv('MSL') - dv('NAVD88');
@@ -103,7 +116,7 @@ const rawDir = join(root, 'data/raw');
 if (!process.argv.includes('--negative')) {
   const fail = check(rawDir, credits);
   if (fail.length) { console.log('G0 FAIL\n- ' + fail.join('\n- ')); process.exit(1); }
-  console.log('G0 PASS — 6 sources cached, checksummed, plausible, licences recorded');
+  console.log('G0 PASS — 9 sources cached, checksummed, plausible, licences recorded');
   process.exit(0);
 }
 

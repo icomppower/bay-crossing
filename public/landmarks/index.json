@@ -39,28 +39,28 @@
    "slug": "ferry-building",
    "name": "Ferry Building",
    "anchor": [
-    3879.617,
-    3495.621
+    3883.591,
+    3507.468
    ],
-   "ground": 2.41,
+   "ground": 2.3,
    "lods": [
     {
      "name": "ferry-building_lod0.glb",
-     "triangles": 254,
+     "triangles": 468,
      "meshes": 3,
-     "sha256": "d858ef0615e87b0cc8d36835d91feb160624035b7dda2bc42b3d554625afbf82"
+     "sha256": "7d733ba75ba00b664cf530604cbc06bf9f6a5f27e12ee06973907b3f6a35ef5e"
     },
     {
      "name": "ferry-building_lod1.glb",
-     "triangles": 145,
+     "triangles": 308,
      "meshes": 2,
-     "sha256": "e98ac0babd1fd663a4abdad67a6a3878cf72ba08a2238f9565b09075ee1f379e"
+     "sha256": "e1ca1017eab5d3fb04e811fbd5481ad7ed9b40fe1fcaf9c172625a375a025759"
     },
     {
      "name": "ferry-building_lod2.glb",
-     "triangles": 121,
-     "meshes": 2,
-     "sha256": "7498809edae4ba50002b35c25b18167b66d72504652e51ad76cb8da9c9fa8904"
+     "triangles": 158,
+     "meshes": 1,
+     "sha256": "a69fc37ff94f13a07f117674f9dca7c4e8a5206bcd12ff96821edec16315a946"
     }
    ]
   },
@@ -68,8 +68,8 @@
    "slug": "coit-tower",
    "name": "Coit Tower",
    "anchor": [
-    2801.511,
-    2745.15
+    2802.119,
+    2745.368
    ],
    "ground": 89.9,
    "lods": [
@@ -77,19 +77,19 @@
      "name": "coit-tower_lod0.glb",
      "triangles": 200,
      "meshes": 1,
-     "sha256": "feaf10e43644643889584d9e884167a534ac572ed5a98346d7c199084a2de8b0"
+     "sha256": "934bb8c552a5b53f4f30060b5d3bdb861e54ee29ba43ab56483f40a37645d43f"
     },
     {
      "name": "coit-tower_lod1.glb",
      "triangles": 68,
      "meshes": 1,
-     "sha256": "a4944f0eedbb23b550a1af0af1df1112e8a76c2baa48d0b54f61c5c29f9fb6e4"
+     "sha256": "d9b8901b033c62662d84fa6fc96d76609008d64e4bf5d2c6f42480bcc33df855"
     },
     {
      "name": "coit-tower_lod2.glb",
      "triangles": 44,
      "meshes": 1,
-     "sha256": "9bd39745fcfdd9c7fd166acae0192725767079d3fab0b99e83268ea7f10c1ef1"
+     "sha256": "c21ebefe0ece1c9d8ec7f46443363d1f3f82119576169e630c40cac41384694d"
     }
    ]
   },
@@ -97,8 +97,8 @@
    "slug": "transamerica-pyramid",
    "name": "Transamerica Pyramid",
    "anchor": [
-    3087.428,
-    3540.973
+    3075.557,
+    3543.368
    ],
    "ground": 3.23,
    "lods": [
@@ -106,19 +106,19 @@
      "name": "transamerica-pyramid_lod0.glb",
      "triangles": 48,
      "meshes": 1,
-     "sha256": "42cb9cb14a69af10a2d143dc0a3f4ae5ddc8eabf5155f75ebf80547eccf3799a"
+     "sha256": "80390420cdd86b4da381d01e01bd5bac74a23717cd2022f000a3a1ef18aefd46"
     },
     {
      "name": "transamerica-pyramid_lod1.glb",
      "triangles": 48,
      "meshes": 1,
-     "sha256": "c31a4445d1302542ef12f3d74c5d3b5bca14d55c77a29e3e63df18b40fe8a2af"
+     "sha256": "c2c1347b41c789baefdcae0526fefcc3563e11ca5df935ff0850aec89bce7fe2"
     },
     {
      "name": "transamerica-pyramid_lod2.glb",
      "triangles": 24,
      "meshes": 1,
-     "sha256": "cd7160ad5c25e87e3db0b0faf44e60c89376a3b5c07a7510557c729b5ed67fd9"
+     "sha256": "e0793aee144723c4f6c549d80f2c225ee052de86229188fddbc4a5f329e34341"
     }
    ]
   },
@@ -126,8 +126,8 @@
    "slug": "alcatraz",
    "name": "Alcatraz",
    "anchor": [
-    1336.488,
-    104.946
+    1336.61,
+    104.969
    ],
    "ground": 40.68,
    "lods": [
@@ -135,19 +135,19 @@
      "name": "alcatraz_lod0.glb",
      "triangles": 586,
      "meshes": 3,
-     "sha256": "2bdda23cd4d821a32793099897288d0f9f991493abe7a2bde57b9c4d874bf7b0"
+     "sha256": "e39f83f35c5a5135c2221d65c3fbfc8e36792db086a93c4c6e41fd45ce88355f"
     },
     {
      "name": "alcatraz_lod1.glb",
      "triangles": 586,
      "meshes": 3,
-     "sha256": "57ef77efb20127bd09db9f8697c6588d22c172b1594716c89e20df59082e426a"
+     "sha256": "a25c52dcd5e9c14cca7146a858a7a7127ff4e70114a1cd0e4f700f10b077c6c5"
     },
     {
      "name": "alcatraz_lod2.glb",
      "triangles": 168,
      "meshes": 2,
-     "sha256": "8447850220e4faae1c7b28afbed76237d6662a5129827f1069d68c45c10785c0"
+     "sha256": "9acc0079d5714301b5e245a89582a24c1ff560598ec2c04e16b2cffd1d7ca9e3"
     }
    ]
   }

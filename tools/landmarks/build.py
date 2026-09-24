@@ -151,17 +151,24 @@ def golden_gate(L, lod):
     return B
 
 def ferry_building(L, lod):
-    # Ferry Building (1898): 660 ft (201 m) long shed from the SF footprint, clock tower 245 ft (74.7 m).
+    # Ferry Building (1898): the shed from the OSM outline (OSM height 15 m), the clock tower from the OSM
+    # building:part stack (heights 43.5 ... 70 m dome, 83.1 m flagpole); charted as "FERRY TOWER" by NOAA.
     B = Builder()
     ring = [bl(p) for p in L['footprint']]
-    g = L['ground']
-    ang = pca_angle(ring)
-    B.prism('stone', ring, g - 1, 16.0)
-    if lod == 0: B.prism('roof', ring, 16.0, 19.5, 0.94, centroid(ring))
-    stages = [(g - 1, 44, 14.5), (44, 58, 12.5), (58, 66, 10.0)] if lod < 2 else [(g - 1, 66, 13)]
-    for z0, z1, w in stages: B.box('stone', 0, 0, z0, w, w, z1 - z0, ang)
-    B.box('roof', 0, 0, 66, 10.0, 10.0, 8.7, ang, 0.05)
-    if lod == 0: B.box('dark', 0, 0, 50.5, 12.8, 12.8, 1.6, ang)
+    g, sh = L['ground'], L.get('shedHeight') or 15.0
+    B.prism('stone', ring, g - 1, sh)
+    if lod == 0: B.prism('roof', ring, sh, sh + 3.5, 0.94, centroid(ring))
+    parts = sorted(L['parts'], key=lambda p: p['height'])
+    if lod == 1: parts = [p for p in parts if p['height'] > 40][:-1] or parts
+    if lod == 2: parts = [max(parts, key=lambda p: abs(area([bl(q) for q in p['ring']])) if p['height'] > 40 else 0)]
+    for p in parts:
+        pr = [bl(q) for q in p['ring']]
+        if len(pr) < 3: continue
+        top = p['height']
+        if top > 75:   # the flagpole: a thin mast on the dome
+            c = centroid(pr); B.box('dark', c[0], c[1], 70.0, 0.4, 0.4, top - 70.0); continue
+        mat = 'roof' if p['roof'] == 'dome' else 'stone'
+        B.prism(mat, pr, max(g - 1, p['minHeight'] or g - 1), top, 0.6 if p['roof'] == 'dome' else 1.0, centroid(pr))
     return B
 
 def coit_tower(L, lod):

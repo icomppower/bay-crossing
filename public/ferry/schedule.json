@@ -1,0 +1,61 @@
+{
+ "source": "Golden Gate Ferry GTFS (realtime.goldengate.org/gtfsstatic/GTFSTransitData.zip), route SSSF \"Sausalito - San Francisco Ferry\"; facts only",
+ "trips": 21,
+ "terminals": {
+  "sausalito": [
+   {
+    "stopId": "43003",
+    "name": "Sausalito",
+    "lat": 37.856166,
+    "lon": -122.477546,
+    "x": -3544.33,
+    "z": -3185.129
+   }
+  ],
+  "sanFrancisco": [
+   {
+    "stopId": "43000",
+    "name": "San Francisco-Gate C",
+    "lat": 37.795921,
+    "lon": -122.392427,
+    "x": 3987.024,
+    "z": 3453.759
+   },
+   {
+    "stopId": "43008",
+    "name": "San Francisco-Gate B",
+    "lat": 37.796533,
+    "lon": -122.393763,
+    "x": 3868.961,
+    "z": 3386.621
+   }
+  ]
+ },
+ "publishedMinutes": {
+  "toSausalito": [
+   30,
+   30,
+   30,
+   30,
+   30,
+   30,
+   30,
+   30,
+   30,
+   30
+  ],
+  "toSanFrancisco": [
+   30,
+   30,
+   30,
+   30,
+   30,
+   30,
+   30,
+   30,
+   30,
+   30,
+   30
+  ]
+ }
+}

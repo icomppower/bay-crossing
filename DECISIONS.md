@@ -93,3 +93,18 @@ are in `docs/archive-hong-kong.md`.
   calls at 1.5 × measured, and per-tile LOD0 triangles at 1.25 × measured. Measured at five fixed views
   (`gates/lib/views.mjs`) at 1920×1080 and frozen in SPEC-THRESHOLDS.md. Reason: the negatives (LOD off, unmerged
   buildings) must be caught by the caps.
+- **D30** Three more G0 sources: NOAA ENC charted landmarks and bridge pylons (public domain), used as the
+  independent georeference, and the Golden Gate Ferry GTFS feed. The GTFS licence is not stated, so it is used
+  only for facts (terminal positions, published trip times → `public/ferry/schedule.json`); its route shapes
+  are not shipped and the zip stays in the gitignored cache. Reason: §2 requires a cited published schedule;
+  §7 fallback-before-block.
+- **D31** Ferry Building from OSM: the shed from the "San Francisco Ferry Building" outline, the clock tower
+  from its `building:part` stack (to 70 m, 83 m flagpole). Landmark anchors use polygon area centroids, not
+  vertex means (the Transamerica vertex mean was 15 m off). `data/landmarks.json` anchors are used only to
+  exclude DataSF footprints. Reason: G3 found the hand-entered Ferry tower anchor 13 m off the chart.
+- **D32** G3 control points: six gated (Ferry tower, Coit Tower, Transamerica, Golden Gate south tower vs NOAA
+  ENC; Pier 1 end vs OSM, the only pier whose OSM outline is the shed itself; Sausalito landing from GTFS vs
+  OSM). Two advisory: the north tower (the charted "North Light" is not the tower centre) and Alcatraz Light (OSM
+  and the chart disagree by 13.8 m and no third source covers Alcatraz, so Alcatraz placement is uncertain to
+  ~14 m). Tolerance calibrated to 10 m (worst gated error 6.45 m). Reason: every gated point compares two
+  independent surveys.

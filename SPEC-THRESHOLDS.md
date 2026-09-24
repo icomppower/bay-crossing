@@ -7,3 +7,4 @@ changing a frozen value needs a BLOCKED.md.
 - `G2c.frameTriangles`: 1953488 — triangles per frame, all passes, 1920×1080, fixed views (gates/lib/views.mjs); measured max 1562790 at embarcadero-street on 2026-09-24; cap = 1.25 × measured (terrain + ocean dominate)
 - `G2c.frameDraws`: 126 — draw calls per frame, all passes, same views; measured max 84 at sausalito-waterfront on 2026-09-24; cap = 1.5 × measured
 - `G2c.tileTriangles`: 77209 — LOD0 triangles in one 600 m building tile; measured max 61767 on 2026-09-24; cap = 1.25 × measured
+- `G3.toleranceMetres`: 10 — horizontal control-point tolerance; worst gated error 6.45 m on 2026-09-24; tolerance = min( 10, ceil( 1.5 × worst ) )

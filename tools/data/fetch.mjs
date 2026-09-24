@@ -14,6 +14,7 @@ mkdirSync(raw, { recursive: true });
 const { minE, minN, maxE, maxN } = slice.extent;
 const W = (maxE - minE) / slice.gridMetres, H = (maxN - minN) / slice.gridMetres;
 const sf = slice.boxes.sfBuildings, sa = slice.boxes.sausalito;
+const WGS = { west: -122.49, south: 37.785, east: -122.385, north: 37.87 }; // the slice in WGS84
 
 function exportImage(service) {
   const q = new URLSearchParams({
@@ -22,6 +23,13 @@ function exportImage(service) {
     interpolation: 'RSP_BilinearInterpolation', compression: 'LZ77', f: 'image',
   });
   return `${service}/exportImage?${q}`;
+}
+
+function encQuery(layer) {
+  return `https://encdirect.noaa.gov/arcgis/rest/services/encdirect/enc_harbour/MapServer/${layer}/query?` + new URLSearchParams({
+    geometry: `${WGS.west},${WGS.south},${WGS.east},${WGS.north}`, geometryType: 'esriGeometryEnvelope', inSR: '4326', outSR: '4326',
+    outFields: '*', returnGeometry: 'true', orderByFields: 'OBJECTID', f: 'json',
+  });
 }
 
 export const SOURCES = [
@@ -62,6 +70,8 @@ export const SOURCES = [
     body: 'data=' + encodeURIComponent(`[out:json][timeout:120];(
   nwr["man_made"="tower"]["tower:type"="bridge"](37.805,-122.485,37.832,-122.470);
   nwr["name"="Ferry Building"](37.79,-122.40,37.80,-122.39);
+  way["name"="San Francisco Ferry Building"](37.79,-122.40,37.80,-122.39);
+  nwr["building:part"](37.7945,-122.3945,37.7962,-122.3925);
   nwr["name"="Coit Tower"](37.80,-122.41,37.805,-122.40);
   nwr["name"~"Transamerica Pyramid"](37.79,-122.41,37.80,-122.40);
   nwr["building"](37.8250,-122.4260,37.8290,-122.4200);
@@ -69,6 +79,24 @@ export const SOURCES = [
   nwr["amenity"="ferry_terminal"](37.85,-122.49,37.86,-122.47);
   nwr["man_made"="pier"](37.79,-122.42,37.815,-122.385);
 );out geom tags qt;`),
+  },
+  {
+    file: 'noaa-enc-landmarks.json', key: 'noaa-enc-landmarks',
+    title: 'NOAA Electronic Navigational Charts (ENC Direct, harbour scale): charted landmarks — Ferry Tower, Coit Tower, Transamerica, Golden Gate Bridge lights, Alcatraz Light',
+    licence: 'Public domain (US Government work, NOAA Office of Coast Survey)', licenceUrl: 'https://nauticalcharts.noaa.gov/data/enc-direct-to-gis.html',
+    url: encQuery(26),
+  },
+  {
+    file: 'noaa-enc-pylons.json', key: 'noaa-enc-pylons',
+    title: 'NOAA Electronic Navigational Charts (ENC Direct, harbour scale): bridge pylon / support areas (Golden Gate Bridge South Pier)',
+    licence: 'Public domain (US Government work, NOAA Office of Coast Survey)', licenceUrl: 'https://nauticalcharts.noaa.gov/data/enc-direct-to-gis.html',
+    url: encQuery(149),
+  },
+  {
+    file: 'ggt-gtfs.zip', key: 'ggt-gtfs',
+    title: 'Golden Gate Transit / Golden Gate Ferry GTFS schedule feed (stops, ferry trips and stop times, route shapes)',
+    licence: 'No licence stated by the publisher (GGBHTD); used only for facts: stop positions and published trip times; not redistributed', licenceUrl: 'https://realtime.goldengate.org/gtfsstatic/GTFSTransitData.zip',
+    url: 'https://realtime.goldengate.org/gtfsstatic/GTFSTransitData.zip',
   },
   {
     file: 'noaa-datums-9414290.json', key: 'noaa-datums',
@@ -89,6 +117,7 @@ async function download(s) {
       const buf = Buffer.from(await res.arrayBuffer());
       const ct = res.headers.get('content-type') || '';
       if (s.file.endsWith('.tif') && !ct.includes('tiff')) throw new Error(`${s.file}: got ${ct}: ${buf.subarray(0, 200)}`);
+      if (s.file.endsWith('.json') && /"error"\s*:/.test(buf.subarray(0, 300).toString())) throw new Error(`${s.file}: service error ${buf.subarray(0, 300)}`);
       return buf;
     }
     console.warn(`${s.file}: HTTP ${res.status}, attempt ${attempt}`);
