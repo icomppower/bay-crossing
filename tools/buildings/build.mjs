@@ -21,6 +21,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '../..');
 const arg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; };
 const MM = v => Math.round(v * 1000) / 1000;
 export const DEFAULT_HEIGHT = 6, LEVEL_HEIGHT = 3, MAX_SINK = -2;
+export const LOD_DISTANCES = [900, 2500]; // m from the tile: LOD0 nearer than 900 m, LOD1 to 2.5 km, LOD2 beyond
 
 const PALETTE = [ // SF / Sausalito facade tints (sRGB bytes)
   [236, 230, 218], [222, 212, 196], [204, 198, 188], [238, 226, 204], [214, 200, 178], [190, 186, 180],
@@ -69,7 +70,7 @@ export function collectBuildings({ rawDir = RAW, merged } = {}) {
     const h = top - Math.max(gMax, 0);
     const cls = h > 60 ? 255 : h > 15 ? 128 : 0;
     const tint = PALETTE[hash(id) % PALETTE.length];
-    out.push({ id, polys, top, base, cls, tint, src });
+    out.push({ id, polys, top, base, cls, tint, src, h, area: Math.abs(polys.reduce((a, poly) => a + area2(poly[0]), 0)) / 2 });
   };
 
   const sf = JSON.parse(readCached('sf-buildings.geojson', rawDir).toString('utf8'));
@@ -138,7 +139,36 @@ function extrude(b, cx, cz, G) {
   }
 }
 
-export function buildTiles(buildings) {
+// Level-of-detail variants of a building (null = dropped at that level). LOD1: rings simplified to 1.5 m,
+// small low buildings dropped; LOD2: outer rings simplified to 4 m, only tall or large buildings kept.
+export const LODS = [
+  { tol: 0, keep: () => true },
+  { tol: 1.5, keep: b => b.h >= 8 || b.area >= 150, holes: true },
+  { tol: 4, keep: b => b.h >= 20 || b.area >= 1500, holes: false },
+];
+function simplifyRing(r, tol) {
+  if (!tol || r.length <= 4) return r;
+  // Douglas–Peucker on the closed ring, split at the vertex farthest from vertex 0
+  let far = 0, fd = -1;
+  for (let i = 1; i < r.length; i++) { const d = Math.hypot(r[i][0] - r[0][0], r[i][1] - r[0][1]); if (d > fd) { fd = d; far = i; } }
+  const dp = pts => {
+    if (pts.length <= 2) return pts;
+    const [a, b] = [pts[0], pts[pts.length - 1]], L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1e-9;
+    let idx = 0, md = -1;
+    for (let i = 1; i < pts.length - 1; i++) { const d = Math.abs((b[0] - a[0]) * (a[1] - pts[i][1]) - (a[0] - pts[i][0]) * (b[1] - a[1])) / L; if (d > md) { md = d; idx = i; } }
+    return md > tol ? [...dp(pts.slice(0, idx + 1)).slice(0, -1), ...dp(pts.slice(idx))] : [a, b];
+  };
+  const out = [...dp(r.slice(0, far + 1)).slice(0, -1), ...dp([...r.slice(far), r[0]]).slice(0, -1)];
+  return out.length >= 3 && Math.abs(area2(out)) > 1 ? out : r;
+}
+export function lodBuilding(b, lod) {
+  const L = LODS[lod];
+  if (!L.keep(b)) return null;
+  if (!L.tol) return b;
+  return { ...b, polys: b.polys.map(poly => (L.holes ? poly : poly.slice(0, 1)).map(r => simplifyRing(r, L.tol))) };
+}
+
+export function buildTiles(buildings, lod = 0) {
   const { size, tile, res } = GRID, span = tile * size / res, n = res / tile, o = -size / 2;
   const tiles = new Map();
   for (const b of buildings) {
@@ -153,27 +183,32 @@ export function buildTiles(buildings) {
     const cx = o + (t.i + 0.5) * span, cz = o + (t.j + 0.5) * span;
     const G = { pos: [], nrm: [], uv: [], col: [], idx: [] };
     t.list.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-    for (const b of t.list) extrude(b, cx, cz, G);
+    for (const b0 of t.list) { const b = lodBuilding(b0, lod); if (b) extrude(b, cx, cz, G); }
     return { ...t, cx, cz, G };
   });
 }
 
-export function writeBuildingTiles(tiles, log, outDir, excluded = []) {
+export function writeBuildingTiles(lodTiles, log, outDir, excluded = []) {
+  const tiles = lodTiles[0];
   mkdirSync(outDir, { recursive: true });
-  for (const f of readdirSync(outDir)) if (/^b_\d+_\d+\.glb(\.deflate)?$/.test(f) || f === 'index.json') rmSync(join(outDir, f));
-  const files = [];
-  for (const t of tiles) {
-    const name = `b_${t.i}_${t.j}.glb.deflate`;
+  for (const f of readdirSync(outDir)) if (/^b_\d+_\d+(_l\d)?\.glb(\.deflate)?$/.test(f) || f === 'index.json') rmSync(join(outDir, f));
+  const write = (t, lod) => {
+    const name = `b_${t.i}_${t.j}${lod ? '_l' + lod : ''}.glb.deflate`;
     const glb = deflateSync(writeGLB({ meshes: [{
-      name: `buildings_${t.i}_${t.j}`, translation: [t.cx, 0, t.cz],
+      name: `buildings_${t.i}_${t.j}_lod${lod}`, translation: [t.cx, 0, t.cz],
       position: new Float32Array(t.G.pos), normal: new Float32Array(t.G.nrm), uv: new Float32Array(t.G.uv),
       color: new Uint8Array(t.G.col), index: new Uint32Array(t.G.idx),
     }] }), { level: 9, memLevel: 9 });
     writeFileSync(join(outDir, name), glb);
-    files.push({ name, i: t.i, j: t.j, buildings: t.list.length, triangles: t.G.idx.length / 3, sha256: createHash('sha256').update(glb).digest('hex') });
-  }
+    return { name, triangles: t.G.idx.length / 3, sha256: createHash('sha256').update(glb).digest('hex') };
+  };
+  const files = [];
+  tiles.forEach((t, k) => {
+    const l0 = write(t, 0);
+    files.push({ ...l0, i: t.i, j: t.j, buildings: t.list.length, lods: [1, 2].map(lod => write(lodTiles[lod][k], lod)) });
+  });
   const index = {
-    format: 'bay-buildings/1', tileSpan: GRID.tile * GRID.size / GRID.res, frame: 'BayFrame (x east, z south); node translation = tile centre',
+    format: 'bay-buildings/2', lodDistances: LOD_DISTANCES, tileSpan: GRID.tile * GRID.size / GRID.res, frame: 'BayFrame (x east, z south); node translation = tile centre',
     heights: { log, defaultHeight: DEFAULT_HEIGHT, levelHeight: LEVEL_HEIGHT, maxSink: MAX_SINK },
     landmarkExclusions: excluded,
     totals: { buildings: files.reduce((s, f) => s + f.buildings, 0), triangles: files.reduce((s, f) => s + f.triangles, 0) },
@@ -186,7 +221,9 @@ export function writeBuildingTiles(tiles, log, outDir, excluded = []) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const t0 = performance.now();
   const { buildings, log, excluded } = collectBuildings({ rawDir: arg('--raw', RAW) });
-  const index = writeBuildingTiles(buildTiles(buildings), log, arg('--out', join(root, 'public/buildings')), excluded);
+  const index = writeBuildingTiles([0, 1, 2].map(lod => buildTiles(buildings, lod)), log, arg('--out', join(root, 'public/buildings')), excluded);
   console.log(`landmark exclusions ${JSON.stringify(excluded)}`);
+  const lt = [1, 2].map(l => index.files.reduce((s, f) => s + f.lods[l - 1].triangles, 0));
+  console.log(`LOD triangles: ${index.totals.triangles} / ${lt[0]} / ${lt[1]}`);
   console.log(`buildings: ${index.totals.buildings} in ${index.files.length} tiles, ${index.totals.triangles} triangles, heights ${JSON.stringify(log)}, ${((performance.now() - t0) / 1000).toFixed(1)} s`);
 }

@@ -55,6 +55,22 @@ export const SOURCES = [
     url: exportImage('https://gis.ngdc.noaa.gov/arcgis/rest/services/DEM_mosaics/DEM_all/ImageServer'),
   },
   {
+    file: 'landmarks-osm.json', key: 'landmarks-osm',
+    title: 'OpenStreetMap landmark and waterfront features: Golden Gate Bridge towers, Ferry Building and its ferry gates, Coit Tower, Transamerica Pyramid, Alcatraz buildings and lighthouse, Sausalito ferry terminal, Embarcadero piers (Overpass API)',
+    licence: 'ODbL 1.0 — © OpenStreetMap contributors', licenceUrl: 'https://www.openstreetmap.org/copyright',
+    url: 'https://overpass-api.de/api/interpreter',
+    body: 'data=' + encodeURIComponent(`[out:json][timeout:120];(
+  nwr["man_made"="tower"]["tower:type"="bridge"](37.805,-122.485,37.832,-122.470);
+  nwr["name"="Ferry Building"](37.79,-122.40,37.80,-122.39);
+  nwr["name"="Coit Tower"](37.80,-122.41,37.805,-122.40);
+  nwr["name"~"Transamerica Pyramid"](37.79,-122.41,37.80,-122.40);
+  nwr["building"](37.8250,-122.4260,37.8290,-122.4200);
+  nwr["man_made"~"lighthouse|water_tower"](37.8250,-122.4260,37.8290,-122.4200);
+  nwr["amenity"="ferry_terminal"](37.85,-122.49,37.86,-122.47);
+  nwr["man_made"="pier"](37.79,-122.42,37.815,-122.385);
+);out geom tags qt;`),
+  },
+  {
     file: 'noaa-datums-9414290.json', key: 'noaa-datums',
     title: 'NOAA CO-OPS tidal datums, San Francisco station 9414290 (MSL relative to NAVD88)',
     licence: 'Public domain (US Government work, NOAA CO-OPS)', licenceUrl: 'https://tidesandcurrents.noaa.gov/datums.html?id=9414290',

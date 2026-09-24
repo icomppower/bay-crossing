@@ -53,38 +53,65 @@ export function buildingMaterial() {
 
 }
 
+async function tileMesh( base, name, material ) {
+
+	const r = await fetch( base + 'buildings/' + name );
+	if ( ! r.ok ) throw new Error( `buildings: ${ name } HTTP ${ r.status }` );
+	const glb = parseGLB( await new Response( r.body.pipeThrough( new DecompressionStream( 'deflate' ) ) ).arrayBuffer() );
+	const node = glb.nodes[ glb.roots ? glb.roots[ 0 ] : 0 ];
+	const p = glb.meshes[ node.mesh ][ 0 ];
+	const g = new BufferGeometry();
+	g.setAttribute( 'position', new BufferAttribute( p.attributes.POSITION.array, 3 ) );
+	g.setAttribute( 'normal', new BufferAttribute( p.attributes.NORMAL.array, 3 ) );
+	g.setAttribute( 'uv', new BufferAttribute( p.attributes.TEXCOORD_0.array, 2 ) );
+	const c8 = p.attributes.COLOR_0.array, c = new Float32Array( c8.length );
+	for ( let k = 0; k < c8.length; k ++ ) c[ k ] = k % 4 === 3 ? c8[ k ] / 255 : Math.pow( c8[ k ] / 255, 2.2 ); // sRGB tint -> linear
+	g.setAttribute( 'color', new BufferAttribute( c, 4 ) );
+	g.setIndex( new BufferAttribute( p.indices, 1 ) );
+	const mesh = new Mesh( g, material );
+	mesh.name = node.name;
+	mesh.position.set( ...node.t );
+	mesh.castShadow = true;
+	mesh.receiveShadow = true;
+	return mesh;
+
+}
+
+// One group per 600 m tile (a CDLOD quadtree node at depth 4) holding its three LOD meshes; update() shows
+// the level for the camera's distance to the tile (index.lodDistances).
 export async function loadBayBuildings( base = ( import.meta.env && import.meta.env.BASE_URL ) || '/' ) {
 
 	const index = await ( await fetch( base + 'buildings/index.json' ) ).json();
 	const material = buildingMaterial();
 	const group = new Group();
 	group.name = 'bay-buildings';
+	const span = index.tileSpan, half = span / 2;
 	await Promise.all( index.files.map( async ( f ) => {
 
-		const r = await fetch( base + 'buildings/' + f.name );
-		if ( ! r.ok ) throw new Error( `buildings: ${ f.name } HTTP ${ r.status }` );
-		const glb = parseGLB( await new Response( r.body.pipeThrough( new DecompressionStream( 'deflate' ) ) ).arrayBuffer() );
-		const node = glb.nodes[ glb.roots ? glb.roots[ 0 ] : 0 ];
-		const p = glb.meshes[ node.mesh ][ 0 ];
-		const g = new BufferGeometry();
-		g.setAttribute( 'position', new BufferAttribute( p.attributes.POSITION.array, 3 ) );
-		g.setAttribute( 'normal', new BufferAttribute( p.attributes.NORMAL.array, 3 ) );
-		g.setAttribute( 'uv', new BufferAttribute( p.attributes.TEXCOORD_0.array, 2 ) );
-		const c8 = p.attributes.COLOR_0.array, c = new Float32Array( c8.length );
-		for ( let k = 0; k < c8.length; k ++ ) c[ k ] = k % 4 === 3 ? c8[ k ] / 255 : Math.pow( c8[ k ] / 255, 2.2 ); // sRGB tint -> linear
-		g.setAttribute( 'color', new BufferAttribute( c, 4 ) );
-		g.setIndex( new BufferAttribute( p.indices, 1 ) );
-		g.computeBoundingSphere && g.computeBoundingSphere();
-		const mesh = new Mesh( g, material );
-		mesh.name = node.name;
-		mesh.position.set( ...node.t );
-		mesh.castShadow = true;
-		mesh.receiveShadow = true;
-		mesh.userData.tile = f;
-		group.add( mesh );
+		const lods = await Promise.all( [ f.name, ...f.lods.map( ( l ) => l.name ) ].map( ( n ) => tileMesh( base, n, material ) ) );
+		const tile = new Group();
+		tile.name = `buildings_${ f.i }_${ f.j }`;
+		tile.userData = { tile: f, lods, cx: lods[ 0 ].position.x, cz: lods[ 0 ].position.z, level: - 1 };
+		for ( const m of lods ) { m.visible = false; tile.add( m ); }
+		group.add( tile );
 
 	} ) );
 	group.userData.index = index;
+	group.userData.lodBias = 1; // quality tiers scale the LOD distances
+	group.update = ( camera ) => {
+
+		const [ d0, d1 ] = index.lodDistances, k = group.userData.lodBias, p = camera.position;
+		for ( const tile of group.children ) {
+
+			const u = tile.userData;
+			const dx = Math.max( 0, Math.abs( p.x - u.cx ) - half ), dz = Math.max( 0, Math.abs( p.z - u.cz ) - half );
+			const d = Math.hypot( dx, dz, Math.max( 0, p.y - 250 ) );
+			const level = d < d0 * k ? 0 : d < d1 * k ? 1 : 2;
+			if ( level !== u.level ) { u.lods.forEach( ( m, i ) => { m.visible = i === level; } ); u.level = level; }
+
+		}
+
+	};
 	return group;
 
 }

@@ -103,9 +103,28 @@ licence is checked at G0.
 |---|---|---|
 | `sf-buildings.geojson` | [San Francisco Building Footprints](https://data.sf.gov/d/ynuv-fyni) (DataSF, City and County of San Francisco): footprints with LiDAR-derived heights (`hgt_median_m`, `peak_1st_m`) | ODC PDDL 1.0 — [public domain dedication](http://opendatacommons.org/licenses/pddl/1.0/) |
 | `sausalito-osm.json` | [OpenStreetMap](https://www.openstreetmap.org) buildings around the Sausalito waterfront, via the Overpass API | ODbL 1.0 — © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) |
+| `landmarks-osm.json` | [OpenStreetMap](https://www.openstreetmap.org) landmark and waterfront features (bridge towers, Ferry Building, Coit Tower, Transamerica Pyramid, Alcatraz, Sausalito ferry terminal, Embarcadero piers), via the Overpass API | ODbL 1.0 — © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) |
 | `terrain-3dep.tif` | [USGS 3D Elevation Program](https://www.usgs.gov/3d-elevation-program) (3DEPElevation ImageServer), resampled to the slice grid | Public domain (US Government work) |
 | `noaa-datums-9414290.json` | [NOAA CO-OPS tidal datums](https://tidesandcurrents.noaa.gov/datums.html?id=9414290), San Francisco station 9414290 (sets game sea level = local MSL) | Public domain (US Government work) |
 | `bathy-ncei.tif` | [NOAA NCEI](https://www.ncei.noaa.gov/products/coastal-elevation-models) coastal DEM mosaic (topobathy; DEM_mosaics/DEM_all ImageServer), resampled to the slice grid | Public domain (US Government work) |
 
 Derived tiles in this repository are processed copies. Map data from OpenStreetMap is available under the Open
 Database License; derived building tiles for Sausalito are a Produced Work under ODbL.
+
+### Landmarks: `public/landmarks/`
+
+Procedural models written by our own scripts, with no hand modelling and no third-party meshes. They are built
+offline in Blender 5.2 (headless: `node tools/landmarks/build.mjs`, which runs `tools/landmarks/build.py`) into
+three LOD GLBs each. Positions and footprints come from `landmarks-osm.json` (OpenStreetMap, ODbL) and the SF
+building footprints (Ferry Building). Published dimensions:
+
+- **Golden Gate Bridge:** main span 4,200 ft (1,280 m), side spans 1,125 ft (343 m), towers 746 ft (227 m) above
+  the water, 220 ft (67 m) clearance, 90 ft (27.4 m) deck, 25 ft stiffening truss, suspenders every 50 ft.
+  Source: Golden Gate Bridge, Highway and Transportation District, "Bridge Design & Construction Statistics"
+  (goldengate.org). International Orange colour per the District. Tower centres from OSM.
+- **Ferry Building:** 660 ft (201 m) shed, 245 ft (74.7 m) clock tower (Port of San Francisco).
+- **Coit Tower:** 210 ft (64 m) fluted column (OSM `height`; San Francisco Recreation and Parks).
+- **Transamerica Pyramid:** 853 ft (260 m), 175 ft (53 m) base, the top 212 ft spire, east and west wings
+  (OSM `height`; building fact sheets).
+- **Alcatraz:** OSM building footprints on the island; lighthouse 84 ft (26 m) per OSM `height`, other heights
+  by building type.

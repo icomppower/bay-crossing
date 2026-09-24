@@ -78,3 +78,18 @@ are in `docs/archive-hong-kong.md`.
   Transamerica LiDAR median is 67.8 m against a 264 m peak, so an extruded prism would be a stub.
 - **D26** `earcut` (ISC) is a devDependency, used only by the offline building pipeline for roofs with holes.
   Reason: robust, deterministic polygon triangulation; nothing ships at runtime.
+- **D27** A sixth G0 source, `landmarks-osm.json` (OSM, ODbL): Golden Gate tower legs, Coit Tower, Transamerica,
+  Alcatraz buildings, the Sausalito ferry terminal, Embarcadero piers and Ferry Building gates. It places the
+  landmarks and gives G3 an independent reference. Reason: OSM tower centres give a 1,280.1 m span against the
+  official 1,280 m.
+- **D28** Building LODs per tile: LOD0 full; LOD1 rings simplified to 1.5 m, buildings under 8 m tall and under
+  150 m² dropped; LOD2 outer rings simplified to 4 m, only buildings 20 m+ tall or 1,500 m²+ kept (569k / 150k /
+  15k triangles). Chosen by distance to the tile: < 900 m, < 2.5 km, beyond. Landmark LODs: < 1.5 km, < 5 km,
+  beyond. Building tiles are the 600 m nodes at depth 4 of the CDLOD quadtree over the 9.6 km domain (one merged
+  mesh per LOD per node). Reason: "merged per CDLOD tile with distant LODs".
+- **D29** G2c caps: "triangle cap" is split in two. City triangles (building + landmark LOD meshes submitted
+  per frame) are capped at 1.5 × measured, because a whole-frame cap cannot see LOD (terrain and ocean dominate:
+  LOD off moves frame triangles only 1.22×). Frame triangles (all passes) are capped at 1.25 × measured, draw
+  calls at 1.5 × measured, and per-tile LOD0 triangles at 1.25 × measured. Measured at five fixed views
+  (`gates/lib/views.mjs`) at 1920×1080 and frozen in SPEC-THRESHOLDS.md. Reason: the negatives (LOD off, unmerged
+  buildings) must be caught by the caps.

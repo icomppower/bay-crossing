@@ -1,0 +1,155 @@
+{
+ "format": "bay-landmarks/1",
+ "lodDistances": [
+  1500,
+  5000
+ ],
+ "blender": "Blender 5.2.1",
+ "landmarks": [
+  {
+   "slug": "golden-gate-bridge",
+   "name": "Golden Gate Bridge",
+   "anchor": [
+    -3611.018,
+    854.798
+   ],
+   "ground": 0,
+   "lods": [
+    {
+     "name": "golden-gate-bridge_lod0.glb",
+     "triangles": 6888,
+     "meshes": 3,
+     "sha256": "000ed3488c36c6c7941fcc98242285cb7a3f11b9a3cea5a7e033129a7ff63a5a"
+    },
+    {
+     "name": "golden-gate-bridge_lod1.glb",
+     "triangles": 752,
+     "meshes": 2,
+     "sha256": "21fed9e3b532f86ee2a8c51644be3b22cd4ad35367afcc04e37fabac2c93fa74"
+    },
+    {
+     "name": "golden-gate-bridge_lod2.glb",
+     "triangles": 216,
+     "meshes": 2,
+     "sha256": "333fefd7ebb9e5ed46a2e67354eecff3245bad06fbb2595b7af5a6e84952af3f"
+    }
+   ]
+  },
+  {
+   "slug": "ferry-building",
+   "name": "Ferry Building",
+   "anchor": [
+    3879.617,
+    3495.621
+   ],
+   "ground": 2.41,
+   "lods": [
+    {
+     "name": "ferry-building_lod0.glb",
+     "triangles": 254,
+     "meshes": 3,
+     "sha256": "d858ef0615e87b0cc8d36835d91feb160624035b7dda2bc42b3d554625afbf82"
+    },
+    {
+     "name": "ferry-building_lod1.glb",
+     "triangles": 145,
+     "meshes": 2,
+     "sha256": "e98ac0babd1fd663a4abdad67a6a3878cf72ba08a2238f9565b09075ee1f379e"
+    },
+    {
+     "name": "ferry-building_lod2.glb",
+     "triangles": 121,
+     "meshes": 2,
+     "sha256": "7498809edae4ba50002b35c25b18167b66d72504652e51ad76cb8da9c9fa8904"
+    }
+   ]
+  },
+  {
+   "slug": "coit-tower",
+   "name": "Coit Tower",
+   "anchor": [
+    2801.511,
+    2745.15
+   ],
+   "ground": 89.9,
+   "lods": [
+    {
+     "name": "coit-tower_lod0.glb",
+     "triangles": 200,
+     "meshes": 1,
+     "sha256": "feaf10e43644643889584d9e884167a534ac572ed5a98346d7c199084a2de8b0"
+    },
+    {
+     "name": "coit-tower_lod1.glb",
+     "triangles": 68,
+     "meshes": 1,
+     "sha256": "a4944f0eedbb23b550a1af0af1df1112e8a76c2baa48d0b54f61c5c29f9fb6e4"
+    },
+    {
+     "name": "coit-tower_lod2.glb",
+     "triangles": 44,
+     "meshes": 1,
+     "sha256": "9bd39745fcfdd9c7fd166acae0192725767079d3fab0b99e83268ea7f10c1ef1"
+    }
+   ]
+  },
+  {
+   "slug": "transamerica-pyramid",
+   "name": "Transamerica Pyramid",
+   "anchor": [
+    3087.428,
+    3540.973
+   ],
+   "ground": 3.23,
+   "lods": [
+    {
+     "name": "transamerica-pyramid_lod0.glb",
+     "triangles": 48,
+     "meshes": 1,
+     "sha256": "42cb9cb14a69af10a2d143dc0a3f4ae5ddc8eabf5155f75ebf80547eccf3799a"
+    },
+    {
+     "name": "transamerica-pyramid_lod1.glb",
+     "triangles": 48,
+     "meshes": 1,
+     "sha256": "c31a4445d1302542ef12f3d74c5d3b5bca14d55c77a29e3e63df18b40fe8a2af"
+    },
+    {
+     "name": "transamerica-pyramid_lod2.glb",
+     "triangles": 24,
+     "meshes": 1,
+     "sha256": "cd7160ad5c25e87e3db0b0faf44e60c89376a3b5c07a7510557c729b5ed67fd9"
+    }
+   ]
+  },
+  {
+   "slug": "alcatraz",
+   "name": "Alcatraz",
+   "anchor": [
+    1336.488,
+    104.946
+   ],
+   "ground": 40.68,
+   "lods": [
+    {
+     "name": "alcatraz_lod0.glb",
+     "triangles": 586,
+     "meshes": 3,
+     "sha256": "2bdda23cd4d821a32793099897288d0f9f991493abe7a2bde57b9c4d874bf7b0"
+    },
+    {
+     "name": "alcatraz_lod1.glb",
+     "triangles": 586,
+     "meshes": 3,
+     "sha256": "57ef77efb20127bd09db9f8697c6588d22c172b1594716c89e20df59082e426a"
+    },
+    {
+     "name": "alcatraz_lod2.glb",
+     "triangles": 168,
+     "meshes": 2,
+     "sha256": "8447850220e4faae1c7b28afbed76237d6662a5129827f1069d68c45c10785c0"
+    }
+   ]
+  }
+ ]
+}

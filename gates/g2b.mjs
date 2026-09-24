@@ -95,8 +95,14 @@ async function loaderMatches( dir ) {
 		const g = await loadBayBuildings( '/' );
 		const index = JSON.parse( readFileSync( join( dir, 'index.json' ), 'utf8' ) );
 		let bad = 0;
-		for ( const m of g.children ) if ( m.geometry.index.count / 3 !== m.userData.tile.triangles ) bad ++;
-		return bad || g.children.length !== index.files.length ? [ `loader: ${ g.children.length } meshes / ${ bad } triangle-count mismatches vs index` ] : [];
+		for ( const tile of g.children ) {
+
+			const f = tile.userData.tile, want = [ f.triangles, ...f.lods.map( ( l ) => l.triangles ) ];
+			tile.userData.lods.forEach( ( m, k ) => { if ( m.geometry.index.count / 3 !== want[ k ] ) bad ++; } );
+
+		}
+
+		return bad || g.children.length !== index.files.length ? [ `loader: ${ g.children.length } tiles / ${ bad } LOD triangle-count mismatches vs index` ] : [];
 
 	} finally { globalThis.fetch = netFetch; }
 

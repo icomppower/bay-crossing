@@ -20,6 +20,7 @@ import { Environment } from './sky/Environment.js';
 
 import { loadBayHeightField } from './world/BayTerrain.js';
 import { loadBayBuildings } from './world/BayBuildings.js';
+import { loadLandmarks } from './world/Landmarks.js';
 import { TerrainGPU } from './world/TerrainGPU.js';
 import { Terrain } from './world/Terrain.js';
 import { computeShoreField } from './world/ShoreField.js';
@@ -138,6 +139,9 @@ export class App {
 		await progress( 0.22, 'Raising the city…' );
 		this.buildings = await loadBayBuildings();
 		scene.add( this.buildings );
+		// Golden Gate Bridge, Ferry Building, Coit Tower, Transamerica, Alcatraz (offline Blender LOD GLBs)
+		this.landmarks = await loadLandmarks();
+		scene.add( this.landmarks );
 
 		this.boat = new BoatModel();
 		scene.add( this.boat.group );
@@ -166,6 +170,7 @@ export class App {
 		} );
 		underwaterMode( this.boat.group, 'lite' );
 		underwaterMode( this.buildings, 'lite' );
+		underwaterMode( this.landmarks, 'lite' );
 
 		this.underwaterLighting = installUnderwaterLighting( {
 			fft: this.fft, caustics: this.caustics, clouds: this.clouds, terrain: this.terrainGPU,
@@ -577,6 +582,8 @@ export class App {
 		// ---- world
 		this.oceanLOD.update( this.camera );
 		this.terrain.update( this.camera );
+		this.buildings.update( this.camera );
+		this.landmarks.update( this.camera );
 		this.boat.update( dt );
 		this.localLights.update( this.camera, dt );
 
