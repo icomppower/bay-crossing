@@ -87,21 +87,16 @@ These are published techniques. No code from the papers is included.
 The cloud noise, lighting and sampling scheme (`src/sky/Clouds.js`) is adapted from DRG Software Solutions'
 own *Sky Pro WebGPU*. It is published here under this repository's MIT license by its copyright holder.
 
-## Victoria Harbour fork
+## SF Bay Crossing fork
 
 This repository is a fork of [Tidewater](https://github.com/dgreenheck/tidewater) (MIT, © its authors; see
 `LICENSE`), pinned at commit `1438b1abfcaee3267092b75573014f4d9b4a983c`. The island, village, reef, vegetation
 and fishing game were removed; the ocean, sky, post-processing, boat controller, player, CDLOD terrain and
 headless test harness are Tidewater's.
 
-### Hong Kong geospatial data
+### Geospatial data
 
-Terrain (5 m Digital Terrain Model) and 3D building data (3D Spatial Data) are from the **Lands Department**,
-The Government of the Hong Kong Special Administrative Region, obtained through
-[DATA.GOV.HK](https://data.gov.hk) / the [Common Spatial Data Infrastructure portal](https://portal.csdi.gov.hk),
-and reused under the [DATA.GOV.HK Terms and Conditions](https://data.gov.hk/en/terms-and-conditions).
-© The Government of the Hong Kong SAR. Contains data from the Lands Department. The derived terrain and
-building tiles in this repository are processed copies; the Lands Department is not responsible for them.
+Every source is fetched by script into `data/raw/` (checksums in `data/raw/MANIFEST.sha256`). Each entry's
+licence is checked at G0.
 
-Bathymetry of Victoria Harbour is **approximate**: coarse global bathymetry plus an authored channel profile.
-It is not navigational data (see `DECISIONS.md`, D5).
+<!-- data sources are added here as G0 verifies them -->
