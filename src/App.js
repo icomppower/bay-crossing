@@ -18,35 +18,27 @@ import { Clouds } from './sky/Clouds.js';
 import { SkyProClouds } from './sky/SkyProClouds.js';
 import { Environment } from './sky/Environment.js';
 
-import { TerrainData } from './world/TerrainData.js';
+import { HeightField } from './world/HeightField.js';
 import { TerrainGPU } from './world/TerrainGPU.js';
 import { Terrain } from './world/Terrain.js';
 import { computeShoreField } from './world/ShoreField.js';
 import { WORLD } from './world/WorldLayout.js';
 import { Colliders } from './world/Colliders.js';
-import { Village } from './world/Village.js';
-import { Reef } from './world/Reef.js';
 import { BoatModel } from './world/BoatModel.js';
-import { Rocks } from './world/Rocks.js';
-import { Debris } from './world/Debris.js';
-import { Wildlife } from './world/wildlife/Wildlife.js';
-import { Whale } from './world/marine/Whale.js';
 
 import { OceanFFT } from './ocean/OceanFFT.js';
 import { WaterSurface } from './ocean/WaterSurface.js';
 import { WaterMaterial } from './ocean/WaterMaterial.js';
 import { createFoamTexture } from './ocean/FoamTexture.js';
 import { ShoreWaves } from './ocean/ShoreWaves.js';
-import { ShoreSim } from './ocean/ShoreSim.js';
 import { Caustics } from './ocean/Caustics.js';
 import { installUnderwaterLighting } from './ocean/UnderwaterLighting.js';
 import { RefractionPass } from './ocean/RefractionPass.js';
 import { installGroundBounce } from './materials/GroundBounce.js';
-import { LocalLights, addVillageLights, addBoatLights } from './materials/LocalLights.js';
+import { LocalLights, addBoatLights } from './materials/LocalLights.js';
 import { installContactShadows, ContactShadows } from './materials/ContactShadows.js';
 import { WaterQuery } from './ocean/WaterQuery.js';
 import { Breakers } from './ocean/Breakers.js';
-import { SurfFoam } from './ocean/SurfFoam.js';
 import { Spray } from './fx/Spray.js';
 import { SeaDetail } from './ocean/SeaDetail.js';
 import { MarineSnow } from './fx/MarineSnow.js';
@@ -57,13 +49,9 @@ import { PostFX } from './post/PostFX.js';
 import { AirHaze } from './post/AirHaze.js';
 import { FlyCamera } from './player/FlyCamera.js';
 import { Player } from './player/Player.js';
-import { Game } from './game/Game.js';
-import { STAND } from './game/FishStand.js';
-import { CHANDLERY } from './game/Chandlery.js';
 import { BoatController } from './player/BoatController.js';
 import { BoatSpray } from './player/BoatSpray.js';
 import { WakeSim } from './ocean/WakeSim.js';
-import { Vegetation } from './world/Vegetation.js';
 import { SoundScape } from './audio/SoundScape.js';
 import { updateCameraVelocity, useStaticVelocity } from './post/CameraVelocity.js';
 
@@ -109,7 +97,7 @@ export class App {
 
 		this.input = new Input( engine.domElement );
 		this.fly = new FlyCamera( camera, engine.domElement, this.input );
-		this.fly.setPose( new Vector3( 20, 6, - 20 ), Math.PI * 0.9, - 0.12 );
+		this.fly.setPose( WORLD.start.position.clone().setY( 6 ), WORLD.start.yaw, - 0.12 );
 
 		// ---------------------------------------------------------------- sky
 		await progress( 0.04, 'Building the atmosphere…' );
@@ -133,36 +121,18 @@ export class App {
 
 		this.environment = new Environment( renderer, scene, this.sky );
 
-		// ---------------------------------------------------------------- island
-		await progress( 0.06, 'Shaping the island…' );
-		this.terrainData = new TerrainData();
+		// ---------------------------------------------------------------- bay floor
+		// The bay's terrain + seabed heightfield (a flat seabed until the G2a tiles fill it). The shore
+		// field, GPU textures and terrain mesh are all derived from it.
+		await progress( 0.06, 'Laying the bay floor…' );
+		this.terrainData = new HeightField( { size: WORLD.terrainSize, res: 2048 } );
 		this.colliders = new Colliders();
-		// the village flattens building pads into the heightmap: build it before any terrain
-		// data is derived (shore field, GPU textures, meshes)
-		await progress( 0.12, 'Building the village…' );
-		this.village = new Village( { scene, terrain: this.terrainData, colliders: this.colliders } );
-		if ( ! qs.has( 'noVeg' ) ) {
-
-			await progress( 0.14, 'Planting the island…' );
-			this.vegetation = new Vegetation( { scene, terrain: this.terrainData, village: this.village } );
-			useStaticVelocity( this.vegetation.group );
-
-		}
-
 		await progress( 0.19, 'Rolling in the swell…' );
 		this.shoreField = computeShoreField( this.terrainData, { res: 512, swellDir: [ WORLD.swellDir.x, WORLD.swellDir.y ] } );
 		this.terrainGPU = new TerrainGPU( this.terrainData, this.shoreField );
-		// terrain and rocks apply the heightfield sun shadow (long hill shadows) in their own lighting
+		// the terrain applies the heightfield sun shadow (long hill shadows) in its own lighting
 		this.terrain = new Terrain( { scene, terrainData: this.terrainData, terrainGPU: this.terrainGPU, renderer } );
-		this.rocks = new Rocks( { scene, terrain: this.terrain, village: this.village, colliders: this.colliders } );
-		// driftwood (CC0 photoscans), wrack, pebbles and village clutter
-		this.debris = new Debris( { scene, terrain: this.terrain, village: this.village, vegetation: this.vegetation, rocks: this.rocks, colliders: this.colliders } );
-		// these apply the heightfield sun shadow in their own lighting model (see UnderwaterLighting)
 		this.terrain.mesh.material.appliesHillShadow = true;
-		this.rocks.material.appliesHillShadow = true;
-
-		await progress( 0.23, 'Growing the reef…' );
-		this.reef = new Reef( { scene, terrain: this.terrainData, shoreField: this.shoreField } );
 
 		this.boat = new BoatModel();
 		scene.add( this.boat.group );
@@ -172,7 +142,6 @@ export class App {
 		// ---------------------------------------------------------------- ocean
 		await progress( 0.3, 'Simulating the ocean…' );
 		this.fft = new OceanFFT( renderer );
-		if ( this.reef.setOcean ) this.reef.setOcean( this.fft ); // coral / sea fan sway follows the simulated swell
 		this.foamTexture = createFoamTexture( renderer );
 		this.oceanLOD = new CDLOD( { gridSize: Number( qs.get( 'G' ) || 32 ), leafSize: 8, levels: 12, minY: - 25, maxY: 25 } );
 		this.surface = new WaterSurface( { fft: this.fft, cdlod: this.oceanLOD, foamTexture: this.foamTexture } );
@@ -184,43 +153,17 @@ export class App {
 		this.caustics = qs.has( 'noCaustics' ) ? null : new Caustics( renderer, this.fft );
 		if ( this.caustics ) this.caustics.detail = this.seaDetail;
 
-		if ( ! qs.has( 'noSim' ) ) {
-
-			this.shoreSim = new ShoreSim( renderer, { terrainGPU: this.terrainGPU, shore: this.shore } );
-			this.surface.shoreSim = this.shoreSim;
-			// WGSL: fn terrainWetness( xz: vec2f, h: f32 ) -> vec2f (x = wetness, y = sand foam)
-			this.terrain.wetness = {
-				modules: [ this.shoreSim.module ],
-				code: /* wgsl */`
-fn terrainWetness( xz: vec2f, h: f32 ) -> vec2f {
-	let s = shoreSimSample( xz );
-	let inside = shoreSimInside( shoreSimUvOf( xz ) );
-	// outside the simulated region fall back to a static damp band
-	let band = smoothstep( 0.45, 0.0, h );
-	// foam left on the sand: the lace the water carried, stranded and popping (ShoreSim.sandFoam)
-	return vec2f( max( s.y, band * ( 1.0 - inside ) ), shoreSimSandFoam( xz, s, h ) );
-}`,
-			};
-			this.terrain.finalizeMaterial();
-			// surf-zone foam look (whitewater, lace) used by the water shader
-			this.surfFoam = new SurfFoam( { shoreSim: this.shoreSim } );
-			this.surface.foamShading = ( args ) => this.surfFoam.shading( args );
-
-		}
-
 		// how much of the underwater lighting each group needs (sampler budget, see UnderwaterLighting)
 		const underwaterMode = ( root, m ) => root && root.traverse( ( o ) => {
 
 			if ( o.material ) for ( const mat of Array.isArray( o.material ) ? o.material : [ o.material ] ) mat.underwaterLighting = m;
 
 		} );
-		underwaterMode( this.village.group, 'lite' );
 		underwaterMode( this.boat.group, 'lite' );
-		if ( this.vegetation ) underwaterMode( this.vegetation.group, 'none' );
 
 		this.underwaterLighting = installUnderwaterLighting( {
 			fft: this.fft, caustics: this.caustics, clouds: this.clouds, terrain: this.terrainGPU,
-			shore: this.shore, surface: this.surface, shoreSim: this.shoreSim,
+			shore: this.shore, surface: this.surface,
 		} );
 
 		// sunlight bounced off the ground (one diffuse bounce, re-baked with the terrain sun shadow)
@@ -231,15 +174,14 @@ fn terrainWetness( xz: vec2f, h: f32 ) -> vec2f {
 		this.sceneRenderer.onBeforeWater = () => this.refraction.render( G.seaLevel.value );
 		if ( this.sky.background ) this.sceneRenderer.background = this.sky.background;
 		// screen-space contact shadows for the sun from last frame's opaque depth (foliage only casts)
-		installContactShadows( { depthTexture: this.sceneRenderer.opaqueCopy.depthTexture, skip: [ this.vegetation && this.vegetation.group, this.boat.group ] } );
+		installContactShadows( { depthTexture: this.sceneRenderer.opaqueCopy.depthTexture, skip: [ this.boat.group ] } );
 		// lanterns, lamp posts, path lights, lit windows, the boat's cabin / navigation lights and the
 		// flashlight (L): nearest few packed into one small uniform array each frame
 		this.localLights = new LocalLights();
-		addVillageLights( this.localLights, this.village );
 		addBoatLights( this.localLights, this.boat );
 		// rough, large or heavily overdrawn surfaces (ground, rocks, debris, foliage) take the local
 		// lights as Lambert only; the village, pier and boat get the full BRDF (glints on wet wood, metal)
-		for ( const root of [ this.terrain.mesh, this.rocks.group, this.debris && this.debris.group, this.vegetation && this.vegetation.group ] ) if ( root ) root.traverse( ( o ) => {
+		for ( const root of [ this.terrain.mesh ] ) if ( root ) root.traverse( ( o ) => {
 
 			if ( o.material ) for ( const m of Array.isArray( o.material ) ? o.material : [ o.material ] ) m.localLightsCheap = true;
 
@@ -262,7 +204,7 @@ fn terrainWetness( xz: vec2f, h: f32 ) -> vec2f {
 		// painted over by the water).
 		this.scene.traverse( ( o ) => {
 
-			if ( o.isMesh && ( o.name === 'village_fabric' || o.name === 'village_nets' || o.name === 'boat-trap' || o.name === 'boat-glass' ) ) o.layers.set( LAYERS.TRANSPARENT );
+			if ( o.isMesh && ( o.name === 'boat-trap' || o.name === 'boat-glass' ) ) o.layers.set( LAYERS.TRANSPARENT );
 
 		} );
 		// Terrain and water place their vertices in the vertex shader (CDLOD), so three's default motion
@@ -270,7 +212,6 @@ fn terrainWetness( xz: vec2f, h: f32 ) -> vec2f {
 		// nearly so: camera-only reprojection of the real world position is what the temporal resolve needs.
 		// ( the water material writes its own velocity + waterline mask outputs )
 		useStaticVelocity( this.terrain.mesh );
-		useStaticVelocity( this.rocks.group );
 		scene.add( this.ocean );
 
 		this.query = new WaterQuery( renderer, this.surface );
@@ -282,7 +223,6 @@ fn terrainWetness( xz: vec2f, h: f32 ) -> vec2f {
 		// spray.emit() / emitAlongPoints() for boat bow spray and splashes)
 		this.spray = new Spray( renderer, { query: this.query, terrain: this.terrainGPU, sceneCopy: this.sceneRenderer.opaqueCopy, clouds: this.clouds } );
 		scene.add( this.spray.mesh );
-		if ( this.reef.setSpray ) this.reef.setSpray( this.spray ); // splashes of leaping fish
 		this.breakers = new Breakers( renderer, {
 			surface: this.surface, shore: this.shore, terrainData: this.terrainData, sky: this.sky,
 			spray: this.spray, clouds: this.clouds,
@@ -293,32 +233,10 @@ fn terrainWetness( xz: vec2f, h: f32 ) -> vec2f {
 		scene.add( this.airMotes.mesh );
 		this.boatCtl = new BoatController( { model: this.boat, query: this.query, terrain: this.terrainData, colliders: this.colliders } );
 		this.boatSpray = new BoatSpray( { boat: this.boatCtl, spray: this.spray } );
-		// humpback cruising the deep water around the island (model fetched from public/models/whale)
-		this.whale = new Whale( { scene, terrain: this.terrainData, query: this.query, spray: this.spray } );
-		try {
-
-			await this.whale.load();
-			if ( this.reef && this.reef.setWhale ) this.reef.setWhale( this.whale ); // escort fish, foam and slick
-
-		} catch ( e ) {
-
-			console.warn( 'whale model failed to load', e );
-			this.whale = null;
-
-		}
-
 		// interactive wake around the boat (Kelvin pattern, bow/stern waves, prop wash foam)
 		this.wake = new WakeSim( renderer, { terrainGPU: this.terrainGPU, boat: this.boatCtl, colliders: this.colliders } );
 		this.surface.wake = this.wake;
-		this.player = new Player( { camera, input: this.input, terrain: this.terrainData, colliders: this.colliders, query: this.query, boat: this.boatCtl, reef: this.reef } );
-		// birds, beach crabs, sanderlings (after spray / query / boat, which they use)
-		this.wildlife = new Wildlife( {
-			scene, renderer, terrain: this.terrainData, terrainGPU: this.terrainGPU, shore: this.shore,
-			village: this.village, colliders: this.colliders, vegetation: this.vegetation, boat: this.boatCtl, boatModel: this.boat,
-			query: this.query, spray: this.spray, csm: this.csm,
-		} );
-		// moving receivers: last frame's depth no longer lines up with them (see installContactShadows)
-		for ( const o of [ this.whale && this.whale.group, this.wildlife.birdBatch && this.wildlife.birdBatch.mesh, this.wildlife.critterBatch && this.wildlife.critterBatch.mesh ] ) if ( o ) ContactShadows.skipRoots.add( o );
+		this.player = new Player( { camera, input: this.input, terrain: this.terrainData, colliders: this.colliders, query: this.query, boat: this.boatCtl } );
 		this.freeCam = qs.has( 'fly' );
 
 		// ---------------------------------------------------------------- post
@@ -344,18 +262,6 @@ fn terrainWetness( xz: vec2f, h: f32 ) -> vec2f {
 		// recorded field recordings (public/audio, credits in public/audio/CREDITS.md); ?noAudio turns it off
 		this.audio = qs.has( 'noAudio' ) ? null : new SoundScape();
 		this.player.audio = this.audio;
-		// the fishing game (rod, bites, catch, cooler, fish stand)
-		this.game = new Game( this );
-		// the lanterns at Joe's fish stand and Marta's chandlery (lit from dusk like the village lamps);
-		// positions are in each stall's frame (x right, z toward the customer), turned by its yaw
-		for ( const [ s, lx, ly, lz ] of [ [ STAND, - 0.9, 1.85, 0.1 ], [ CHANDLERY, - 0.75, 1.58, - 1.45 ] ] ) {
-
-			const c = Math.cos( s.yaw ), sn = Math.sin( s.yaw );
-			const x = s.x + lx * c + lz * sn, z = s.z - lx * sn + lz * c;
-			this.localLights.add( { position: new Vector3( x, this.terrainData.heightAt( s.x, s.z ) + ly, z ), color: new Color( 1.0, 0.72, 0.42 ), intensity: 5 * 1.5, range: 11, kind: 'lantern', flicker: 0.08 } );
-
-		}
-
 		this.boatCtl.onSlam = ( s ) => this.audio && this.audio.hullSlap( s );
 		engine.domElement.addEventListener( 'click', () => {
 
@@ -631,7 +537,6 @@ fn terrainWetness( xz: vec2f, h: f32 ) -> vec2f {
 		this.wake.update( dt );
 		if ( this.freeCam ) this.fly.update( dt );
 		else this.player.update( dt );
-		this.game.update( dt );
 		this.updateSun();
 
 		this.atmosphere.update( dt, this.camera.position.y );
@@ -659,7 +564,6 @@ fn terrainWetness( xz: vec2f, h: f32 ) -> vec2f {
 		// drawn while any part of the view can be under water (the specks above the surface are dropped)
 		this.marineSnow.update( this.camera, this.camera.position.y < ( this.cameraWaterHeight ?? 0 ) + LENS_REACH );
 		this.airMotes.update( dt, this.camera, this.cameraWaterHeight ?? 0 );
-		if ( this.shoreSim ) this.shoreSim.update();
 		this.underwaterLighting.update( this.camera );
 		this.breakers.update( this.camera );
 		this.spray.update();
@@ -667,14 +571,7 @@ fn terrainWetness( xz: vec2f, h: f32 ) -> vec2f {
 		// ---- world
 		this.oceanLOD.update( this.camera );
 		this.terrain.update( this.camera );
-		this.rocks.update( this.camera );
-		this.debris.update( this.camera );
-		this.reef.update( dt, this.camera.position );
-		this.village.update( dt );
-		if ( this.vegetation ) this.vegetation.update( dt, this.camera );
-		if ( this.whale ) this.whale.update( dt, this.camera );
 		this.boat.update( dt );
-		this.wildlife.update( dt, this.camera, this.freeCam ? null : this.player );
 		this.localLights.update( this.camera, dt );
 
 		// ---- render

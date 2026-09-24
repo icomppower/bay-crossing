@@ -39,3 +39,15 @@ are in `docs/archive-hong-kong.md`.
 - **D16** Building heights are from 2016, so post-2016 towers (Salesforce Tower, 326 m, finished 2018) are
   missing or wrong. Logged, not fixed in run 1. Reason: G0 found the tallest building is Transamerica
   (260.8 m) and Salesforce Tower is absent.
+- **D17** D7 extended to everything bound to the island: wildlife (birds, crabs, shorebirds), the humpback,
+  debris, rocks, gulls and fish are removed with their assets (`public/models/*`) and asset tools
+  (`tools/characters`, `tools/props`). Tests for removed systems are deleted; `npm test` is the engine smoke test.
+  Reason: they read the island generator's masks and have no place in the bay slice.
+- **D18** The procedural island (`TerrainData`) is replaced by a generic `HeightField` (`src/world/HeightField.js`)
+  with the same accessors. It holds a flat −20 m seabed until G2a fills it. `TerrainGPU`, `Terrain`, the shore
+  field and the CDLOD terrain mesh are kept unchanged. World frame: `src/world/BayFrame.js` (x east, z south,
+  origin at the centre of the slice extent). Reason: the ocean, shore, spray and wake all read the heightfield
+  interface; swapping the source keeps them intact.
+- **D19** `tools/headless/app.mjs` boots the real App in headless Dawn (DOM shim, offscreen canvas texture,
+  fetch of `public/`). Gates measure its frames numerically, with one App per process. Reason: gate the
+  product itself, not stub harnesses.
