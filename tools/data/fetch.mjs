@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { toUTM } from '../geo/utm.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..');
 const raw = join(root, 'data/raw');
@@ -29,6 +30,21 @@ function encQuery(layer) {
   return `https://encdirect.noaa.gov/arcgis/rest/services/encdirect/enc_harbour/MapServer/${layer}/query?` + new URLSearchParams({
     geometry: `${WGS.west},${WGS.south},${WGS.east},${WGS.north}`, geometryType: 'esriGeometryEnvelope', inSR: '4326', outSR: '4326',
     outFields: '*', returnGeometry: 'true', orderByFields: 'OBJECTID', f: 'json',
+  });
+}
+
+// 1 m NAIP natural colour over a building box (lat/lon), on the UTM 10N grid, whole metres
+export function naipBox(box) {
+  const c = [[box.south, box.west], [box.south, box.east], [box.north, box.west], [box.north, box.east]].map(([la, lo]) => toUTM(la, lo));
+  const minE = Math.floor(Math.min(...c.map(p => p[0]))), maxE = Math.ceil(Math.max(...c.map(p => p[0])));
+  const minN = Math.floor(Math.min(...c.map(p => p[1]))), maxN = Math.ceil(Math.max(...c.map(p => p[1])));
+  return { minE, minN, maxE, maxN };
+}
+function naipExport(box) {
+  const b = naipBox(box);
+  return 'https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPImagery/ImageServer/exportImage?' + new URLSearchParams({
+    bbox: `${b.minE},${b.minN},${b.maxE},${b.maxN}`, bboxSR: '32610', imageSR: '32610', size: `${b.maxE - b.minE},${b.maxN - b.minN}`,
+    format: 'tiff', pixelType: 'U8', bandIds: '0,1,2', compression: 'LZ77', interpolation: 'RSP_BilinearInterpolation', f: 'image',
   });
 }
 
@@ -97,6 +113,18 @@ export const SOURCES = [
     title: 'Golden Gate Transit / Golden Gate Ferry GTFS schedule feed (stops, ferry trips and stop times, route shapes)',
     licence: 'No licence stated by the publisher (GGBHTD); used only for facts: stop positions and published trip times; not redistributed', licenceUrl: 'https://realtime.goldengate.org/gtfsstatic/GTFSTransitData.zip',
     url: 'https://realtime.goldengate.org/gtfsstatic/GTFSTransitData.zip',
+  },
+  {
+    file: 'naip-sf.tif', key: 'naip-sf',
+    title: 'USDA NAIP aerial orthoimagery (natural colour, 1 m resample) over the San Francisco building box (USGS The National Map NAIP ImageServer), for roof colours',
+    licence: 'Public domain (US Government work, USDA Farm Service Agency NAIP)', licenceUrl: 'https://naip-usdaonline.hub.arcgis.com/',
+    url: naipExport(sf),
+  },
+  {
+    file: 'naip-sausalito.tif', key: 'naip-sausalito',
+    title: 'USDA NAIP aerial orthoimagery (natural colour, 1 m resample) over the Sausalito building box (USGS The National Map NAIP ImageServer), for roof colours',
+    licence: 'Public domain (US Government work, USDA Farm Service Agency NAIP)', licenceUrl: 'https://naip-usdaonline.hub.arcgis.com/',
+    url: naipExport(sa),
   },
   {
     file: 'noaa-datums-9414290.json', key: 'noaa-datums',

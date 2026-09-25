@@ -16,3 +16,4 @@ Hong Kong run entries are archived in `docs/archive-hong-kong.md`.
 | 2026-09-25 | G5 | PASS | 25 | Owner approved replacing the cap. Metric fixed (all '(graphics)' footprint categories), recalibrated 689 MB → cap 862 MB (D36); leak negative now caught (2,225 MB) |
 | 2026-09-25 | DONE | PASS | 20 | Full verify.sh: G0–G5 green, G6 advisory green |
 | 2026-09-25 | mobile | PASS | 60 | Touch controls + mobile tier + helm camera scaled to hull (D37); phone emulation 390×844 / 844×390 layout, walk, look, helm, autopilot checked; full verify.sh green |
+| 2026-09-25 | colours | PASS | 50 | Typed wall palettes + NAIP roof colours (2 new G0 sources, haze-corrected), tinted tower glass; G2b colour-variety check + one-colour negative; full verify.sh green (D38) |

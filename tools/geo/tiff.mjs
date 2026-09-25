@@ -1,4 +1,4 @@
-// Minimal single-band TIFF reader for DEM exports: little/big endian, strips or tiles,
+// Minimal TIFF reader for DEM and imagery exports (single band, or interleaved multi-band → `bands`): little/big endian, strips or tiles,
 // compression none (1), LZW (5) or deflate (8/32946), sample formats uint/int/float, 8–64 bit.
 import { inflateSync } from 'node:zlib';
 
@@ -27,13 +27,15 @@ export function readTiff(buf) {
   const width = tags[256][0], height = tags[257][0];
   const bps = tags[258]?.[0] ?? 8, fmt = tags[339]?.[0] ?? 1, comp = tags[259]?.[0] ?? 1;
   const pred = tags[317]?.[0] ?? 1, spp = tags[277]?.[0] ?? 1;
-  if (spp !== 1) throw new Error('only single-band TIFFs are supported');
-  const bytes = bps / 8;
+  const planar = tags[284]?.[0] ?? 1;
+  if (spp !== 1 && planar !== 1) throw new Error('only interleaved (chunky) multi-band TIFFs are supported');
+  const bytes = bps / 8, px = bytes * spp; // bytes per sample, per pixel
   const tiled = !!tags[322];
   const bw = tiled ? tags[322][0] : width, bh = tiled ? tags[323][0] : (tags[278]?.[0] ?? height);
   const offs = tiled ? tags[324] : tags[273], lens = tiled ? tags[325] : tags[279];
   const across = Math.ceil(width / bw);
-  const out = new Float64Array(width * height);
+  const bands = Array.from({ length: spp }, () => new Float64Array(width * height));
+  const out = bands[0];
   const read = (d, p) => fmt === 3 ? (bytes === 4 ? d.getFloat32(p, le) : d.getFloat64(p, le))
     : fmt === 2 ? (bytes === 1 ? d.getInt8(p) : bytes === 2 ? d.getInt16(p, le) : d.getInt32(p, le))
     : (bytes === 1 ? d.getUint8(p) : bytes === 2 ? d.getUint16(p, le) : d.getUint32(p, le));
@@ -43,19 +45,22 @@ export function readTiff(buf) {
     else if (comp === 5) raw = lzw(raw);
     else if (comp !== 1) throw new Error(`unsupported compression ${comp}`);
     const rows = tiled ? bh : Math.min(bh, height - b * bh);
-    if (pred === 2 || pred === 3) unpredict(raw, bw, rows, bytes, pred, le);
+    if (pred === 2 || pred === 3) {
+      if (spp !== 1) throw new Error('predictors with multi-band TIFFs are not supported');
+      unpredict(raw, bw, rows, bytes, pred, le);
+    }
     const d = new DataView(raw.buffer, raw.byteOffset, raw.byteLength);
     const x0 = tiled ? (b % across) * bw : 0, y0 = tiled ? Math.floor(b / across) * bh : b * bh;
     for (let y = 0; y < rows; y++) {
       const gy = y0 + y; if (gy >= height) break;
       for (let x = 0; x < bw; x++) {
         const gx = x0 + x; if (gx >= width) break;
-        out[gy * width + gx] = read(d, (y * bw + x) * bytes);
+        for (let c = 0; c < spp; c++) bands[c][gy * width + gx] = read(d, (y * bw + x) * px + c * bytes);
       }
     }
   }
   const noData = tags[42113] !== undefined ? parseFloat(tags[42113]) : null;
-  return { width, height, data: out, noData, tags };
+  return { width, height, data: out, bands, noData, tags };
 }
 
 function unpredict(raw, w, rows, bytes, pred, le) {

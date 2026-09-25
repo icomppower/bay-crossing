@@ -143,3 +143,16 @@ are in `docs/archive-hong-kong.md`.
     there are no overlaps with the HUD and no horizontal scroll. The joystick walks forward, a drag turns the
     view, and E then G take the helm and start the autopilot.
   - The G5 budget stays desktop `low` only. Real phone frame rates are not measured.
+- **D38** Building colours, at the owner's request (2026-09-25; "all the buildings are the same colour").
+  - **Walls:** typed palettes. Towers get glass/stone curtain walls (tower glass takes the building's tint in the
+    shader); mid-rise concrete, sandstone and brick; SF houses painted-Victorian pastels; Sausalito wood shingle
+    and white; pier sheds (bases over water) cream Beaux-Arts. ±8 % brightness per building.
+  - **Roofs:** the median colour of USDA NAIP aerial pixels inside each footprint (two new public-domain G0
+    sources, 1 m), shadow pixels excluded. Corrected for haze: dark-object subtraction (1st percentile per
+    channel), a stretch to the 99th percentile, and saturation ×1.5. The raw imagery gave a median roof
+    saturation of 0.07.
+  - **Exceptions:** buildings over 40 m use a roof palette, because relief displacement moves their roofs off
+    the footprint in NAIP. So do footprints with fewer than 12 usable pixels.
+  - **Result:** 9,981 of 10,309 roofs from imagery. G2b now checks colour variety (≥ 40 wall and ≥ 300 roof
+    colours, ≥ 70 % NAIP roofs), with a one-colour negative. Reason: the old palette was 12 near-identical
+    off-whites for walls and roofs.

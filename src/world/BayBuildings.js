@@ -3,7 +3,7 @@ import { Material } from '../engine/render/Material.js';
 import { parseGLB } from '../engine/loaders/GLTF.js';
 
 // Extruded bay buildings (public/buildings/, built by tools/buildings/build.mjs): one deflated GLB per
-// 600 m tile, positions relative to the tile centre (node translation). Vertex colour = facade tint (rgb)
+// 600 m tile, positions relative to the tile centre (node translation). Vertex colour = wall or roof colour (rgb)
 // and class (a: 0 house, 0.5 mid-rise, 1 tower); uv = metres along the wall / above the base (walls) or
 // world x, z (roofs). The facade is procedural: storey bands and window bays from the uv, lit windows at
 // night (G.night).
@@ -30,7 +30,8 @@ export function buildingMaterial() {
 		let fx = fract( in.uv.x / bay );
 		let glassFrac = select( select( 0.35, 0.5, cls > 0.25 ), 0.85, cls > 0.75 );
 		let win = step( 0.5 - 0.5 * glassFrac, fx ) * step( fx, 0.5 + 0.5 * glassFrac ) * step( 0.28, fy ) * step( fy, 0.82 ) * step( 1.2, in.uv.y );
-		let glass = mix( vec3f( 0.10, 0.12, 0.14 ), vec3f( 0.22, 0.28, 0.33 ), select( 0.0, 1.0, cls > 0.75 ) );
+		// towers: the curtain-wall glass takes the building's own tint (blue, green, silver, bronze), others dark glass
+		let glass = mix( vec3f( 0.10, 0.12, 0.14 ), mix( vec3f( 0.16, 0.2, 0.24 ), tint * 0.55, 0.65 ), select( 0.0, 1.0, cls > 0.75 ) );
 		albedo = mix( tint, glass, win );
 		rough = mix( 0.85, 0.12, win );
 		metal = mix( 0.0, 0.6, win * select( 0.0, 1.0, cls > 0.75 ) );
@@ -41,7 +42,7 @@ export function buildingMaterial() {
 
 	} else {
 
-		albedo = tint * 0.72;
+		albedo = tint; // the roof's own colour (NAIP aerial imagery, or the roof palette)
 
 	}
 	s.albedo = albedo;

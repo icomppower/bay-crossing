@@ -33,6 +33,7 @@ function content( dir ) {
 
 	const fail = [], index = JSON.parse( readFileSync( join( dir, 'index.json' ), 'utf8' ) );
 	let badWinding = 0, floating = 0, lowRoofs = 0, tris = 0, tallest = 0, c555 = 0;
+	const wallCols = new Set(), roofCols = new Set(); // distinct colours (5-bit per channel)
 	// 555 California St (official roof 237 m): the tallest ordinary tower, LiDAR median roof ~218 m
 	const [ tE, tN ] = toUTM( 37.79205, - 122.40365 ), tx = tE - 549504, tz = 4186800 - tN;
 	for ( const f of index.files ) {
@@ -54,6 +55,8 @@ function content( dir ) {
 
 			const x = T.pos[ v * 3 ] + T.t[ 0 ], y = T.pos[ v * 3 + 1 ], z = T.pos[ v * 3 + 2 ] + T.t[ 2 ];
 			const roof = T.nrm[ v * 3 + 1 ] > 0.5;
+			const q = ( ( T.col[ v * 4 ] >> 3 ) << 10 ) | ( ( T.col[ v * 4 + 1 ] >> 3 ) << 5 ) | ( T.col[ v * 4 + 2 ] >> 3 );
+			( roof ? roofCols : wallCols ).add( q );
 			if ( ! roof && T.uv[ v * 2 + 1 ] === 0 && y > Math.max( tH( x, z ), - 2 ) + 0.05 ) floating ++;
 			if ( roof ) {
 
@@ -78,8 +81,14 @@ function content( dir ) {
 	const L = index.heights && index.heights.log;
 	if ( ! L || ! ( L.sfLidar > 8000 ) || ! ( L.osmDefault >= 0 ) || L.sfLidar + L.sfFallback + L.osmHeight + L.osmLevels + L.osmDefault !== index.totals.buildings )
 		fail.push( `heights: height-source log missing or inconsistent (${ JSON.stringify( L ) })` );
+	// colour (D38): typed wall palettes with per-building variation, roofs from NAIP aerial imagery
+	const C = index.colours && index.colours.roofs;
+	if ( ! ( wallCols.size >= 40 ) ) fail.push( `colour: only ${ wallCols.size } distinct wall colours (want ≥ 40)` );
+	if ( ! ( roofCols.size >= 300 ) ) fail.push( `colour: only ${ roofCols.size } distinct roof colours (want ≥ 300)` );
+	if ( ! C || ! ( C.naip >= 0.7 * index.totals.buildings ) ) fail.push( `colour: roofs from NAIP ${ C && C.naip } of ${ index.totals.buildings } (want ≥ 70 %)` );
 	if ( ! ( index.totals.buildings >= 9000 ) ) fail.push( `count: ${ index.totals.buildings } buildings, expected ≥ 9000` );
 	if ( tris !== index.totals.triangles ) fail.push( `count: index says ${ index.totals.triangles } triangles, tiles hold ${ tris }` );
+	console.log( `colours: ${ wallCols.size } wall / ${ roofCols.size } roof (5-bit), NAIP roofs ${ C && C.naip }` );
 	console.log( `buildings: ${ index.totals.buildings }, ${ tris } triangles, tallest ${ tallest.toFixed( 1 ) } m above ground, 555 California ${ c555.toFixed( 1 ) } m, exclusions [${ ex }], log ${ JSON.stringify( L ) }` );
 	return fail;
 
@@ -151,6 +160,7 @@ const MUTATIONS = [
 	[ 'cached footprints tampered', 'pipeline:', () => { const d = rawFixture( () => {} ); rmSync( join( d, 'sf-buildings.geojson' ) ); const b = readFileSync( join( RAW, 'sf-buildings.geojson' ) ); b[ 100 ] ^= 1; writeFileSync( join( d, 'sf-buildings.geojson' ), b ); return check( { rawDir: d } ); } ],
 	[ 'LiDAR heights dropped', 'heights:', () => check( { rawDir: rawFixture( ( d ) => { const j = JSON.parse( readFileSync( join( RAW, 'sf-buildings.geojson' ), 'utf8' ) ); for ( const f of j.features ) { delete f.properties.median_1st_m; f.properties.hgt_median_m = '0'; } rmSync( join( d, 'sf-buildings.geojson' ) ); writeFileSync( join( d, 'sf-buildings.geojson' ), JSON.stringify( j ) ); } ) } ) ],
 	[ 'triangles wound inward', 'winding:', () => check( { tamper: both( ( T ) => { for ( let k = 0; k < T.idx.length; k += 3 ) { const t = T.idx[ k + 1 ]; T.idx[ k + 1 ] = T.idx[ k + 2 ]; T.idx[ k + 2 ] = t; } } ) } ) ],
+	[ 'every building one colour', 'colour:', () => check( { tamper: both( ( T ) => { for ( let v = 0; v < T.col.length; v += 4 ) { T.col[ v ] = 214; T.col[ v + 1 ] = 206; T.col[ v + 2 ] = 190; } } ) } ) ],
 	[ 'buildings floating 5 m up', 'ground:', () => check( { tamper: both( ( T ) => { for ( let v = 0; v < T.pos.length / 3; v ++ ) T.pos[ v * 3 + 1 ] += 5; } ) } ) ],
 ];
 let missed = 0;

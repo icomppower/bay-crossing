@@ -8,7 +8,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readTiff } from '../tools/geo/tiff.mjs';
 import { toUTM } from '../tools/geo/utm.mjs';
-import { SOURCES } from '../tools/data/fetch.mjs';
+import { SOURCES, naipBox } from '../tools/data/fetch.mjs';
 import { readZip, parseCSV } from '../tools/data/zip.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -17,7 +17,7 @@ const { minE, minN, maxE, maxN } = slice.extent;
 const G = slice.gridMetres, W = (maxE - minE) / G, H = (maxN - minN) / G;
 
 // Licence keywords CREDITS.md must pair with each cached file.
-const LICENCE_WORD = { 'sf-buildings.geojson': 'PDDL', 'sausalito-osm.json': 'ODbL', 'terrain-3dep.tif': 'Public domain', 'bathy-ncei.tif': 'Public domain', 'noaa-datums-9414290.json': 'Public domain', 'landmarks-osm.json': 'ODbL', 'noaa-enc-landmarks.json': 'Public domain', 'noaa-enc-pylons.json': 'Public domain', 'ggt-gtfs.zip': 'No licence stated' };
+const LICENCE_WORD = { 'sf-buildings.geojson': 'PDDL', 'sausalito-osm.json': 'ODbL', 'terrain-3dep.tif': 'Public domain', 'bathy-ncei.tif': 'Public domain', 'noaa-datums-9414290.json': 'Public domain', 'landmarks-osm.json': 'ODbL', 'noaa-enc-landmarks.json': 'Public domain', 'noaa-enc-pylons.json': 'Public domain', 'ggt-gtfs.zip': 'No licence stated', 'naip-sf.tif': 'Public domain', 'naip-sausalito.tif': 'Public domain' };
 
 function check(dir, credits) {
   const fail = [];
@@ -102,6 +102,16 @@ function check(dir, credits) {
   const stops = gtfs['stops.txt'] ? parseCSV(gtfs['stops.txt'].toString('utf8')) : [];
   for (const id of ['SFFT', 'SFT']) req(stops.some(st => st.stop_id === id), `ggt-gtfs: no stop ${id}`);
   req(gtfs['stop_times.txt'] && gtfs['trips.txt'], 'ggt-gtfs: no stop_times / trips');
+  // NAIP roof imagery: 3 bands, 1 m, exactly the box asked for, not blank
+  for (const [file, box] of [['naip-sf.tif', slice.boxes.sfBuildings], ['naip-sausalito.tif', slice.boxes.sausalito]]) {
+    const t = readTiff(readFileSync(join(dir, file))), b = naipBox(box);
+    req(t.bands.length === 3 && t.width === b.maxE - b.minE && t.height === b.maxN - b.minN && t.tags[33922]?.[3] === b.minE && t.tags[33922]?.[4] === b.maxN && t.tags[33550]?.[0] === 1,
+      `${file}: expected 3-band 1 m imagery over E ${b.minE}–${b.maxE}, N ${b.minN}–${b.maxN}`);
+    let s1 = 0, s2 = 0; const n = Math.min(t.data.length, 2e6);
+    for (let k = 0; k < n; k++) { const v = t.bands[1][k * Math.floor(t.data.length / n)]; s1 += v; s2 += v * v; }
+    const mean = s1 / n, sd = Math.sqrt(s2 / n - mean * mean);
+    req(mean > 30 && mean < 220 && sd > 12, `${file}: imagery looks blank (mean ${mean.toFixed(0)}, sd ${sd.toFixed(0)})`);
+  }
   const datums = JSON.parse(readFileSync(join(dir, 'noaa-datums-9414290.json'), 'utf8'));
   const dv = n => datums.datums?.find(d => d.name === n)?.value;
   const mslAboveNavd = dv('MSL') - dv('NAVD88');
@@ -116,7 +126,7 @@ const rawDir = join(root, 'data/raw');
 if (!process.argv.includes('--negative')) {
   const fail = check(rawDir, credits);
   if (fail.length) { console.log('G0 FAIL\n- ' + fail.join('\n- ')); process.exit(1); }
-  console.log('G0 PASS — 9 sources cached, checksummed, plausible, licences recorded');
+  console.log('G0 PASS — 11 sources cached, checksummed, plausible, licences recorded');
   process.exit(0);
 }
 
