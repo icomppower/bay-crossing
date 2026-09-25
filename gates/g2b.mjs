@@ -173,4 +173,5 @@ for ( const [ name, label, run ] of MUTATIONS ) {
 }
 
 for ( const d of [ work, fxRaw, fxShip ] ) rmSync( d, { recursive: true, force: true } );
+console.log( `NEGATIVE ${ MUTATIONS.length - missed }/${ MUTATIONS.length }` ); // verify.sh requires every mutation caught
 process.exit( missed ? 0 : 1 );

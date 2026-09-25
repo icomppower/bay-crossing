@@ -94,4 +94,5 @@ if ( ! NEG ) {
 
 const fail = judge( shootChild( 'noon' ) ).filter( ( m ) => m.startsWith( 'order:' ) );
 console.log( `${ fail.length ? 'caught  ' : 'MISSED  ' } sun frozen at noon${ fail.length ? ' — ' + fail[ 0 ] : '' }` );
+console.log( `NEGATIVE ${ fail.length ? 1 : 0 }/1` ); // verify.sh requires every mutation caught
 process.exit( fail.length ? 1 : 0 );

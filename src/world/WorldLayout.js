@@ -17,6 +17,10 @@ export const WORLD = {
 	// No reef in the bay: the terrain shader's reef term is inert (far away, 1 m radius).
 	reef: { center: new THREE.Vector3( 1e6, 0, 1e6 ), radius: 1 },
 
+	// SF Bay water: turbid, sediment-laden (yellow-green, a few metres of visibility) instead of the tropical
+	// defaults (absorption 0.42 / 0.075 / 0.035, scattering 0.012 / 0.018 / 0.024 per m). D39.
+	water: { absorption: [ 0.5, 0.16, 0.26 ], scattering: [ 0.075, 0.085, 0.055 ] },
+
 	// San Francisco's sun: latitude, and the declination for late September (time of day = local solar time)
 	sun: { latitude: 37.81, declination: - 0.5 },
 

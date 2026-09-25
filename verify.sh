@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Runs every gate in SPEC §5. Each gate is gates/<id>.mjs and is run twice:
-#   node gates/<id>.mjs --negative   must exit non-zero (the negative fixture is caught)
+#   node gates/<id>.mjs --negative   must exit non-zero and print "NEGATIVE n/n" (every mutation caught, run finished)
 #   node gates/<id>.mjs              must exit zero
 # A gate is green only when both hold (D11). G6 is advisory (D12).
 # Usage: ./verify.sh            all gates
@@ -31,7 +31,12 @@ for id in "${SELECTED[@]}"; do
     node "$script" > ".verify/$id.log" 2>&1
     pos=$?
     tail -15 ".verify/$id.log"
-    if [ $neg -eq 0 ]; then status="FAIL (negative fixture passed — gate cannot detect failure)"
+    # the negative run must finish and report every mutation caught (a crash is not a catch)
+    negline=$(grep -E '^NEGATIVE [0-9]+/[0-9]+$' ".verify/$id.neg.log" | tail -1)
+    caught=${negline#NEGATIVE }; caught_n=${caught%/*}; caught_t=${caught#*/}
+    if [ -z "$negline" ]; then status="FAIL (negative run did not complete — no NEGATIVE summary)"
+    elif [ "$caught_n" != "$caught_t" ] || [ "$caught_t" = "0" ]; then status="FAIL (negative fixtures missed: $caught)"
+    elif [ $neg -eq 0 ]; then status="FAIL (negative fixture passed — gate cannot detect failure)"
     elif [ $pos -ne 0 ]; then status="FAIL"
     else status="PASS"; fi
   fi

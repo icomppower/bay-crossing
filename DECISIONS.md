@@ -156,3 +156,23 @@ are in `docs/archive-hong-kong.md`.
   - **Result:** 9,981 of 10,309 roofs from imagery. G2b now checks colour variety (≥ 40 wall and ≥ 300 roof
     colours, ≥ 70 % NAIP roofs), with a one-colour negative. Reason: the old palette was 12 near-identical
     off-whites for walls and roofs.
+- **D39** Ground and water for the bay, at the owner's request (2026-09-25). This replaces Tidewater's tropical
+  island look (grass-green hills, coral sand, turquoise shallows).
+  - **Source:** a 4 m NAIP image over the whole 9.6 km terrain square (`naip-bay.tif`, the twelfth G0
+    source, public domain).
+  - **The map:** built by `tools/terrain/build.mjs` into `public/terrain/aerial.bin`. The haze correction uses
+    land-only statistics, with one offset and stretch shared by all channels to keep the image's colour balance
+    (per-channel correction turned streets magenta) and saturation ×1.2. Brightness is scaled so the median
+    land pixel is sRGB 105 (urban albedo ~0.15; the raw stretch gave 0.33–0.40). Water deeper than 1.5 m is
+    zeroed and 6 bits kept per channel: 4.0 MB instead of 15.4 MB.
+  - **Shader:** land above +1.2 m takes the map colour (with a little procedural detail), loses 90 % of the
+    sand-ripple relief, and becomes fully rough with half the specular. The seabed is bay mud.
+  - **Water:** turbid (absorption 0.5 / 0.16 / 0.26, scattering 0.075 / 0.085 / 0.055 per m, in
+    `WORLD.water`), and the clarity slider rescales around it.
+  - **G2a checks:** coverage, zeroed water, the median brightness, and the loader, with a missing-map negative.
+  - **Limit:** at street level 4 m pixels are coarse (no road markings).
+- **D40** `verify.sh` hardening. A gate's negative run must finish and print `NEGATIVE n/n` (every mutation
+  caught); a missing summary or any miss is a FAIL. Before this, a negative run that crashed (non-zero exit)
+  counted as "caught": G2a's new missing-map fixture threw inside the loader check, skipped its last two
+  mutations, and still passed. Fixed in G2a (loader errors are failures), and all gates re-proved:
+  40/40 mutations caught.

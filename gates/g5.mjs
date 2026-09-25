@@ -178,4 +178,5 @@ for ( const [ name, label, fn ] of MUTATIONS ) {
 
 }
 
+console.log( `NEGATIVE ${ MUTATIONS.length - missed }/${ MUTATIONS.length }` ); // verify.sh requires every mutation caught
 process.exit( missed ? 0 : 1 );

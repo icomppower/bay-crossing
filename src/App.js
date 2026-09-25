@@ -156,6 +156,9 @@ export class App {
 		// ---------------------------------------------------------------- ocean
 		await progress( 0.3, 'Simulating the ocean…' );
 		this.fft = new OceanFFT( renderer );
+		// SF Bay's turbid water (WORLD.water) instead of Tidewater's clear tropical sea
+		G.waterAbsorption.value.set( ...WORLD.water.absorption );
+		G.waterScattering.value.set( ...WORLD.water.scattering );
 		this.foamTexture = createFoamTexture( renderer );
 		this.oceanLOD = new CDLOD( { gridSize: Number( qs.get( 'G' ) || Q.oceanGrid ), leafSize: 8, levels: 12, minY: - 25, maxY: 25 } );
 		this.surface = new WaterSurface( { fft: this.fft, cdlod: this.oceanLOD, foamTexture: this.foamTexture } );

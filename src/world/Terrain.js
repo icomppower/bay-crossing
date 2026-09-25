@@ -1,6 +1,8 @@
 import { Mesh, Vector2, Vector3 } from '../engine/index.js';
 import { ShaderModule } from '../engine/gpu/Shader.js';
 import { CDLOD } from '../core/CDLOD.js';
+import { Texture } from '../engine/gpu/Texture.js';
+import { generateMipmaps } from '../engine/gpu/Mipmaps.js';
 import { standard } from '../materials/Materials.js';
 import { G } from '../engine/render/Frame.js';
 import { WORLD } from './WorldLayout.js';
@@ -67,6 +69,16 @@ export class Terrain {
 			attributes: { nodeData: 'vec4f' },
 		} );
 		this.params = { wetDarken: mat.uniforms.wetDarken };
+		// the bay's ground colour map (aerial imagery over the whole terrain square, D39)
+		if ( terrainData.aerial ) {
+
+			const a = terrainData.aerial;
+			const tex = this.aerialTexture = new Texture( { label: 'terrainAerial', width: a.width, height: a.height, format: 'rgba8unorm', mips: true, usage: [ 'sample', 'copyDst' ], data: a.data } );
+			tex.getGPU();
+			generateMipmaps( tex );
+			mat.bindings.terrainAerial = { texture: tex };
+
+		}
 		this.uViewPos = mat.uniforms.viewPos;
 
 		mat.vertex = /* wgsl */`
@@ -107,6 +119,7 @@ export class Terrain {
 		mat.modules = modules;
 		mat.defines.HAS_WETNESS = this.wetness ? 1 : 0;
 		mat.defines.MATERIAL_SUN_MODULATION = this.sunShadow ? 1 : 0;
+		mat.defines.HAS_AERIAL = this.aerialTexture ? 1 : 0;
 		mat.surface = TERRAIN_SURFACE;
 		mat.needsUpdate = true;
 
@@ -603,8 +616,25 @@ const TERRAIN_SURFACE = /* wgsl */`
 
 	}
 
+#if HAS_AERIAL
+	// San Francisco Bay: land takes its colour from the aerial map (a little of the procedural detail kept as
+	// texture) and loses the beach's sand-ripple relief (streets, plazas and lawns are flat at this scale); the
+	// seabed is bay mud instead of coral sand and seagrass (D39)
+	let aerial = pow( textureSample( terrainAerial, smpLinearClamp, terrainUvOf( xz ) ).rgb, vec3f( 2.2 ) );
+	let aerialK = smoothstep( 0.2, 1.2, h ) * step( 0.002, dot( aerial, vec3f( 1.0 ) ) );
+	hdOut = hdOut * ( 1.0 - 0.9 * aerialK );
+#endif
 	outN = terrainPerturbNormal( p, N0, hdOut, 1.0 );
 
+#if HAS_AERIAL
+	let detail = ( dM.w - 0.5 ) * 0.14 + ( dN.w - 0.5 ) * 0.08 + 1.0;
+	albedoOut = mix( albedoOut, aerial * detail, aerialK );
+	// pavement and dry grass: fully rough, half the specular (the beach's sheen made grazing streets glare white)
+	outRough = mix( outRough, 0.98, aerialK );
+	s.specularIntensity = mix( s.specularIntensity, 0.5, aerialK );
+	let mud = vec3f( 0.052, 0.046, 0.034 ) * ( ( mcr - 0.5 ) * 0.35 + 1.0 ) * ( ( dM.w - 0.5 ) * 0.2 + 1.0 );
+	albedoOut = mix( albedoOut, mud, smoothstep( 0.1, - 0.9, h ) );
+#endif
 	s.albedo = albedoOut;
 	s.roughness = outRough;
 	s.normal = outN;

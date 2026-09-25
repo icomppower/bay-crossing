@@ -1,6 +1,7 @@
 import * as THREE from '../engine/index.js';
 import { UI } from './UI.js';
 import { G } from '../core/Globals.js';
+import { WORLD } from '../world/WorldLayout.js';
 import { GroundBounce } from '../materials/GroundBounce.js';
 import { ContactShadows } from '../materials/ContactShadows.js';
 
@@ -79,10 +80,10 @@ export class AppUI {
 
 		const clarity = () => {
 
-			// scale absorption/scattering around the tropical defaults
+			// scale absorption/scattering around the bay's turbid water (WORLD.water)
 			const k = 1 / Math.max( 0.2, s.clarity );
-			G.waterAbsorption.value.set( 0.42, 0.075, 0.035 ).multiplyScalar( 0.6 + 0.4 * k );
-			G.waterScattering.value.set( 0.012, 0.018, 0.024 ).multiplyScalar( k * k );
+			G.waterAbsorption.value.set( ...WORLD.water.absorption ).multiplyScalar( 0.6 + 0.4 * k );
+			G.waterScattering.value.set( ...WORLD.water.scattering ).multiplyScalar( k * k );
 
 		};
 

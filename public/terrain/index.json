@@ -1550,5 +1550,14 @@
    "j": 15,
    "sha256": "a3e6f32a9d7e7289dc1c61db0fcfc34af11bfbd51276912ab372652960e81985"
   }
- ]
+ ],
+ "aerial": {
+  "file": "aerial.bin",
+  "width": 2400,
+  "height": 2400,
+  "cell": 4,
+  "format": "RGB8 sRGB (6 significant bits), row 0 = north, same square as the heightfield, zlib deflate; 0,0,0 = water",
+  "source": "naip-bay.tif (haze corrected)",
+  "sha256": "79f102683634c17e039159e39e1e45f688694b1588f85190eb61ee809b11f7f6"
+ }
 }

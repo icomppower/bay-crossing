@@ -2,7 +2,7 @@
 // offline runs; the shipped tiles (public/terrain) are exactly that output; heights are plausible, the
 // land/sea seam adds no cliffs, and the in-app loader reproduces the grid.
 // --negative: each mutation must trip the check it targets.
-import { cpSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync, readdirSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync, readdirSync } from 'node:fs';
 import { deflateSync, inflateSync } from 'node:zlib';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
@@ -53,6 +53,37 @@ function plausibility( dir, rawDir = RAW ) {
 	}
 
 	if ( seams > 0 ) fail.push( `seam: ${ seams } cliff steps (> 15 m) introduced by the land/sea merge` );
+
+	// ground colour map (D39): covers the land, zero over deeper water, median land brightness at the target
+	const idx = JSON.parse( readFileSync( join( dir, 'index.json' ), 'utf8' ) ), A = idx.aerial;
+	if ( ! A || ! existsSync( join( dir, A.file || 'aerial.bin' ) ) ) fail.push( 'aerial: no ground colour map in the terrain tiles' );
+	else {
+
+		const rgb = inflateSync( readFileSync( join( dir, A.file ) ) );
+		if ( rgb.length !== A.width * A.height * 3 || A.width * A.cell !== size ) fail.push( `aerial: ${ A.width }×${ A.height } at ${ A.cell } m does not cover the ${ size } m square` );
+		else {
+
+			let land = 0, landLit = 0, deep = 0, deepLit = 0; const lumas = [];
+			for ( let y = 0; y < A.height; y += 3 ) for ( let x = 0; x < A.width; x += 3 ) {
+
+				const hh = h[ Math.min( res - 1, Math.floor( ( y + 0.5 ) * A.cell / texel ) ) * res + Math.min( res - 1, Math.floor( ( x + 0.5 ) * A.cell / texel ) ) ];
+				const k = ( y * A.width + x ) * 3, sum = rgb[ k ] + rgb[ k + 1 ] + rgb[ k + 2 ];
+				if ( hh > 2 ) { land ++; if ( sum > 0 ) { landLit ++; lumas.push( 0.3 * rgb[ k ] + 0.59 * rgb[ k + 1 ] + 0.11 * rgb[ k + 2 ] ); } }
+				if ( hh < - 3 ) { deep ++; if ( sum > 0 ) deepLit ++; }
+
+			}
+
+			lumas.sort( ( a, b ) => a - b );
+			const med = lumas[ lumas.length >> 1 ] || 0;
+			if ( ! ( landLit >= 0.98 * land ) ) fail.push( `aerial: only ${ ( 100 * landLit / land ).toFixed( 1 ) } % of land has colour` );
+			if ( deepLit > 0.001 * deep ) fail.push( `aerial: ${ deepLit } deep-water pixels carry colour (should be zero)` );
+			if ( ! ( med >= 95 && med <= 115 ) ) fail.push( `aerial: median land brightness ${ med.toFixed( 0 ) }, expected 95–115 (urban albedo ~0.15)` );
+			console.log( `aerial: ${ A.width }×${ A.height } at ${ A.cell } m, land coloured ${ ( 100 * landLit / land ).toFixed( 1 ) } %, median land luma ${ med.toFixed( 0 ) }` );
+
+		}
+
+	}
+
 	return { fail, h };
 
 }
@@ -68,19 +99,33 @@ async function loaderMatches( dir, h ) {
 		const hf = await loadBayHeightField( '/' );
 		let bad = 0;
 		for ( let k = 0; k < h.length; k += 997 ) if ( hf.heights[ k ] !== h[ k ] ) bad ++;
-		return bad ? [ `loader: ${ bad } sampled heights differ between BayTerrain.js and the tiles` ] : [];
+		const A = JSON.parse( readFileSync( join( dir, 'index.json' ), 'utf8' ) ).aerial;
+		if ( A && existsSync( join( dir, A.file ) ) ) {
+
+			const rgb = inflateSync( readFileSync( join( dir, A.file ) ) );
+			if ( ! hf.aerial ) bad ++;
+			else for ( let k = 0; k < A.width * A.height; k += 1009 ) for ( let c = 0; c < 3; c ++ ) if ( hf.aerial.data[ k * 4 + c ] !== rgb[ k * 3 + c ] ) bad ++;
+
+		}
+
+		return bad ? [ `loader: ${ bad } sampled heights / colours differ between BayTerrain.js and the tiles` ] : [];
+
+	} catch ( e ) {
+
+		return [ `loader: BayTerrain.js failed on these tiles — ${ String( e.message || e ).split( '\n' )[ 0 ] }` ];
 
 	} finally { globalThis.fetch = netFetch; }
 
 }
 
-async function check( { rawDir = RAW, shipped = SHIPPED, tamperRun2 = null } = {} ) {
+async function check( { rawDir = RAW, shipped = SHIPPED, tamperRun2 = null, dropAerial = false } = {} ) {
 
 	rmSync( work, { recursive: true, force: true } );
 	const a = join( work, 'run1' ), b = join( work, 'run2' );
 	const fail = [ ...build( rawDir, a ), ...build( rawDir, b ) ];
 	if ( fail.length ) return fail;
 	if ( tamperRun2 ) tamperRun2( b );
+	if ( dropAerial ) for ( const d of [ a, b ] ) rmSync( join( d, 'aerial.bin' ) );
 	fail.push( ...compareDirs( a, b, 'determinism (run1 vs run2)' ) );
 	fail.push( ...compareDirs( a, shipped, 'shipped tiles (public/terrain vs pipeline)' ) );
 	const p = plausibility( a, rawDir );
@@ -120,6 +165,7 @@ const MUTATIONS = [
 	[ 'cached bathymetry tampered (checksum)', 'pipeline:', () => check( { rawDir: rawFixture( ( d ) => { rmSync( join( d, 'bathy-ncei.tif' ) ); const b = readFileSync( join( RAW, 'bathy-ncei.tif' ) ); b[ 5000 ] ^= 1; writeFileSync( join( d, 'bathy-ncei.tif' ), b ); } ) } ) ],
 	[ 'cached file missing (no network fallback)', 'pipeline:', () => check( { rawDir: rawFixture( ( d ) => rmSync( join( d, 'noaa-datums-9414290.json' ) ) ) } ) ],
 	[ 'shipped tiles stale', 'shipped tiles', () => { rmSync( fxShip, { recursive: true, force: true } ); cpSync( SHIPPED, fxShip, { recursive: true } ); const p = join( fxShip, 't_8_8.bin' ); const t = inflateSync( readFileSync( p ) ); t[ 100 ] ^= 4; writeFileSync( p, deflateSync( t, { level: 9, memLevel: 9 } ) ); return check( { shipped: fxShip } ); } ],
+	[ 'ground colour map missing', 'aerial:', () => check( { tamperRun2: null, shipped: SHIPPED, dropAerial: true } ) ],
 	[ 'land DEM 20 m too high (seam cliffs)', 'seam:', () => check( { rawDir: rawFixture( ( d ) => {
 
 		const t = readTiff( readFileSync( join( RAW, 'terrain-3dep.tif' ) ) );
@@ -141,4 +187,5 @@ for ( const [ name, label, run ] of MUTATIONS ) {
 }
 
 for ( const d of [ work, fxRaw, fxShip ] ) rmSync( d, { recursive: true, force: true } );
+console.log( `NEGATIVE ${ MUTATIONS.length - missed }/${ MUTATIONS.length }` ); // verify.sh requires every mutation caught
 process.exit( missed ? 0 : 1 );

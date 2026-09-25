@@ -40,10 +40,12 @@ export function naipBox(box) {
   const minN = Math.floor(Math.min(...c.map(p => p[1]))), maxN = Math.ceil(Math.max(...c.map(p => p[1])));
   return { minE, minN, maxE, maxN };
 }
-function naipExport(box) {
-  const b = naipBox(box);
+// the whole terrain domain (the 9.6 km square of src/world/BayFrame.js) at 4 m, for the ground colour map
+export const NAIP_BAY = { minE: 544704, minN: 4182000, maxE: 554304, maxN: 4191600, cell: 4 };
+function naipExport(box, cell = 1) {
+  const b = box.minE !== undefined ? box : naipBox(box);
   return 'https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPImagery/ImageServer/exportImage?' + new URLSearchParams({
-    bbox: `${b.minE},${b.minN},${b.maxE},${b.maxN}`, bboxSR: '32610', imageSR: '32610', size: `${b.maxE - b.minE},${b.maxN - b.minN}`,
+    bbox: `${b.minE},${b.minN},${b.maxE},${b.maxN}`, bboxSR: '32610', imageSR: '32610', size: `${(b.maxE - b.minE) / cell},${(b.maxN - b.minN) / cell}`,
     format: 'tiff', pixelType: 'U8', bandIds: '0,1,2', compression: 'LZ77', interpolation: 'RSP_BilinearInterpolation', f: 'image',
   });
 }
@@ -125,6 +127,12 @@ export const SOURCES = [
     title: 'USDA NAIP aerial orthoimagery (natural colour, 1 m resample) over the Sausalito building box (USGS The National Map NAIP ImageServer), for roof colours',
     licence: 'Public domain (US Government work, USDA Farm Service Agency NAIP)', licenceUrl: 'https://naip-usdaonline.hub.arcgis.com/',
     url: naipExport(sa),
+  },
+  {
+    file: 'naip-bay.tif', key: 'naip-bay',
+    title: 'USDA NAIP aerial orthoimagery (natural colour, 4 m resample) over the whole 9.6 km terrain square (USGS The National Map NAIP ImageServer), for the ground colour map',
+    licence: 'Public domain (US Government work, USDA Farm Service Agency NAIP)', licenceUrl: 'https://naip-usdaonline.hub.arcgis.com/',
+    url: naipExport(NAIP_BAY, NAIP_BAY.cell),
   },
   {
     file: 'noaa-datums-9414290.json', key: 'noaa-datums',

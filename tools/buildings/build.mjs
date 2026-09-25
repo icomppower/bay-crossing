@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url';
 import earcut from 'earcut';
 import { readCached, RAW } from '../data/cache.mjs';
 import { readTiff } from '../geo/tiff.mjs';
+import { dehaze } from '../geo/naip.mjs';
 import { toUTM } from '../geo/utm.mjs';
 import { writeGLB } from '../geo/glb.mjs';
 import { mergeHeights, GRID } from '../terrain/build.mjs';
@@ -69,26 +70,6 @@ const area2 = r => { let a = 0; for (let i = 0; i < r.length; i++) { const p = r
 
 // Roof colour from NAIP: the per-channel median of the pixels inside the footprint (shadow pixels, luma < 40,
 // left out), or null when there are too few usable pixels.
-// Haze correction (dark-object subtraction): each channel's 1st percentile over the image is atmospheric path
-// radiance, not surface; subtract it, stretch the 99th percentile to 235, then restore saturation ×1.5 about the
-// luma (the haze greys roofs out). D38.
-function dehaze(tif) {
-  const lo = [], hi = [];
-  for (const band of tif.bands) {
-    const hist = new Uint32Array(256);
-    for (let k = 0; k < band.length; k += 7) hist[band[k] | 0]++;
-    const total = hist.reduce((a, b) => a + b, 0);
-    let acc = 0, p1 = 0, p99 = 255;
-    for (let v = 0; v < 256; v++) { acc += hist[v]; if (acc < total * 0.01) p1 = v; if (acc < total * 0.99) p99 = v; }
-    lo.push(p1); hi.push(Math.max(p99, p1 + 1));
-  }
-  return ([r, g, b]) => {
-    const c = [r, g, b].map((v, i) => Math.max(0, (v - lo[i]) / (hi[i] - lo[i]) * 235));
-    const l = 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2];
-    return c.map(v => Math.max(0, Math.min(255, Math.round(l + (v - l) * 1.5))));
-  };
-}
-
 function naipSampler(tif) {
   const [, , , e0, n0] = tif.tags[33922], W = tif.width, H = tif.height, [R, Gc, B] = tif.bands;
   const fix = dehaze(tif);

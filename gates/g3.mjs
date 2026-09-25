@@ -122,4 +122,5 @@ for ( const [ name, fn ] of MUTATIONS ) {
 }
 
 rmSync( work, { recursive: true, force: true } );
+console.log( `NEGATIVE ${ MUTATIONS.length - missed }/${ MUTATIONS.length }` ); // verify.sh requires every mutation caught
 process.exit( missed ? 0 : 1 );
