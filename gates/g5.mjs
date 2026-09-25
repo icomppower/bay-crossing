@@ -1,7 +1,7 @@
 // G5 M4 budget: a scripted camera path through the fixed views at the `low` tier, 1920×1080, in the real App on
 // the M4 GPU (headless Dawn → Metal, no vsync). Checks, with values calibrated on first run and frozen in
 // SPEC-THRESHOLDS.md: an fps floor (target ≥ 30 at 1080p) on the 95th-percentile frame, a GPU memory cap
-// (Metal IOAccelerator + IOSurface memory of the process, `footprint`), and no swap-outs during the run (vm_stat).
+// (the process's footprint "(graphics)" categories — Metal allocations), and no swap-outs during the run (vm_stat).
 // Frame time = CPU + GPU serialised (each frame waits for the GPU), an upper bound on the pipelined cost.
 // --negative: rendering at 4K (4× the pixels) must break the fps floor, a leaked GPU allocation the memory cap, and a
 // recorded swap-out the swap check.
@@ -48,7 +48,9 @@ function gpuMemory( pid ) {
 	for ( const line of ( r.stdout || '' ).split( '\n' ) ) {
 
 		const m = line.match( /^\s*(\d+)\s*B?\s+(\d+)\s*B?\s+(\d+)\s*B?\s+(\d+)\s+(.+)$/ );
-		if ( m && /IOAccelerator|IOSurface/i.test( m[ 5 ] ) ) gpu += Number( m[ 1 ] );
+		// Metal (Dawn) allocations: every "(graphics)" category — mostly "Owned physical footprint (unmapped)
+		// (graphics)", plus "IOAccelerator (graphics)" (D36; the first cap summed IOAccelerator|IOSurface only)
+		if ( m && /\(graphics\)/i.test( m[ 5 ] ) ) gpu += Number( m[ 1 ] );
 		const t = line.match( /Footprint:\s*(\d+)\s*B/ );
 		if ( t ) total = Number( t[ 1 ] );
 
@@ -147,7 +149,7 @@ if ( ! ( 'G5.fpsFloor' in T ) || ! ( 'G5.gpuMemoryMB' in T ) ) {
 	const fps95 = 1000 / m.p95, today = new Date().toISOString().slice( 0, 10 );
 	if ( fps95 < FPS_TARGET ) { console.log( `G5 FAIL — calibration run is ${ fps95.toFixed( 1 ) } fps at p95, below the ${ FPS_TARGET } fps target; not freezing` ); process.exit( 1 ); }
 	freeze( 'G5.fpsFloor', Math.max( FPS_TARGET, Math.floor( 0.8 * fps95 ) ), `95th-percentile fps on the camera path (gates/g5.mjs), 1920×1080, low tier, M4 (Metal); measured ${ fps95.toFixed( 1 ) } fps (p95 ${ m.p95.toFixed( 1 ) } ms, CPU+GPU serialised) on ${ today }; floor = max( ${ FPS_TARGET }, 0.8 × measured )` );
-	freeze( 'G5.gpuMemoryMB', Math.ceil( 1.25 * m.gpuMB ), `GPU memory (footprint IOAccelerator + IOSurface) of the App process on the path; measured ${ m.gpuMB.toFixed( 0 ) } MB on ${ today }; cap = 1.25 × measured` );
+	freeze( 'G5.gpuMemoryMB', Math.ceil( 1.25 * m.gpuMB ), `GPU memory (footprint "(graphics)" categories: Metal allocations) of the App process on the path, peak; measured ${ m.gpuMB.toFixed( 0 ) } MB on ${ today }; cap = 1.25 × measured` );
 	T = readThresholds();
 
 }

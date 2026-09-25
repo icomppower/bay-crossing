@@ -13,3 +13,5 @@ Hong Kong run entries are archived in `docs/archive-hong-kong.md`.
 | 2026-09-24 | G4 | PASS | 70 | Ferry = MV Golden Gate dims (D33), FerryController + autopilot + A* route on bathymetry (D35). First negative run: slow helmsman reported as 'arrival' not 'duration' (judge only checked duration on arrival) → fixed. Range cited both ends (D34) |
 | 2026-09-24 | G5 | BLOCKED | 45 | Real Metal M4 via headless Dawn: 49.8 fps p95 serialised @1080p low, floor frozen at 40; 4K negative caught. GPU memory metric summed the wrong footprint categories (22 MB; real ~717 MB in '(graphics)'), leak negative missed; fixing it needs the frozen 28 MB cap replaced → BLOCKED.md |
 | 2026-09-24 | G6 | PASS (advisory) | 15 | Golden/blue/night shots from sun elevations +6/−5/−15° on the SF sun model; brightness ordered; noon-frozen negative caught |
+| 2026-09-25 | G5 | PASS | 25 | Owner approved replacing the cap. Metric fixed (all '(graphics)' footprint categories), recalibrated 689 MB → cap 862 MB (D36); leak negative now caught (2,225 MB) |
+| 2026-09-25 | DONE | PASS | 20 | Full verify.sh: G0–G5 green, G6 advisory green |

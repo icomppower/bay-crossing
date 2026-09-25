@@ -126,3 +126,7 @@ are in `docs/archive-hong-kong.md`.
   ≥ 3.45 m at MSL in open water (draft + 1 m + MSL→MLLW) and ≥ 2.0 m within 150 m of a terminal (the NCEI grid
   is 2.5–4.4 m at the Ferry Building gates), with pier sheds and OSM piers as obstacles. Departure from
   Gate C (GTFS 43000), the deeper SSSF gate. Reason: G4.
+- **D36** G5 GPU memory is re-measured as the sum of footprint's "(graphics)" categories, where Metal/Dawn
+  allocations actually land. The first frozen cap (`G5.gpuMemoryMB = 28`) summed IOAccelerator|IOSurface,
+  missed ~95 % of GPU memory and could not see a 1.5 GB leak. It is removed and recalibrated (1.25 × measured
+  peak) with the owner's approval (BLOCKED.md, 2026-09-24, answered "Yes"). No other frozen value changes.
