@@ -8,4 +8,4 @@
 - [x] G3 Georeference — ≥5 control points within tolerance; shifted dataset fails
 - [x] G4 Ferry — Ferry Building → Sausalito, cited schedule range, draft clearance on route
 - [ ] G5 M4 budget — scripted camera path at `low`, fps floor, GPU memory cap, no swap
-- [ ] G6 Look (advisory) — golden hour / blue hour / night shots in `shots/`
+- [x] G6 Look (advisory) — golden hour / blue hour / night shots in `shots/`
