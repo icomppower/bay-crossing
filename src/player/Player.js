@@ -433,6 +433,14 @@ export class Player {
 
 	}
 
+	// hull length relative to the 8.2 m lobster boat the cameras were tuned for
+	boatScale() {
+
+		const L = this.boat && this.boat.model.lines;
+		return L && L.zBow !== undefined ? Math.max( 1, ( L.zBow - L.zAft ) / 8.2 ) : 1;
+
+	}
+
 	// sit down at the helm and drive (the old "enter boat")
 	takeHelm() {
 
@@ -798,7 +806,10 @@ export class Player {
 
 			this.orbitYaw -= look.x * 0.003;
 			this.orbitPitch = THREE.MathUtils.clamp( this.orbitPitch + look.y * 0.003, - 0.05, 1.2 );
-			this.orbitDist = THREE.MathUtils.clamp( this.orbitDist * ( 1 + wheel * 0.08 ), 6, 40 );
+			// orbit sized to the hull (the 8.2 m lobster boat: 13 m; the 43.7 m ferry: ~69 m)
+			const k = this.boatScale();
+			if ( this._orbitK !== k ) { this.orbitDist = 13 * k; this._orbitK = k; }
+			this.orbitDist = THREE.MathUtils.clamp( this.orbitDist * ( 1 + wheel * 0.08 ), 6 * k, 40 * k );
 			// gently swing behind the boat when moving
 			if ( b.speed > 2 && Math.abs( look.x ) < 0.5 ) {
 
@@ -809,7 +820,7 @@ export class Player {
 
 			}
 
-			const target = b.toWorld( new THREE.Vector3( 0, 1.4, 0 ), new THREE.Vector3() );
+			const target = b.toWorld( new THREE.Vector3( 0, 1.4 * k, 0 ), new THREE.Vector3() );
 			const off = new THREE.Vector3(
 				Math.sin( this.orbitYaw ) * Math.cos( this.orbitPitch ),
 				Math.sin( this.orbitPitch ),

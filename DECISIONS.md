@@ -130,3 +130,16 @@ are in `docs/archive-hong-kong.md`.
   allocations actually land. The first frozen cap (`G5.gpuMemoryMB = 28`) summed IOAccelerator|IOSurface,
   missed ~95 % of GPU memory and could not see a 1.5 GB leak. It is removed and recalibrated (1.25 × measured
   peak) with the owner's approval (BLOCKED.md, 2026-09-24, answered "Yes"). No other frozen value changes.
+- **D37** Mobile support, at the owner's request (2026-09-25), which overrides §1's "Desktop only".
+  - **Controls:** `src/ui/TouchControls.js` adds a left-thumb joystick (W/A/S/D; a full push forward is sprint or
+    boost), drag-to-look, and buttons E, G, jump, V, T and F. They feed the same Input state as the keyboard, so
+    the player and ferry code are unchanged.
+  - **Touch events, not pointer events:** every mobile browser delivers them with coordinates and per-finger
+    identifiers, and headless emulation reported pointer coordinates as 0, so only touch events are verifiable.
+  - **Quality:** a `mobile` tier (60 % render scale, 1024 shadows, no volumetric clouds or caustics, LOD bias 0.6)
+    is picked automatically on a coarse pointer.
+  - **Boat camera:** the orbit now scales with hull length (the ferry was inside the lobster boat's 13 m orbit).
+  - **Layout:** verified at 390×844 and 844×390 in phone emulation. Every control is hit-tested at its centre,
+    there are no overlaps with the HUD and no horizontal scroll. The joystick walks forward, a drag turns the
+    view, and E then G take the helm and start the autopilot.
+  - The G5 budget stays desktop `low` only. Real phone frame rates are not measured.

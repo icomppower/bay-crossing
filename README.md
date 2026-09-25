@@ -41,7 +41,11 @@ the ferry is helm-only.
 | F | Free camera |
 | H, F1 | Settings, all controls |
 
-It needs a browser with WebGPU (a recent Chrome, Edge or Safari). On a Mac mini M4 it holds ~50 fps at
+**On a phone or tablet:** the left thumb joystick walks (or drives the ferry at the helm), dragging anywhere
+else looks around, and on-screen buttons cover E, G, jump, camera, time and free camera. A lighter `mobile`
+quality tier is picked automatically.
+
+It needs a browser with WebGPU (a recent Chrome, Edge or Safari, including iOS 26 Safari and Android Chrome). On a Mac mini M4 it holds ~50 fps at
 1080p on the `low` tier. The first load compiles the shaders and can take a minute.
 
 ## Run locally

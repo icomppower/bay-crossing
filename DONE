@@ -1,6 +1,5 @@
-DONE — 2026-09-25T05:08Z
+DONE — 2026-09-25T10:05Z (re-verified after mobile support, D37)
 
-G0–G5 green in one clean ./verify.sh run (G6 advisory green). Summary:
 ===== verify.sh summary =====
 g0   PASS
 g1   PASS

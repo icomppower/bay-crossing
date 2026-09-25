@@ -2187,6 +2187,7 @@ export class UI {
 				${ brandMark( 'tw-start-mark' ) }
 				<div class="tw-start-title">BAY CROSSING</div>
 				<button type="button" class="tw-start-cta"><span class="tw-start-pulse" aria-hidden="true"></span>${ icon( 'mouse' ) }<span>Click to explore</span></button>
+				<div class="tw-start-touch">Left thumb: walk (or drive the ferry) · drag: look · <b>E</b>: ferry helm · <b>G</b>: autopilot</div>
 				<div class="tw-start-keys">
 					<span><span class="tw-wasd"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span>Move</span>
 					<span><kbd class="tw-kbd-ico">${ icon( 'mouse' ) }</kbd>Look</span>
