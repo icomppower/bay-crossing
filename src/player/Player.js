@@ -125,6 +125,8 @@ export class Player {
 		const bp = this.boat.toWorld( this.boat.model.boardPoint, _v );
 		const d = Math.hypot( bp.x - this.position.x, bp.z - this.position.z );
 		const dy = Math.abs( bp.y - this.position.y );
+		// the ferry berths off a pier the walker cannot reach yet: board it from the waterfront nearby
+		if ( this.boat.model.helmOnly ) return d < 60 && dy < 12;
 		return d < 4.2 && dy < 3.2;
 
 	}
@@ -416,6 +418,7 @@ export class Player {
 	boardBoat() {
 
 		const b = this.boat;
+		if ( b.model.helmOnly ) { this.takeHelm(); return; } // the ferry: straight to the wheelhouse
 		this.mode = 'deck';
 		this.deckPos.copy( b.model.boardPoint );
 		this.deckVel.set( 0, 0, 0 );
@@ -450,6 +453,31 @@ export class Player {
 		const b = this.boat;
 		b.driven = false;
 		b.throttle = 0;
+		if ( b.model.helmOnly ) {
+
+			// step ashore: the nearest dry ground around the ferry (spiral search out to 250 m)
+			const c = b.position;
+			let spot = null;
+			for ( let r = 10; r <= 250 && ! spot; r += 5 ) for ( let k = 0; k < 24; k ++ ) {
+
+				const x = c.x + Math.cos( k / 24 * Math.PI * 2 ) * r, z = c.z + Math.sin( k / 24 * Math.PI * 2 ) * r;
+				if ( this.terrain.heightAt( x, z ) > 0.6 ) { spot = [ x, z ]; break; }
+
+			}
+
+			if ( spot ) {
+
+				this.mode = 'walk';
+				this.position.set( spot[ 0 ], this.terrain.heightAt( spot[ 0 ], spot[ 1 ] ), spot[ 1 ] );
+				this.velocity.set( 0, 0, 0 );
+				this.grounded = false;
+				if ( this.audio ) this.audio.engineStop();
+				return;
+
+			}
+
+		}
+
 		this.mode = 'deck';
 		this.deckPos.set( HOUSE_HELM.x + 0.45, b.model.lines.deckY, HOUSE_HELM.z - 0.1 );
 		this.deckVel.set( 0, 0, 0 );

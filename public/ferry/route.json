@@ -1,0 +1,38 @@
+{
+ "from": {
+  "stopId": "43000",
+  "name": "San Francisco-Gate C",
+  "x": 3987.024,
+  "z": 3453.759
+ },
+ "to": {
+  "stopId": "43003",
+  "name": "Sausalito",
+  "x": -3544.33,
+  "z": -3185.129
+ },
+ "rules": {
+  "draft": 1.5,
+  "depthOpen": 3.45,
+  "depthBerth": 2,
+  "berthZone": 150,
+  "cell": 6,
+  "datum": "MSL (NAVD88 + 0.969 m); open water also holds at MLLW"
+ },
+ "waypoints": [
+  [
+   3987.02,
+   3453.76
+  ],
+  [
+   3837,
+   2313
+  ],
+  [
+   -3544.33,
+   -3185.13
+  ]
+ ],
+ "length": 10354.57,
+ "minDepthAlong": 3.02
+}

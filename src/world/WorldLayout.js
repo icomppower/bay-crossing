@@ -17,6 +17,9 @@ export const WORLD = {
 	// No reef in the bay: the terrain shader's reef term is inert (far away, 1 m radius).
 	reef: { center: new THREE.Vector3( 1e6, 0, 1e6 ), radius: 1 },
 
+	// San Francisco's sun: latitude, and the declination for late September (time of day = local solar time)
+	sun: { latitude: 37.81, declination: - 0.5 },
+
 	// Prevailing westerly: wind chop and the residual ocean swell travel east through the Golden Gate.
 	swellDir: new THREE.Vector2( 1, 0.12 ).normalize(),
 };

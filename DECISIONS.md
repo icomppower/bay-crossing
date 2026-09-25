@@ -108,3 +108,21 @@ are in `docs/archive-hong-kong.md`.
   and the chart disagree by 13.8 m and no third source covers Alcatraz, so Alcatraz placement is uncertain to
   ~14 m). Tolerance calibrated to 10 m (worst gated error 6.45 m). Reason: every gated point compares two
   independent surveys.
+- **D33** The ferry is MV Golden Gate (ex-Chinook), a Golden Gate Ferry catamaran: 43.7 m × 12.0 m, draft 1.5 m,
+  waterjets, 38 kn (Wikipedia, "MV Golden Gate"). Golden Gate Ferry runs route SSSF (GTFS) with its fleet and
+  rotates vessels between routes; no source fixes one hull to Sausalito, so the choice is "a fleet vessel on
+  the route". It is procedural in code (`src/world/FerryModel.js`), from the dimensions in `FerrySpec.js`.
+  Reason: D3.
+- **D34** G4 duration range, cited on both ends: lower = the geodesic distance between the GTFS terminals at the
+  published top speed (38 kn) = 8.56 min; upper = the published timetable, 30 min (every SSSF trip in GTFS). The
+  helmsman (`FerryAutopilot`) sails 8 kn within 400 m of each terminal and 22 kn on the open bay. That speed is a
+  setting, so the check proves route geometry, scale and physics give a timetable-consistent crossing, not the
+  vessel's real service speed. Reason: GTFS lists one duration (30 min), so no other range is published.
+- **D35** Ferry physics: a dedicated `FerryController` with BoatController's public surface (the lobster
+  controller is tuned to an 8 m boat with hard-coded constants). The Tidewater lobster boat is no longer
+  spawned. The ferry is helm-only in run 1: boarding goes straight to the wheelhouse, within 60 m of the
+  boarding point (the berth is on a pier with no walkable deck yet), and leaving the helm steps ashore on the
+  nearest dry ground. P toggles the helmsman. Route planning: A* over the shipped bathymetry at 6 m, needing
+  ≥ 3.45 m at MSL in open water (draft + 1 m + MSL→MLLW) and ≥ 2.0 m within 150 m of a terminal (the NCEI grid
+  is 2.5–4.4 m at the Ferry Building gates), with pier sheds and OSM piers as obstacles. Departure from
+  Gate C (GTFS 43000), the deeper SSSF gate. Reason: G4.

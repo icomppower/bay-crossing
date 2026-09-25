@@ -11,6 +11,7 @@ import { Profiler } from './core/Profiler.js';
 import { SceneRenderer, LAYERS } from './core/SceneRenderer.js';
 import { DEPTH_FORMAT } from './engine/render/SceneRenderer.js';
 import { installDebugViews } from './core/DebugViews.js';
+import { qualityTier } from './core/Quality.js';
 
 import { Atmosphere, SUN_ILLUMINANCE } from './sky/Atmosphere.js';
 import { Sky, sunDirectionFromTime } from './sky/Sky.js';
@@ -26,7 +27,7 @@ import { Terrain } from './world/Terrain.js';
 import { computeShoreField } from './world/ShoreField.js';
 import { WORLD } from './world/WorldLayout.js';
 import { Colliders } from './world/Colliders.js';
-import { BoatModel } from './world/BoatModel.js';
+import { FerryModel } from './world/FerryModel.js';
 
 import { OceanFFT } from './ocean/OceanFFT.js';
 import { WaterSurface } from './ocean/WaterSurface.js';
@@ -51,7 +52,8 @@ import { PostFX } from './post/PostFX.js';
 import { AirHaze } from './post/AirHaze.js';
 import { FlyCamera } from './player/FlyCamera.js';
 import { Player } from './player/Player.js';
-import { BoatController } from './player/BoatController.js';
+import { FerryController } from './player/FerryController.js';
+import { FerryAutopilot } from './player/FerryAutopilot.js';
 import { BoatSpray } from './player/BoatSpray.js';
 import { WakeSim } from './ocean/WakeSim.js';
 import { SoundScape } from './audio/SoundScape.js';
@@ -77,6 +79,7 @@ export class App {
 	async init( onProgress = () => {} ) {
 
 		const qs = this.qs;
+		const Q = this.quality = qualityTier( qs ); // D6: low = the Mac mini M4 baseline
 		// report a stage, then let the page paint it before the (synchronous) stage work starts
 		const progress = async ( p, text, until ) => {
 
@@ -105,7 +108,7 @@ export class App {
 		await progress( 0.04, 'Building the atmosphere…' );
 		this.atmosphere = new Atmosphere( renderer );
 		this.sky = new Sky( this.atmosphere );
-		if ( ! qs.has( 'noClouds' ) ) {
+		if ( ! qs.has( 'noClouds' ) && Q.clouds ) {
 
 			// sky-pro-webgpu's clouds ("Partly cloudy"); ?oldClouds: the previous ones
 			this.clouds = qs.has( 'oldClouds' ) ? new Clouds( renderer, this.atmosphere ) : new SkyProClouds( renderer, this.atmosphere );
@@ -118,7 +121,7 @@ export class App {
 		// contact-hardening filter sized by the sun's disc on the near cascade. Each cascade's depth range
 		// is its light margin (200 m) + its extent, which keeps the depth bias small in metres.
 		// Shadows come from the opaque and the late (transparent-pass) layers.
-		this.csm = this.shadows = new SunShadows( { size: 2048, splits: [ 10, 60, 400 ], lightMargin: 200, normalBias: [ 0.015, 0.06, 0.3 ], bias: 0.00002 } );
+		this.csm = this.shadows = new SunShadows( { size: Q.shadowSize, splits: [ 10, 60, 400 ], lightMargin: 200, normalBias: [ 0.015, 0.06, 0.3 ], bias: 0.00002 } );
 		this.shadows.layerMask = ( 1 << LAYERS.OPAQUE ) | ( 1 << LAYERS.TRANSPARENT );
 
 		this.environment = new Environment( renderer, scene, this.sky );
@@ -142,24 +145,26 @@ export class App {
 		// Golden Gate Bridge, Ferry Building, Coit Tower, Transamerica, Alcatraz (offline Blender LOD GLBs)
 		this.landmarks = await loadLandmarks();
 		scene.add( this.landmarks );
+		this.buildings.userData.lodBias = this.landmarks.userData.lodBias = Q.lodBias;
 
-		this.boat = new BoatModel();
+		// the ferry (MV Golden Gate class) and its route Ferry Building → Sausalito (public/ferry/)
+		const base = ( import.meta.env && import.meta.env.BASE_URL ) || '/';
+		this.ferryRoute = await ( await fetch( base + 'ferry/route.json' ) ).json();
+		this.boat = new FerryModel();
 		scene.add( this.boat.group );
-		this.boat.group.position.copy( WORLD.boatDock.position );
-		this.boat.group.rotation.y = WORLD.boatDock.heading;
 
 		// ---------------------------------------------------------------- ocean
 		await progress( 0.3, 'Simulating the ocean…' );
 		this.fft = new OceanFFT( renderer );
 		this.foamTexture = createFoamTexture( renderer );
-		this.oceanLOD = new CDLOD( { gridSize: Number( qs.get( 'G' ) || 32 ), leafSize: 8, levels: 12, minY: - 25, maxY: 25 } );
+		this.oceanLOD = new CDLOD( { gridSize: Number( qs.get( 'G' ) || Q.oceanGrid ), leafSize: 8, levels: 12, minY: - 25, maxY: 25 } );
 		this.surface = new WaterSurface( { fft: this.fft, cdlod: this.oceanLOD, foamTexture: this.foamTexture } );
 		this.surface.terrain = this.terrainGPU;
 		this.seaDetail = new SeaDetail();
 		this.surface.detail = this.seaDetail;
 		this.shore = new ShoreWaves( this.terrainGPU );
 		this.surface.shore = this.shore;
-		this.caustics = qs.has( 'noCaustics' ) ? null : new Caustics( renderer, this.fft );
+		this.caustics = qs.has( 'noCaustics' ) || ! Q.caustics ? null : new Caustics( renderer, this.fft );
 		if ( this.caustics ) this.caustics.detail = this.seaDetail;
 
 		// how much of the underwater lighting each group needs (sampler budget, see UnderwaterLighting)
@@ -242,7 +247,10 @@ export class App {
 		// dust, pollen, salt aerosol, seed fluff and gnats drifting around the camera
 		this.airMotes = new AirMotes( { terrain: this.terrainGPU, clouds: this.clouds, csm: this.csm, reversedDepth: true } );
 		scene.add( this.airMotes.mesh );
-		this.boatCtl = new BoatController( { model: this.boat, query: this.query, terrain: this.terrainData, colliders: this.colliders } );
+		const [ w0, w1 ] = this.ferryRoute.waypoints;
+		this.boatCtl = new FerryController( { model: this.boat, query: this.query, terrain: this.terrainData,
+			berth: { x: w0[ 0 ], z: w0[ 1 ], heading: Math.atan2( w1[ 0 ] - w0[ 0 ], w1[ 1 ] - w0[ 1 ] ) } } );
+		this.autopilot = null; // P: the helmsman sails the route (FerryAutopilot)
 		this.boatSpray = new BoatSpray( { boat: this.boatCtl, spray: this.spray } );
 		// interactive wake around the boat (Kelvin pattern, bow/stern waves, prop wash foam)
 		this.wake = new WakeSim( renderer, { terrainGPU: this.terrainGPU, boat: this.boatCtl, colliders: this.colliders } );
@@ -266,6 +274,7 @@ export class App {
 		} );
 		this.post = new PostFX( renderer, { sceneRenderer: this.sceneRenderer, camera, underwater: this.underwater, clouds: this.clouds, sunDir: this.atmosphere.sunDir, haze: this.haze } );
 		G.exposure.value = this.settings.exposure;
+		this.settings.renderScale = Q.renderScale;
 		if ( qs.has( 'scale' ) ) this.settings.renderScale = Number( qs.get( 'scale' ) ) || 1;
 		this.setRenderScale( this.settings.renderScale );
 
@@ -362,7 +371,7 @@ export class App {
 	updateSun() {
 
 		const s = this.settings;
-		const dir = sunDirectionFromTime( s.timeOfDay ).applyAxisAngle( _up, MathUtils.degToRad( s.sunAzimuth || 0 ) );
+		const dir = sunDirectionFromTime( s.timeOfDay, WORLD.sun.latitude, WORLD.sun.declination ).applyAxisAngle( _up, MathUtils.degToRad( s.sunAzimuth || 0 ) );
 		// the sky is always scattered sunlight, even with the sun below the horizon (twilight)
 		this.atmosphere.sunDir.value.copy( dir );
 		// below the horizon the moon takes over as the key light
@@ -420,6 +429,20 @@ export class App {
 			this.ui.ui.toast( s.timeSpeed !== 0 ? 'Time running' : 'Time paused' );
 
 		}
+
+	}
+
+	// P: the helmsman takes the ferry along the route (again from the current position); P again hands it back
+	setAutopilot( on ) {
+
+		if ( on ) {
+
+			this.autopilot = new FerryAutopilot( this.ferryRoute );
+			this.boatCtl.driven = true;
+			this.boatCtl.moored = false;
+
+		} else this.autopilot = null;
+		if ( this.ui ) this.ui.ui.toast( on ? 'Autopilot: Ferry Building → Sausalito' : 'Autopilot off' );
 
 	}
 
@@ -530,6 +553,7 @@ export class App {
 		// ---- player / boat (boat physics first so the cameras follow this frame's pose)
 		if ( this.input.hit( 'KeyF' ) ) this.setFreeCam( ! this.freeCam );
 		if ( this.input.hit( 'KeyT' ) ) this.toggleTime();
+		if ( this.input.hit( 'KeyP' ) ) this.setAutopilot( ! this.autopilot );
 		if ( this.input.hit( 'KeyL' ) ) {
 
 			const on = this.localLights.toggleFlashlight();
@@ -548,6 +572,7 @@ export class App {
 		this.wake.update( dt );
 		if ( this.freeCam ) this.fly.update( dt );
 		else this.player.update( dt );
+		if ( this.autopilot ) this.autopilot.update( this.boatCtl, dt );
 		this.updateSun();
 
 		this.atmosphere.update( dt, this.camera.position.y );
@@ -595,6 +620,15 @@ export class App {
 
 			this.post.flare.setDepthHeight( this.sceneRenderer.sceneRT.height );
 			this.post.flare.update( this.camera, dt, { aboveWater: this.camera.position.y > ( this.cameraWaterHeight ?? 0 ) - 0.02 } );
+
+		}
+
+		// headless simulation runs (gates) skip drawing: water, physics and queries still run on the GPU
+		if ( this.renderEnabled === false ) {
+
+			GPU.submit();
+			this.input.endFrame();
+			return;
 
 		}
 
