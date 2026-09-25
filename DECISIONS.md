@@ -122,7 +122,7 @@ are in `docs/archive-hong-kong.md`.
   controller is tuned to an 8 m boat with hard-coded constants). The Tidewater lobster boat is no longer
   spawned. The ferry is helm-only in run 1: boarding goes straight to the wheelhouse, within 60 m of the
   boarding point (the berth is on a pier with no walkable deck yet), and leaving the helm steps ashore on the
-  nearest dry ground. P toggles the helmsman. Route planning: A* over the shipped bathymetry at 6 m, needing
+  nearest dry ground. G toggles the helmsman (P is photo mode). Route planning: A* over the shipped bathymetry at 6 m, needing
   ≥ 3.45 m at MSL in open water (draft + 1 m + MSL→MLLW) and ≥ 2.0 m within 150 m of a terminal (the NCEI grid
   is 2.5–4.4 m at the Ferry Building gates), with pier sheds and OSM piers as obstacles. Departure from
   Gate C (GTFS 43000), the deeper SSSF gate. Reason: G4.

@@ -1938,7 +1938,7 @@ export class UI {
 		this.sparkEl = stats.querySelector( '.tw-spark' );
 
 		const brand = h( 'div', 'tw-brand' );
-		brand.innerHTML = `${ brandMark() }<span class="tw-brand-name">TIDEWATER</span>`;
+		brand.innerHTML = `${ brandMark() }<span class="tw-brand-name">BAY CROSSING</span>`;
 		this.modeEl = h( 'div', 'tw-mode is-empty', { role: 'status' } );
 		this.modeIco = h( 'span', 'tw-mode-ico' );
 		this.modeText = h( 'span', 'tw-mode-text' );
@@ -2147,12 +2147,9 @@ export class UI {
 					</section>
 					<section>
 						<h3>Interact</h3>
-						${ row( k( 'E' ), 'Interact<small>Board, helm, step ashore, trade</small>' ) }
+						${ row( k( 'E' ), 'Interact<small>Take the ferry helm, step ashore</small>' ) }
 						${ row( k( 'V' ), 'Boat camera<small>1st / 3rd person</small>' ) }
-						${ row( k( 'R' ), 'Fishing rod<small>Take out / put away</small>' ) }
-						${ row( k( 'LMB' ), 'Cast, strike, reel<small>Hold to wind up / reel</small>' ) }
-						${ row( k( 'RMB' ), 'Reel in an empty line' ) }
-						${ row( k( 'I' ), 'Cooler and fish log' ) }
+						${ row( k( 'G' ), 'Ferry autopilot<small>Sails the route to Sausalito</small>' ) }
 						${ row( k( 'F' ), 'Free camera' ) }
 						${ row( k( 'T' ), 'Pause time' ) }
 						${ row( k( 'L' ), 'Flashlight' ) }
@@ -2167,8 +2164,8 @@ export class UI {
 					</section>
 				</div>
 				<div class="tw-help-guide">
-					<span><b>How to play:</b> catch fish, sell them to Joe at the fish stand by the pier, and buy upgrades from Marta at the chandlery by the boathouse. Both are on the map (lower right).</span>
-					<button type="button" class="gm-btn is-ghost tw-help-replay">Replay the guide</button>
+					<span><b>How to play:</b> walk the Embarcadero, take the ferry helm at Ferry Building Gate C and cross to Sausalito, by hand or with the autopilot (G).</span>
+					<button type="button" class="gm-btn is-ghost tw-help-replay" hidden>Replay the guide</button>
 				</div>
 			</div>`;
 		el.querySelector( '.tw-help-close' ).addEventListener( 'click', () => this.toggleHelp( false ) );
@@ -2188,7 +2185,7 @@ export class UI {
 		el.innerHTML = `
 			<div class="tw-start-inner">
 				${ brandMark( 'tw-start-mark' ) }
-				<div class="tw-start-title">TIDEWATER</div>
+				<div class="tw-start-title">BAY CROSSING</div>
 				<button type="button" class="tw-start-cta"><span class="tw-start-pulse" aria-hidden="true"></span>${ icon( 'mouse' ) }<span>Click to explore</span></button>
 				<div class="tw-start-keys">
 					<span><span class="tw-wasd"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span>Move</span>

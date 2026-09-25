@@ -1,155 +1,76 @@
-# Tidewater
+# SF Bay Crossing
 
-An island fishing game for the browser. Cast from the pier, the beach or your own boat, fight the fish,
-sell your catch to Joe at the fish stand, and spend it on better gear at Marta's chandlery. Around it is a
-real-time tropical island and ocean: swim the reef, drive the boat out to deep water, and watch a humpback
-breach. It runs directly on WebGPU and WGSL with its own small rendering engine, no framework.
+San Francisco Bay in the browser, built from real data: walk the Embarcadero at the Ferry Building, take the
+helm of a Golden Gate Ferry catamaran past Alcatraz to Sausalito, and watch the Golden Gate Bridge from golden
+hour to the lit-up night skyline. It runs directly on WebGPU and WGSL, on the engine of
+[Tidewater](https://github.com/dgreenheck/tidewater) (MIT), whose ocean, sky and post-processing it keeps.
 
-**Play it:** https://dgreenheck.github.io/tidewater/
+**Play it:** https://icomppower.github.io/bay-crossing/
 
-![Fishing off the pier at golden hour](docs/screenshot.jpg)
+![Golden hour from the ferry deck, mid-bay](shots/golden-hour.png)
 
-![The beach in the late afternoon](docs/screenshot-beach.jpg)
+| Blue hour | Night |
+|---|---|
+| ![Blue hour](shots/blue-hour.png) | ![Night](shots/night.png) |
 
-## Requirements
+## What's real
 
-- A browser with WebGPU: a recent Chrome, Edge or Safari.
-- A capable GPU. It targets 60 fps at 2560×1267 on an Apple M5 Pro, and dynamic resolution scales
-  the render down on slower machines.
-- The first load compiles several hundred shaders, which can take a minute or more. Later visits are
-  faster because the browser caches them.
+- **Terrain and seabed:** USGS 3DEP lidar elevation on land, NOAA NCEI topobathy below the water, merged on a
+  3 m grid and set to local mean sea level (NOAA tide station 9414290).
+- **Buildings:** 8,452 San Francisco footprints with the city's LiDAR-derived roof heights (DataSF) and 1,823
+  Sausalito buildings from OpenStreetMap, extruded with procedural facades and three levels of detail.
+- **Landmarks:** Golden Gate Bridge, Ferry Building, Coit Tower, Transamerica Pyramid and Alcatraz, built
+  procedurally in Blender from OpenStreetMap positions and published dimensions. Checked against NOAA nautical
+  charts to within 1–7 m.
+- **Ferry:** the dimensions of MV *Golden Gate* (43.7 m catamaran, 1.5 m draft), on a route planned over the
+  bathymetry from Ferry Building Gate C to the Sausalito landing. The autopilot crossing takes about 18 minutes;
+  the published timetable allows 30.
 
-## Features
-
-**Fishing**
-- A spinning rod and reel that cast, reel and bend under load, with the bail, rotor and crank animated.
-- Bites that depend on the water (shallows, pier, reef, bay, deep water), depth and time of day, across
-  18 Caribbean species.
-- A line-tension fight: keep the tension in the green band, ease off when the fish runs.
-- A full-screen catch card with the fish's length and weight, a fish log with records, and a cooler.
-- Joe's fish stand buys your catch; Marta's chandlery sells line, reels, rods, a bigger hold, fuel, a rebuilt
-  engine, a fish finder and deck floodlights for night fishing.
-- Walk the deck and the wheelhouse while the boat drifts; the boat burns fuel.
-- A first-play guide, contextual tips and a minimap. Progress is saved in the browser.
-
-**Ocean**
-- Four-cascade FFT ocean (Tessendorf spectra) with foam, whitecaps, wind streaks and swell.
-- Depth-aware breaking waves with peeling shoulders, whitewater, spray and foam lace.
-- A shallow-water simulation for swash running up and down the sand.
-- Boat wake and bow spray, and a whale wake.
-- Caustics on the seabed and in the water, with light shafts.
-- A split underwater/above-water view at the waterline, with water droplets on the lens after surfacing.
-- Refraction of the seabed through the surface, including behind the pier and boats.
-
-**Sky**
-- Physically based atmosphere (Hillaire 2020) with a sun, moon and stars.
-- Volumetric cumulus and wispy cirrus with cloud shadows on the land.
-- Aerial perspective and sea haze.
-- God rays, and a lens flare with occlusion.
-
-**World**
-- An island with a beach, hills, headlands and rocks.
-- A fishing village, a pier, and the vendors' stalls built from Poly Haven scans.
-- Realistic vendor characters (Microsoft Rocketbox) with skinned animation.
-- A coral reef with fish.
-- Palms, bananas, monstera, elephant ear, heliconia, bird of paradise, broadleaf trees, shrubs and dune
-  grass, with impostors and dithered LOD fades.
-- Beach debris.
-- Birds, crabs and marine snow.
-- A humpback whale with an escort of fish, blows, fluke dives and breaches.
-
-**Lighting and post**
-- Cascaded shadows with contact-hardening penumbrae, and screen-space contact shadows.
-- Ground bounce light.
-- GTAO ambient occlusion.
-- Temporal upscaling and sharpening.
-- Bloom, auto exposure and motion blur.
-- Night lighting from lanterns, windows and the boat, plus a flashlight that also works underwater.
-
-**Audio**
-- Positional audio from real CC0 field recordings: surf timed to each breaking wave, wind, birds, the boat
-  engine, footsteps by surface, underwater ambience, whale song, and the rod and reel (casts, the bail,
-  reeling, the drag, line snaps, splashes).
+Known gaps: the heights date from 2016 (no Salesforce Tower), the Embarcadero piers aren't walkable yet, and
+the ferry is helm-only.
 
 ## Controls
 
 | Key | Action |
 |---|---|
-| W A S D | Move |
-| Mouse | Look (click to capture the mouse, Esc to release) |
-| Shift | Sprint / boat boost |
-| Space | Jump / swim up |
-| C | Crouch / dive |
-| E | Interact: board the boat, take or leave the helm, step ashore, trade with the fish buyer or the chandlery |
-| V | Boat camera at the helm (1st / 3rd person) |
-| R | Take out / put away the fishing rod |
-| Left mouse | Hold to wind up, release to cast · strike when a fish takes the bait · hold to reel |
-| Right mouse | Reel an empty line in |
-| I or Tab | Cooler / fish hold and the fish log |
+| W A S D, mouse | Walk and look (click to capture the mouse) |
+| E | Take the ferry helm / step ashore |
+| W / S, A / D at the helm | Waterjets ahead / astern, steer |
+| G | Ferry autopilot to Sausalito |
+| T | Let the day run (golden hour → night) |
 | F | Free camera |
-| L | Flashlight |
-| T | Pause time |
-| M | Mute |
-| H | Settings panel |
-| P | Photo mode |
-| F1 or ? | All controls |
+| H, F1 | Settings, all controls |
 
-### Fishing
+It needs a browser with WebGPU (a recent Chrome, Edge or Safari). On a Mac mini M4 it holds ~50 fps at
+1080p on the `low` tier. The first load compiles the shaders and can take a minute.
 
-Walk the deck of the boat while it drifts, or fish from the pier and the beach. Cast, wait for the bobber
-to dip and strike when it's pulled under, then play the fish: keep the line tension in the green band,
-ease off when it runs. Different water holds different fish (the shallows, the pier, the reef, the bay and
-deep water offshore), and some bite best at dawn, dusk or night. Sell your catch to Joe at the fish stand
-on the beach by the pier, and spend it at Marta's chandlery by the boathouse: stronger line, a faster reel,
-a longer rod, a bigger fish hold, a larger fuel tank, a rebuilt engine, a fish finder and deck floodlights for
-night fishing. The boat burns diesel at the helm; fill up at the chandlery. Progress is saved in the browser.
+## Run locally
 
-The settings panel (H) exposes the sea state, time of day, sun azimuth, clouds, haze, post-processing and
-more.
-
-## URL options
-
-Add these to the URL, for example `?fly&noAudio`:
-
-| Option | Effect |
-|---|---|
-| `fly` | Start in the free camera |
-| `noAudio` | Disable sound |
-| `noClouds` | Skip the volumetric clouds |
-| `noHaze` | Skip the haze and sun shafts |
-| `noCaustics` | Skip caustics |
-| `noVeg` | Skip vegetation |
-| `noSim` | Skip the swash (shallow-water) simulation |
-
-## Running locally
-
-```sh
+```
 npm install
-npm run dev      # http://127.0.0.1:5189
-npm run build    # static build in dist/
+npm run dev          # http://127.0.0.1:5189
 ```
 
-Every push to `main` deploys to GitHub Pages through `.github/workflows/deploy.yml`.
+## Data pipeline and checks
 
-## Project layout
+The shipped tiles in `public/` are built from cached downloads by deterministic scripts:
 
-| Folder | Contents |
-|---|---|
-| `src/game/` | The fishing game: rod, bites, the fight, catch card, cooler and log, vendors and stalls, guide, minimap, HUD |
-| `src/engine/` | The rendering engine: math, scene graph and geometry, GPU resources, WGSL shader composition, materials, lighting and shadows |
-| `src/ocean/` | FFT ocean, water surface and material, shore waves, breakers, swash, wake, caustics, underwater lighting |
-| `src/sky/` | Atmosphere, clouds, sky and environment |
-| `src/world/` | Terrain, village, pier, reef, fish, vegetation, rocks, debris, wildlife, whale, boat |
-| `src/post/` | Post chain: AO, underwater composite, haze, TAAU, motion blur, bloom, lens flare, droplets |
-| `src/materials/` | Shared lighting: shadow filtering, bounce light, contact shadows, local lights, LOD fades |
-| `src/player/` | Walking, swimming, the boat and the free camera |
-| `src/audio/` | The sample-based soundscape |
-| `src/ui/` | Settings panel, loading screen and HUD |
-| `tools/` | Scripts that fetch and convert the characters, stall props and fishing sounds |
-| `test/` | Headless engine smoke test and game-logic tests (`npm test`), and HUD / loader dev pages |
+```
+npm run fetch-data               # 9 sources into data/raw/ (gitignored), with a checksum manifest
+node tools/terrain/build.mjs     # → public/terrain
+node tools/buildings/build.mjs   # → public/buildings
+node tools/landmarks/build.mjs   # → public/landmarks (needs Blender 5.x; BLENDER=/path/to/blender)
+node tools/ferry/prepare.mjs && node tools/ferry/route.mjs   # → public/ferry
+./verify.sh                      # gates G0–G6 (~20 min, headless WebGPU)
+```
 
-## Credits and license
+Each gate in `gates/` must first fail on a deliberately broken fixture, then pass for real. They cover data
+checksums and licences, the clean fork, byte-identical pipelines, LOD and triangle caps, georeference against
+NOAA charts, the ferry crossing (duration and draft clearance), and the M4 frame-time and GPU-memory budget.
+Calibrated limits are frozen in `SPEC-THRESHOLDS.md`, and the reasoning is in `DECISIONS.md`.
 
-The code is released under the MIT license; see [LICENSE](LICENSE). Third-party assets (CC0 audio from
-Freesound, CC0 scans from Poly Haven, MIT characters from Microsoft Rocketbox, OFL / Apache fonts) and
-technique references are listed in [CREDITS.md](CREDITS.md).
+## Credits and licences
+
+Code: MIT (see `LICENSE`, Tidewater's). Data: DataSF building footprints (PDDL), OpenStreetMap (ODbL,
+© OpenStreetMap contributors), USGS 3DEP and NOAA NCEI / CO-OPS / ENC (public domain). Golden Gate Ferry's GTFS
+feed is used only for facts: terminal positions and trip times. Full details are in `CREDITS.md`.

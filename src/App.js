@@ -250,7 +250,7 @@ export class App {
 		const [ w0, w1 ] = this.ferryRoute.waypoints;
 		this.boatCtl = new FerryController( { model: this.boat, query: this.query, terrain: this.terrainData,
 			berth: { x: w0[ 0 ], z: w0[ 1 ], heading: Math.atan2( w1[ 0 ] - w0[ 0 ], w1[ 1 ] - w0[ 1 ] ) } } );
-		this.autopilot = null; // P: the helmsman sails the route (FerryAutopilot)
+		this.autopilot = null; // G: the helmsman sails the route (FerryAutopilot)
 		this.boatSpray = new BoatSpray( { boat: this.boatCtl, spray: this.spray } );
 		// interactive wake around the boat (Kelvin pattern, bow/stern waves, prop wash foam)
 		this.wake = new WakeSim( renderer, { terrainGPU: this.terrainGPU, boat: this.boatCtl, colliders: this.colliders } );
@@ -432,7 +432,7 @@ export class App {
 
 	}
 
-	// P: the helmsman takes the ferry along the route (again from the current position); P again hands it back
+	// G: the helmsman takes the ferry along the route (again from the current position); G again hands it back
 	setAutopilot( on ) {
 
 		if ( on ) {
@@ -553,7 +553,7 @@ export class App {
 		// ---- player / boat (boat physics first so the cameras follow this frame's pose)
 		if ( this.input.hit( 'KeyF' ) ) this.setFreeCam( ! this.freeCam );
 		if ( this.input.hit( 'KeyT' ) ) this.toggleTime();
-		if ( this.input.hit( 'KeyP' ) ) this.setAutopilot( ! this.autopilot );
+		if ( this.input.hit( 'KeyG' ) ) this.setAutopilot( ! this.autopilot );
 		if ( this.input.hit( 'KeyL' ) ) {
 
 			const on = this.localLights.toggleFlashlight();
