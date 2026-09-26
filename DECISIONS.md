@@ -205,3 +205,18 @@ are in `docs/archive-hong-kong.md`.
     never dips below terrain or a roof, the sight line to the target is clear, the frame is not blank, N wraps,
     W cancels, F leaves; contact sheet `shots/waypoints.png`. Touch: all 8 controls hit-tested at 390×844 and
     844×390 (no overlap, no horizontal scroll), and a tap on N shows the first waypoint.
+- **D43** Landmark signs, at the owner's request (2026-09-26: "maybe all main sf landmark get a sign so I could
+  see"). 18 places in `src/world/Places.js`: the 5 modelled landmarks, Sausalito, and 12 converted from WGS84
+  (Coit Tower and Transamerica come out within 1 m of their model anchors). Bay Bridge, Oracle Park, Treasure
+  Island and Tiburon are outside the slice; Salesforce Tower has no building.
+  - **Signs** (`src/ui/Signs.js`): a glass label with the distance, on a stem to the place. Hidden behind the
+    camera or off screen, when terrain or a roof blocks the view (sampled against the terrain and `RoofGrid`),
+    under an overlap with a nearer sign, or over a touch control. K or the Explore tab toggles them; photo mode
+    and the start screen hide them.
+  - **Flying there:** a click or tap on a sign flies to its waypoint, or to a view 350 m off from the camera's
+    side. With the mouse captured, the sign under the crosshair lights up and a click flies there. Numpad 1–8
+    now work like 1–8.
+  - **Checks:** `test/signs.mjs` (headless: anchors, each waypoint shows its own sign, Angel Island hides
+    Alcatraz from the north, all 12 other places reachable) and a browser check (desktop and phone: no signs
+    on the start screen, no stacking, click / aim-click / tap fly there, K and photo mode hide them, touch
+    controls stay tappable with signs up).

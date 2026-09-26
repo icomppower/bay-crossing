@@ -474,6 +474,22 @@ export class App {
 
 	}
 
+	// A landmark sign was clicked: its waypoint, or a view of the place from the camera's side, ~350 m off and
+	// clear of the ground around it
+	goToPlace( a ) {
+
+		if ( a.waypoint !== undefined ) return this.goToWaypoint( a.waypoint );
+		const c = this.camera.position, dx = c.x - a.x, dz = c.z - a.z, d = Math.hypot( dx, dz ) || 1;
+		const x = a.x + dx / d * 350, z = a.z + dz / d * 350;
+		const y = Math.max( a.ground + 110, this.fly.groundAt( x, z ) + 40 );
+		const p = waypointPose( { eye: [ x, y, z ], at: [ a.x, a.ground + 10, a.z ] } );
+		this.waypoint = - 1;
+		this.setFreeCam( true );
+		this.fly.flyTo( p.position, p.yaw, p.pitch );
+		if ( this.ui ) this.ui.ui.toast( a.name );
+
+	}
+
 	// Free (debug) camera on F; the walker / boat resumes where it was left.
 	setFreeCam( on ) {
 
@@ -582,7 +598,8 @@ export class App {
 		if ( this.input.hit( 'KeyF' ) ) this.setFreeCam( ! this.freeCam );
 		if ( this.input.hit( 'KeyT' ) ) this.toggleTime();
 		if ( this.input.hit( 'KeyG' ) ) this.setAutopilot( ! this.autopilot );
-		for ( let i = 0; i < WAYPOINTS.length; i ++ ) if ( this.input.hit( 'Digit' + ( i + 1 ) ) ) this.goToWaypoint( i );
+		for ( let i = 0; i < WAYPOINTS.length; i ++ ) if ( this.input.hit( 'Digit' + ( i + 1 ) ) || this.input.hit( 'Numpad' + ( i + 1 ) ) ) this.goToWaypoint( i );
+		if ( this.input.hit( 'KeyK' ) && this.ui ) this.ui.toggleSigns();
 		if ( this.input.hit( 'KeyN' ) ) this.goToWaypoint( ( this.waypoint + 1 ) % WAYPOINTS.length );
 		if ( this.input.hit( 'KeyL' ) ) {
 

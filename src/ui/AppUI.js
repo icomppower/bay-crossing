@@ -3,6 +3,7 @@ import { UI } from './UI.js';
 import { G } from '../core/Globals.js';
 import { WORLD } from '../world/WorldLayout.js';
 import { WAYPOINTS } from '../world/Waypoints.js';
+import { SignsLayer } from './Signs.js';
 import { GroundBounce } from '../materials/GroundBounce.js';
 import { ContactShadows } from '../materials/ContactShadows.js';
 
@@ -93,6 +94,9 @@ export class AppUI {
 		const places = explore.addFolder( 'Waypoints', { icon: 'compass' } );
 		WAYPOINTS.forEach( ( w, i ) => places.addButton( { label: `${ i + 1 } · ${ w.name }`, icon: 'viewfinder', onClick: () => app.goToWaypoint( i ) } ) );
 		places.addButton( { label: 'Drop in here (F)', icon: 'walk', onClick: () => app.setFreeCam( false ) } );
+		this.signs = new SignsLayer( app, ui.root );
+		s.signs = true;
+		this.signsToggle = places.addToggle( { label: 'Landmark signs (K)', object: s, key: 'signs', onChange: ( v ) => this.signs.setEnabled( v ) } );
 
 		// ---------------------------------------------------------------- Ocean
 		const ocean = ui.addTab( 'ocean', 'Ocean', 'ocean' );
@@ -247,6 +251,15 @@ export class AppUI {
 
 	}
 
+	toggleSigns() {
+
+		this.s.signs = ! this.s.signs;
+		this.signs.setEnabled( this.s.signs );
+		this.ui.refresh();
+		this.ui.toast( this.s.signs ? 'Landmark signs on' : 'Landmark signs off' );
+
+	}
+
 	// per-frame HUD
 	update( dt ) {
 
@@ -255,6 +268,7 @@ export class AppUI {
 		ui.setStats( { fps: app.fps, frameMs: dt * 1000 } );
 		this.s.renderScale = app.post.scale;
 
+		this.signs.update();
 		const p = app.player;
 		if ( app.freeCam ) {
 

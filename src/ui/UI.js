@@ -2152,6 +2152,7 @@ export class UI {
 						${ row( k( 'G' ), 'Ferry autopilot<small>Sails the route to Sausalito</small>' ) }
 						${ row( k( 'F' ), 'Free camera<small>Or walk on from a waypoint</small>' ) }
 						${ row( k( '1' ) + k( '8' ), 'Waypoints<small>Fly to a landmark; N = next</small>' ) }
+						${ row( k( 'K' ), 'Landmark signs<small>Click one (or aim + click) to fly there</small>' ) }
 						${ row( k( 'T' ), 'Pause time' ) }
 						${ row( k( 'L' ), 'Flashlight' ) }
 						${ row( k( 'M' ), 'Mute' ) }

@@ -2662,3 +2662,26 @@ html.is-touch .tw-boat { top: calc(124px + env(safe-area-inset-top)); bottom: au
 /* the interaction prompt ("E  Take the helm") sits above the thumb controls on a phone */
 html.is-touch .tw-prompt { bottom: calc(250px + env(safe-area-inset-bottom)); }
 @media (max-height: 500px) { html.is-touch .tw-prompt { bottom: calc(150px + env(safe-area-inset-bottom)); } }
+
+/* ---- landmark signs (ui/Signs.js): a glass label on a stem down to the place; click to fly there */
+.tw-signs { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.tw-sign {
+	position: absolute; left: 0; top: 0; display: flex; flex-direction: column; align-items: center; gap: 1px;
+	padding: calc(5 * var(--tw-u)) calc(10 * var(--tw-u)); border-radius: calc(8 * var(--tw-u));
+	background: var(--tw-glass); border: 1px solid var(--tw-line-2); color: var(--tw-ink);
+	font: 600 var(--tw-fs-md, 13px) / 1.15 var(--tw-font); white-space: nowrap; cursor: pointer;
+	-webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+	opacity: 0; visibility: hidden; transition: opacity var(--tw-med) var(--tw-ease), visibility 0s var(--tw-med);
+	will-change: transform;
+}
+.tw-sign.is-on { opacity: 1; visibility: visible; transition: opacity var(--tw-med) var(--tw-ease), visibility 0s; }
+.tw-sign::after {
+	content: ''; position: absolute; left: 50%; top: 100%; width: 1.5px; height: 26px; margin-left: -0.75px;
+	background: linear-gradient(rgba(var(--tw-aqua-rgb), 0.8), rgba(var(--tw-aqua-rgb), 0));
+}
+.tw-sign:hover { border-color: rgba(var(--tw-aqua-rgb), 0.7); }
+.tw-sign-dist { font: 500 calc(11 * var(--tw-u)) / 1.1 var(--tw-mono); color: var(--tw-aqua); }
+.tw-root.is-locked .tw-sign { pointer-events: none; }
+html.is-touch .tw-root.is-locked .tw-sign { pointer-events: auto; } /* touch: tap, whatever the lock */
+.tw-root.is-locked .tw-sign.is-aim { border-color: var(--tw-aqua); box-shadow: 0 0 0 1px var(--tw-aqua), 0 0 18px rgba(var(--tw-aqua-rgb), 0.45); }
+.tw-root.is-photo .tw-signs, .tw-root.is-starting .tw-signs { display: none; }
