@@ -20,6 +20,9 @@ export const GPU = {
 	limits: null,
 	hasTimestamp: false,
 	hasFloat32Filterable: false,
+	// fewer sampled textures per stage than the richest shader needs (the water with the hull mask,
+	// 21): materials build a reduced variant (define REDUCED_TEXTURES) that fits WebGPU's default 16
+	reducedTextures: false,
 	encoder: null,
 	frame: 0,
 	samplers: null,
@@ -48,8 +51,17 @@ export const GPU = {
 			maxStorageBufferBindingSize: 512 * 1024 * 1024,
 			...requiredLimits,
 		};
-		const limits = {};
-		for ( const k in want ) if ( L[ k ] !== undefined ) limits[ k ] = Math.min( want[ k ], L[ k ] );
+		// shaders fit WebGPU's default limits (gate G7); higher limits are only headroom, so a clamp is
+		// logged, not fatal
+		const limits = {}, clamped = [];
+		for ( const k in want ) if ( L[ k ] !== undefined ) {
+
+			limits[ k ] = Math.min( want[ k ], L[ k ] );
+			if ( L[ k ] < want[ k ] ) clamped.push( `${ k } ${ L[ k ] } (wanted ${ want[ k ] })` );
+
+		}
+
+		if ( clamped.length ) console.info( 'WebGPU: adapter limits below the requested ones: ' + clamped.join( ', ' ) );
 
 		const optional = [ 'float32-filterable', 'timestamp-query', 'rg11b10ufloat-renderable', 'float32-blendable', 'shader-f16' ];
 		const requiredFeatures = optional.filter( ( f ) => adapter.features.has( f ) );
@@ -61,8 +73,14 @@ export const GPU = {
 		this.device = device;
 		this.queue = device.queue;
 		this.limits = device.limits;
+		this.reducedTextures = device.limits.maxSampledTexturesPerShaderStage < 21;
 		device.lost.then( ( info ) => console.error( 'WebGPU device lost:', info.message ) );
-		device.addEventListener && device.addEventListener( 'uncapturederror', ( e ) => console.error( 'WebGPU:', e.error.message.split( '\n' ).slice( 0, 6 ).join( '\n' ) ) );
+		device.addEventListener && device.addEventListener( 'uncapturederror', ( e ) => {
+
+			this.validationErrors.push( e.error.message.split( '\n' )[ 0 ] );
+			console.error( 'WebGPU:', e.error.message.split( '\n' ).slice( 0, 6 ).join( '\n' ) );
+
+		} );
 
 		if ( canvas && ! headless ) {
 
@@ -140,6 +158,8 @@ export const GPU = {
 	// run this frame (compute, post) call ready( handle ), which falls back to a synchronous create.
 	_pending: new Set(),
 	syncCompiles: [], // labels of pipelines needed before their async compile finished (diagnostics)
+	failures: [], // { label, message } of pipelines that failed to compile (their passes are skipped)
+	validationErrors: [], // first line of each uncaptured validation error (the cause behind a failed layout)
 
 	renderPipeline( desc ) {
 
@@ -170,6 +190,7 @@ export const GPU = {
 			}, ( e ) => {
 
 				h.failed = true;
+				this.failures.push( { label: desc.label, message: e.message.split( '\n' )[ 0 ] } );
 				console.error( `WebGPU: pipeline "${ desc.label }" failed: ${ e.message.split( '\n' ).slice( 0, 6 ).join( '\n' ) }` );
 
 			} );
@@ -180,7 +201,7 @@ export const GPU = {
 
 	},
 
-	// the pipeline now (synchronous compile when the async one has not finished)
+	// the pipeline now (synchronous compile when the async one has not finished); null when it failed
 	ready( h ) {
 
 		if ( h.pipeline || h.failed ) return h.pipeline;

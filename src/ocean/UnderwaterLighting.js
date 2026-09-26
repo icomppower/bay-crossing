@@ -170,11 +170,15 @@ fn uwMapLookup( xz: vec2f, waves: bool ) -> UwMapSample {
 		let uv = st0 / ${ MAP_N }.0;
 		if ( waves ) { a = textureSampleLevel( uwWaves0, smpLinearClamp, uv, 0.0 ); }
 		b = textureSampleLevel( uwLevel0, smpLinearClamp, uv, 0.0 );
-	} else if ( all( st1 > vec2f( 0.5 ) ) && all( st1 < vec2f( ${ MAP_N }.0 - 0.5 ) ) ) {
+	}
+#if !REDUCED_TEXTURES
+	// (the far map costs two sampled textures: the reduced variant keeps the near one only)
+	else if ( all( st1 > vec2f( 0.5 ) ) && all( st1 < vec2f( ${ MAP_N }.0 - 0.5 ) ) ) {
 		let uv = st1 / ${ MAP_N }.0;
 		if ( waves ) { a = textureSampleLevel( uwWaves1, smpLinearClamp, uv, 0.0 ); }
 		b = textureSampleLevel( uwLevel1, smpLinearClamp, uv, 0.0 );
 	}
+#endif
 	return UwMapSample( frame.seaLevel + a.x, a.yz, a.w, frame.seaLevel + b.x, b.y );
 }
 `,

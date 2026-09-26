@@ -1,4 +1,4 @@
-import { Material, ShaderModule, G } from '../engine/webgpu.js';
+import { Material, ShaderModule, G, GPU } from '../engine/webgpu.js';
 import { commonModule } from '../engine/render/wgsl/common.js';
 import { whaleWaterModule } from './WhaleWater.js';
 
@@ -161,7 +161,10 @@ export class WaterMaterial extends Material {
 			SIM && S.shoreSim.module, REFL && this.reflection.module, this.cameraWaterHeightNode && this.cameraWaterHeightNode.module ].filter( Boolean );
 		this.bindings.waterSceneColor = { texture: this.sceneColorTexture };
 		this.bindings.waterSceneDepth = { texture: this.sceneDepthTexture, sampleType: 'unfilterable-float' };
-		const REFR = !! this.refraction;
+		// reduced variant (GPU.reducedTextures): no refraction target (the scene copy instead), no cloud /
+		// hill shadow on the surface, no wake aeration (WakeSim): 21 -> 16 sampled textures
+		const LOW = GPU.reducedTextures;
+		const REFR = !! this.refraction && ! LOW;
 		if ( REFR ) {
 
 			this.bindings.waterRefrColor = { texture: this.refraction.texture };
@@ -187,14 +190,14 @@ export class WaterMaterial extends Material {
 	o.vSwash = r.swash;
 	o.vSurfMask = r.surfMask;
 `;
-		this.output = this.cheap ? 'r.color = vec4f( 0.02, 0.05, 0.1, 1.0 ); r.mask = vec4f( 0.0, 1.0, 0.0, 1.0 );' : this._shadeWGSL( { T, SH, SIM, SF, CL, HULL, REFL } );
+		this.output = this.cheap ? 'r.color = vec4f( 0.02, 0.05, 0.1, 1.0 ); r.mask = vec4f( 0.0, 1.0, 0.0, 1.0 );' : this._shadeWGSL( { T, SH, SIM, SF, CL, HULL, REFL, LOW } );
 		this.needsUpdate = true;
 
 	}
 
 	// --------------------------------------------------------------- shading (WGSL output snippet)
 
-	_shadeWGSL( { T, SH, SIM, SF, CL, HULL, REFL } ) {
+	_shadeWGSL( { T, SH, SIM, SF, CL, HULL, REFL, LOW } ) {
 
 		const S = this.waterSurface;
 		// the ShoreWaves module always provides shoreCrestPath / shoreSurfMedium (WGSL; the TSL-era
@@ -234,8 +237,8 @@ export class WaterMaterial extends Material {
 	// x the island's own shadow (heightfield horizon: the shadow map's range is too short to hold it)
 	// (5-tap PCF: the waves break up any penumbra detail the contact-hardening filter would add)
 	var sunLight = frame.sunColor * sunShadowPCF( pos, vec3f( 0.0, 1.0, 0.0 ), in.pixel );
-${ CL ? '	sunLight *= cloudsShadow( pos.xz );' : '' }
-${ T ? '	sunLight *= terrainSunShadowAt( pos );' : '' }
+${ CL && ! LOW ? '	sunLight *= cloudsShadow( pos.xz );' : '' }
+${ T && ! LOW ? '	sunLight *= terrainSunShadowAt( pos );' : '' }
 
 	// water film thickness at this pixel and the distance to the swash front (ShoreWaves.swashEdge):
 	// the sheet ends exactly on its analytic leading edge, not on the mesh triangles

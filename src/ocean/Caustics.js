@@ -131,7 +131,9 @@ struct CauOut { @builtin( position ) pos: vec4f, @location( 0 ) vOld: vec2f, @lo
 		rp.setIndexBuffer( this.indexBuffer, 'uint32' );
 		for ( const p of this.pipelines ) {
 
-			rp.setPipeline( GPU.ready( p.pipeline ) );
+			const pipeline = GPU.ready( p.pipeline );
+			if ( ! pipeline ) continue; // failed to compile (GPU.failures)
+			rp.setPipeline( pipeline );
 			rp.setBindGroup( 0, p.group0.getBindGroup() );
 			rp.setBindGroup( 1, p.bindings.getBindGroup() );
 			rp.drawIndexed( this.indexCount, 1 );

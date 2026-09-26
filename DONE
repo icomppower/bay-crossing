@@ -1,4 +1,4 @@
-DONE — 2026-09-25T11:33Z (re-verified after ground/water colours D39 and harness hardening D40)
+DONE — 2026-09-26T20:23Z (re-verified after baseline WebGPU limits D41, new required gate G7)
 
 ===== verify.sh summary =====
 g0   PASS
@@ -9,5 +9,6 @@ g2c  PASS
 g3   PASS
 g4   PASS
 g5   PASS
+g7   PASS
 g6   PASS (advisory)
 ALL REQUIRED GATES GREEN

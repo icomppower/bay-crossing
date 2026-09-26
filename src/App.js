@@ -366,6 +366,15 @@ export class App {
 		this.refraction.enabled = refr;
 		await GPU.pipelinesReady();
 		await GPU.queue.onSubmittedWorkDone();
+		// one readable message instead of a broken frame (or a setPipeline( null ) crash later)
+		if ( GPU.failures.length ) {
+
+			// a pipeline over an invalid layout only says "invalid due to a previous error": show that error
+			const f = GPU.failures[ 0 ];
+			const why = ( /previous error/.test( f.message ) && GPU.validationErrors[ 0 ] || f.message ).split( '. ' )[ 0 ];
+			throw new Error( `this GPU could not build the "${ f.label }" shader (${ why })` + ( GPU.failures.length > 1 ? ` and ${ GPU.failures.length - 1 } more` : '' ) + '. Please report your device and browser.' );
+
+		}
 
 	}
 

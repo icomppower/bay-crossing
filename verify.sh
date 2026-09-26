@@ -8,7 +8,7 @@
 set -u
 cd "$(dirname "$0")"
 
-REQUIRED=(g0 g1 g2a g2b g2c g3 g4 g5)
+REQUIRED=(g0 g1 g2a g2b g2c g3 g4 g5 g7)
 ADVISORY=(g6)
 if [ $# -gt 0 ]; then SELECTED=("$@"); else SELECTED=("${REQUIRED[@]}" "${ADVISORY[@]}"); fi
 

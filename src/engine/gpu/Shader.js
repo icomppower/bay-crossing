@@ -322,7 +322,7 @@ export function getBindGroupLayout( entries, label ) {
 // A composed set of group-1 bindings: layout + a bind group rebuilt when a resource changes.
 export class BindingSet {
 
-	// stageOf: { name: 'vertex' | 'fragment' } for render bindings only one stage reads (keeps the
+	// stageOf: { name: 'vertex' | 'fragment' | 'none' } for render bindings only one (or no) stage reads (keeps the
 	// per-stage uniform buffer / texture counts down); demote: uniform blocks bound as read-only storage
 	constructor( specs, stage, label = 'bindings', stageOf = null, demote = null ) {
 
@@ -337,6 +337,7 @@ export class BindingSet {
 			const st = stageOf[ this.names[ i ] ];
 			if ( st === 'fragment' && ( l.visibility & GPUShaderStage.FRAGMENT ) ) l.visibility = GPUShaderStage.FRAGMENT;
 			if ( st === 'vertex' && ( l.visibility & GPUShaderStage.VERTEX ) ) l.visibility = GPUShaderStage.VERTEX;
+			if ( st === 'none' ) l.visibility = 0;
 
 		}
 
@@ -532,8 +533,9 @@ export function composeShader( { modules = [], bindings = {}, code = '', defines
 	let demote = null;
 	if ( stage === 'render' && /@vertex\s+fn\s+vs\b/.test( code ) ) {
 
-		// bindings only one entry point can reach are declared for that stage only (per-stage limits:
-		// 12 uniform buffers, 16 sampled textures on some adapters)
+		// bindings only one entry point can reach are declared for that stage only, and bindings neither
+		// reaches (pulled in by a shared module) for no stage (per-stage limits: 12 uniform buffers,
+		// 16 sampled textures on WebGPU's default limits)
 		let all = '';
 		for ( const m of mods ) all += m.code + '\n';
 		const full = preprocess( all + code, defines );
@@ -542,7 +544,8 @@ export function composeShader( { modules = [], bindings = {}, code = '', defines
 		stageOf = {};
 		for ( const k in specs ) {
 
-			if ( ! usedV.has( k ) && ( ! usedF || usedF.has( k ) ) ) stageOf[ k ] = 'fragment';
+			if ( usedF && ! usedF.has( k ) && ! usedV.has( k ) ) stageOf[ k ] = 'none';
+			else if ( ! usedV.has( k ) && ( ! usedF || usedF.has( k ) ) ) stageOf[ k ] = 'fragment';
 			else if ( usedF && ! usedF.has( k ) && usedV.has( k ) ) stageOf[ k ] = 'vertex';
 
 		}

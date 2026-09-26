@@ -1,5 +1,6 @@
 import { UniformBlock } from '../gpu/Uniforms.js';
 import { Color, Vector2, Vector3, Vector4 } from '../math/index.js';
+import { GPU } from '../gpu/GPU.js';
 
 // Materials are WGSL snippets plugged into one mesh shader template (render/MeshShader.js).
 //
@@ -177,6 +178,7 @@ export class Material {
 			BACK_SIDE: this.side === 'back' ? 1 : 0,
 			TRANSPARENT: this.transparent ? 1 : 0,
 			RECEIVE_SHADOWS: this.receiveShadows ? 1 : 0,
+			REDUCED_TEXTURES: GPU.reducedTextures ? 1 : 0,
 		};
 
 	}

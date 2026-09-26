@@ -785,6 +785,7 @@ fn wakeSample( xz: vec2f ) -> vec4f {
 // falls (soft, irregular), so it breaks into clouds and streaks instead of a uniform ribbon
 fn wakeAeration( xz: vec2f ) -> f32 {
 	var out = 0.0;
+#if !REDUCED_TEXTURES
 	let tc = xz / WAKE_CELL - 0.5;
 	let i = vec2i( floor( tc ) );
 	let fr = fract( tc );
@@ -796,6 +797,7 @@ fn wakeAeration( xz: vec2f ) -> f32 {
 		let aN = ( 1.0 - exp( a * - 0.5 ) ) * ( m * 0.8 + 0.6 );
 		out = smoothstep( m * 0.2 + 0.03, m * 0.2 + 0.55, aN ) * wakeParams.aerOut * wakeFadeLong( xz );
 	}
+#endif
 	return out;
 }
 

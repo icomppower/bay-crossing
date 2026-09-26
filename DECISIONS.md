@@ -176,3 +176,21 @@ are in `docs/archive-hong-kong.md`.
   counted as "caught": G2a's new missing-map fixture threw inside the loader check, skipped its last two
   mutations, and still passed. Fixed in G2a (loader errors are failures), and all gates re-proved:
   40/40 mutations caught.
+- **D41** Baseline WebGPU limits, from the owner's Chrome crash (2026-09-26: "Failed to execute 'setPipeline' on
+  'GPUComputePassEncoder': parameter 1 is not of type 'GPUComputePipeline'"). `GPU.init()` clamps its wanted
+  limits to the adapter's, and the M4 offers more than WebGPU's defaults, so shaders over a default limit
+  compiled here and failed elsewhere; the failed pipeline was null and `setPipeline( null )` threw.
+  - **Causes** (reproduced by booting the App behind an adapter reporting the defaults): `ComputeMips` and the
+    ocean FFT mip kernel wrote 5 storage textures (limit 4); `Env SH` used 18 KB of workgroup memory (16 KB);
+    post passes declared module bindings neither stage used as vertex + fragment (17–21 vertex textures, 16);
+    Terrain and water sample 17 and 21 textures in the fragment stage (16).
+  - **Fixes:** mips in stages of ≤ `maxStorageTexturesPerShaderStage` levels (same two kernels on the M4); the
+    ocean's level 5 is stored by kernel B; `Env SH` on 64 threads; unused bindings get visibility 0. Below 21
+    sampled textures per stage, `GPU.reducedTextures` / define `REDUCED_TEXTURES` builds reduced variants:
+    terrain skips the far underwater map level; water drops the separate refraction target (scene copy
+    instead), cloud and hill shadow on the surface, and wake aeration. The M4 path is unchanged.
+  - **Guards:** clamped limits are logged; a failed pipeline is recorded in `GPU.failures` and its pass skipped
+    (compute, fullscreen, caustics; meshes already skipped); after precompile the App stops with one readable
+    message naming the shader and the root validation error.
+  - **Gate:** G7 (required). Caveat: Dawn on Metal stands in for Chrome on the owner's device; a limit the
+    proxy does not model, or a driver-specific shader bug, would not show here.

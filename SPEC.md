@@ -43,4 +43,6 @@ are measured at first run, written to `SPEC-THRESHOLDS.md`, then frozen.
   cap; no swap during the run.
 - **G6 Look (advisory):** headless screenshots at fixed seed — golden hour, blue hour, night — in `shots/` for
   human review.
-- **DONE** = G0–G5 green in one clean `verify.sh` run. Create file `DONE`.
+- **G7 Baseline-limits compile** (added 2026-09-26, D41): the real App on an adapter with only WebGPU's default
+  limits and no optional features; every pipeline compiles and every frame validates, all tiers, ferry + fly.
+- **DONE** = G0–G5 and G7 green in one clean `verify.sh` run. Create file `DONE`.
