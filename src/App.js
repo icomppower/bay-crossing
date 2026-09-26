@@ -57,6 +57,8 @@ import { FerryAutopilot } from './player/FerryAutopilot.js';
 import { BoatSpray } from './player/BoatSpray.js';
 import { WakeSim } from './ocean/WakeSim.js';
 import { SoundScape } from './audio/SoundScape.js';
+import { WAYPOINTS, waypointPose } from './world/Waypoints.js';
+import { RoofGrid } from './world/RoofGrid.js';
 import { updateCameraVelocity, useStaticVelocity } from './post/CameraVelocity.js';
 
 const _up = new Vector3( 0, 1, 0 );
@@ -146,6 +148,7 @@ export class App {
 		this.landmarks = await loadLandmarks();
 		scene.add( this.landmarks );
 		this.buildings.userData.lodBias = this.landmarks.userData.lodBias = Q.lodBias;
+		this.roofs = new RoofGrid( [ ...this.buildings.children.map( ( t ) => t.userData.lods[ 0 ] ), ...this.landmarks.children.map( ( l ) => l.userData.lods[ 0 ] ) ], WORLD.terrainSize );
 
 		// the ferry (MV Golden Gate class) and its route Ferry Building → Sausalito (public/ferry/)
 		const base = ( import.meta.env && import.meta.env.BASE_URL ) || '/';
@@ -260,6 +263,8 @@ export class App {
 		this.surface.wake = this.wake;
 		this.player = new Player( { camera, input: this.input, terrain: this.terrainData, colliders: this.colliders, query: this.query, boat: this.boatCtl } );
 		this.freeCam = qs.has( 'fly' );
+		this.waypoint = - 1; // last waypoint flown to (N goes to the next)
+		this.fly.groundAt = ( x, z ) => Math.max( this.terrainData.heightAt( x, z ), this.roofs.heightAt( x, z ) );
 
 		// ---------------------------------------------------------------- post
 		await progress( 0.34, 'Preparing the shaders…' );
@@ -458,6 +463,17 @@ export class App {
 
 	}
 
+	// Waypoints (1–8, N = next): the free camera flies to a named viewpoint; F walks on from there.
+	goToWaypoint( i ) {
+
+		const w = WAYPOINTS[ i ], p = waypointPose( w );
+		this.waypoint = i;
+		this.setFreeCam( true );
+		this.fly.flyTo( p.position, p.yaw, p.pitch );
+		if ( this.ui ) this.ui.ui.toast( `${ i + 1 } · ${ w.name }` );
+
+	}
+
 	// Free (debug) camera on F; the walker / boat resumes where it was left.
 	setFreeCam( on ) {
 
@@ -566,6 +582,8 @@ export class App {
 		if ( this.input.hit( 'KeyF' ) ) this.setFreeCam( ! this.freeCam );
 		if ( this.input.hit( 'KeyT' ) ) this.toggleTime();
 		if ( this.input.hit( 'KeyG' ) ) this.setAutopilot( ! this.autopilot );
+		for ( let i = 0; i < WAYPOINTS.length; i ++ ) if ( this.input.hit( 'Digit' + ( i + 1 ) ) ) this.goToWaypoint( i );
+		if ( this.input.hit( 'KeyN' ) ) this.goToWaypoint( ( this.waypoint + 1 ) % WAYPOINTS.length );
 		if ( this.input.hit( 'KeyL' ) ) {
 
 			const on = this.localLights.toggleFlashlight();

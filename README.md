@@ -38,11 +38,12 @@ the ferry is helm-only.
 | W / S, A / D at the helm | Waterjets ahead / astern, steer |
 | G | Ferry autopilot to Sausalito |
 | T | Let the day run (golden hour → night) |
-| F | Free camera |
+| F | Free camera (from a waypoint: walk on from there) |
+| 1–8, N | Fly to a waypoint: Ferry Building, Transamerica, Coit Tower, Alcatraz, Golden Gate, Sausalito, mid-bay, city from above (N = next; also the Explore tab) |
 | H, F1 | Settings, all controls |
 
 **On a phone or tablet:** the left thumb joystick walks (or drives the ferry at the helm), dragging anywhere
-else looks around, and on-screen buttons cover E, G, jump, camera, time and free camera. A lighter `mobile`
+else looks around, and on-screen buttons cover E, G, jump, camera, time, free camera and N (next waypoint). A lighter `mobile`
 quality tier is picked automatically.
 
 It needs a browser with WebGPU (a recent Chrome, Edge or Safari, including iOS 26 Safari and Android Chrome). On a Mac mini M4 it holds ~50 fps at

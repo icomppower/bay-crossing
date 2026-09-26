@@ -1,7 +1,7 @@
 // On-screen controls for touch devices, feeding the same Input state as the keyboard and mouse:
 // a left-thumb joystick drives W / A / S / D (walk, or throttle and steering at the ferry helm), a drag anywhere
 // else looks around, and buttons press keys (E helm / step ashore, jump, G autopilot, V camera, T time, F free
-// camera). Shown when the primary pointer is coarse, or with ?touch.
+// camera, N next waypoint). Shown when the primary pointer is coarse, or with ?touch.
 const DEAD = 0.3; // joystick dead zone (fraction of its radius)
 
 export function wantsTouch( qs ) {
@@ -31,6 +31,7 @@ export class TouchControls {
 			<div class="tc-top">
 				<button type="button" class="tc-btn tc-btn-small" data-code="KeyT" aria-label="Run or pause time">T<small>time</small></button>
 				<button type="button" class="tc-btn tc-btn-small" data-code="KeyF" aria-label="Free camera">F<small>fly</small></button>
+				<button type="button" class="tc-btn tc-btn-small" data-code="KeyN" aria-label="Next waypoint">N<small>go</small></button>
 			</div>`;
 		document.body.append( root );
 

@@ -2150,7 +2150,8 @@ export class UI {
 						${ row( k( 'E' ), 'Interact<small>Take the ferry helm, step ashore</small>' ) }
 						${ row( k( 'V' ), 'Boat camera<small>1st / 3rd person</small>' ) }
 						${ row( k( 'G' ), 'Ferry autopilot<small>Sails the route to Sausalito</small>' ) }
-						${ row( k( 'F' ), 'Free camera' ) }
+						${ row( k( 'F' ), 'Free camera<small>Or walk on from a waypoint</small>' ) }
+						${ row( k( '1' ) + k( '8' ), 'Waypoints<small>Fly to a landmark; N = next</small>' ) }
 						${ row( k( 'T' ), 'Pause time' ) }
 						${ row( k( 'L' ), 'Flashlight' ) }
 						${ row( k( 'M' ), 'Mute' ) }
@@ -2164,7 +2165,7 @@ export class UI {
 					</section>
 				</div>
 				<div class="tw-help-guide">
-					<span><b>How to play:</b> walk the Embarcadero, take the ferry helm at Ferry Building Gate C and cross to Sausalito, by hand or with the autopilot (G).</span>
+					<span><b>How to play:</b> walk the Embarcadero, take the ferry helm at Ferry Building Gate C and cross to Sausalito, by hand or with the autopilot (G). Keys 1–8 fly to the landmarks.</span>
 					<button type="button" class="gm-btn is-ghost tw-help-replay" hidden>Replay the guide</button>
 				</div>
 			</div>`;

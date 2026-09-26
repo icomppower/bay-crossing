@@ -194,3 +194,14 @@ are in `docs/archive-hong-kong.md`.
     message naming the shader and the root validation error.
   - **Gate:** G7 (required). Caveat: Dawn on Metal stands in for Chrome on the owner's device; a limit the
     proxy does not model, or a driver-specific shader bug, would not show here.
+- **D42** Waypoints, at the owner's request (2026-09-26: "maybe a few waypoint for explore the map").
+  - **What:** 8 named viewpoints in `src/world/Waypoints.js` (Ferry Building, Transamerica, Coit Tower, Alcatraz,
+    Golden Gate from outside the Gate, Sausalito, mid-bay, city from above). Keys 1–8, the Explore tab, or N
+    (next; also a touch button) fly the free camera there in 1.5–5 s, arcing up with the distance; a move key
+    takes over; F drops the walker at the spot.
+  - **Clearance:** buildings are not colliders, so `RoofGrid` (highest mesh point per 20 m cell, from the
+    full-detail building and landmark meshes) keeps flights above roofs as well as terrain.
+  - **Checks:** `test/waypoints.mjs` (real App, headless Dawn): each key lands exactly on its pose, the flight
+    never dips below terrain or a roof, the sight line to the target is clear, the frame is not blank, N wraps,
+    W cancels, F leaves; contact sheet `shots/waypoints.png`. Touch: all 8 controls hit-tested at 390×844 and
+    844×390 (no overlap, no horizontal scroll), and a tap on N shows the first waypoint.

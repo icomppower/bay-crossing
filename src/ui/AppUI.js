@@ -2,6 +2,7 @@ import * as THREE from '../engine/index.js';
 import { UI } from './UI.js';
 import { G } from '../core/Globals.js';
 import { WORLD } from '../world/WorldLayout.js';
+import { WAYPOINTS } from '../world/Waypoints.js';
 import { GroundBounce } from '../materials/GroundBounce.js';
 import { ContactShadows } from '../materials/ContactShadows.js';
 
@@ -86,6 +87,12 @@ export class AppUI {
 			G.waterScattering.value.set( ...WORLD.water.scattering ).multiplyScalar( k * k );
 
 		};
+
+		// ---------------------------------------------------------------- Explore
+		const explore = ui.addTab( 'explore', 'Explore', 'compass' );
+		const places = explore.addFolder( 'Waypoints', { icon: 'compass' } );
+		WAYPOINTS.forEach( ( w, i ) => places.addButton( { label: `${ i + 1 } · ${ w.name }`, icon: 'viewfinder', onClick: () => app.goToWaypoint( i ) } ) );
+		places.addButton( { label: 'Drop in here (F)', icon: 'walk', onClick: () => app.setFreeCam( false ) } );
 
 		// ---------------------------------------------------------------- Ocean
 		const ocean = ui.addTab( 'ocean', 'Ocean', 'ocean' );
