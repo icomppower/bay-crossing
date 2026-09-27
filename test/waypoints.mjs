@@ -3,10 +3,11 @@
 // way), and the frame is not blank. N goes to the next waypoint (wrapping), a move key cancels a flight, F leaves
 // the free camera. Writes shots/waypoints.png (a contact sheet) for review.
 //   node test/waypoints.mjs
+import 'harbor-engine/tools/lib/configured.mjs';
 import { join } from 'node:path';
-import { bootApp } from '../tools/headless/app.mjs';
+import { bootApp } from 'harbor-engine/tools/headless/app.mjs';
 import { writePNG } from './headless.mjs';
-import { WAYPOINTS } from '../src/world/Waypoints.js';
+import { WAYPOINTS } from 'harbor-engine/src/world/Waypoints.js';
 
 const W = 480, H0 = 270;
 const T = await bootApp( { width: W, height: H0, query: '?noAudio&tier=low' } );

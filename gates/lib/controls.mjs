@@ -4,9 +4,9 @@
 import { readFileSync } from 'node:fs';
 import { inflateSync } from 'node:zlib';
 import { join } from 'node:path';
-import { root, decodeTerrain } from './tiles.mjs';
-import { parseGLB } from '../../src/engine/loaders/GLTF.js';
-import { toUTM } from '../../tools/geo/utm.mjs';
+import { root, decodeTerrain } from 'harbor-engine/gates/lib/tiles.mjs';
+import { parseGLB } from 'harbor-engine/src/engine/loaders/GLTF.js';
+import { toUTM } from 'harbor-engine/tools/geo/utm.mjs';
 
 const local = ( lat, lon ) => { const [ E, N ] = toUTM( lat, lon ); return [ E - 549504, 4186800 - N ]; };
 const mean = ( pts ) => [ pts.reduce( ( s, p ) => s + p[ 0 ], 0 ) / pts.length, pts.reduce( ( s, p ) => s + p[ 1 ], 0 ) / pts.length ];

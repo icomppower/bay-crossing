@@ -1,9 +1,9 @@
-// G1 Clean fork: D7 removals done; `npm run build` passes; ocean + sky render in headless Dawn (the real
-// App, measured numerically); dependency audit passes.
+// G1 Clean fork: D7 removals done (in this title and in the Harbor Engine it runs on); `npm run build`
+// passes; ocean + sky render in headless Dawn (the real App, measured numerically); dependency audit passes.
 // --negative: each mutation must trip the check it targets.
 import { spawnSync } from 'node:child_process';
 import { builtinModules } from 'node:module';
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -21,7 +21,8 @@ export const REMOVED = [
 
 function checkRemovals( dir ) {
 
-	return REMOVED.filter( ( p ) => existsSync( join( dir, p ) ) ).map( ( p ) => `removals: ${ p } still present` );
+	const where = [ dir, join( dir, 'node_modules/harbor-engine' ) ];
+	return REMOVED.flatMap( ( p ) => where.filter( ( w ) => existsSync( join( w, p ) ) ).map( ( w ) => `removals: ${ relative( dir, join( w, p ) ) } still present` ) );
 
 }
 
@@ -34,11 +35,12 @@ function checkBuild( dir ) {
 
 }
 
-// Every bare import in src/, tools/, gates/, test/ resolves to a package.json dependency or a Node builtin.
+// Every bare import in src/, pipelines/, gates/, test/, hooks.js resolves to a package.json dependency or a Node builtin.
 function sourceFiles( dir ) {
 
 	const out = [];
-	for ( const d of [ 'src', 'tools', 'gates', 'test' ] ) {
+	if ( existsSync( join( dir, 'hooks.js' ) ) ) out.push( join( dir, 'hooks.js' ) );
+	for ( const d of [ 'src', 'pipelines', 'gates', 'test' ] ) {
 
 		const walk = ( p ) => {
 
@@ -94,8 +96,8 @@ function checkAudit( extra = [] ) {
 // Ocean + sky in headless Dawn: the real App, free camera 12 m above the bay looking at the horizon.
 async function checkRender( sabotage = null ) {
 
-	const { bootApp } = await import( '../tools/headless/app.mjs' );
-	const { Vector3 } = await import( '../src/engine/index.js' );
+	const { bootApp } = await import( 'harbor-engine/tools/headless/app.mjs' );
+	const { Vector3 } = await import( 'harbor-engine/src/engine/index.js' );
 	const H = await bootApp( { width: 960, height: 540, query: '?fly&noAudio' } );
 	const app = H.app, fail = [];
 	if ( sabotage ) sabotage( app );
@@ -195,12 +197,13 @@ if ( ! NEG ) {
 const fx = join( root, '.verify', 'g1-neg' );
 rmSync( fx, { recursive: true, force: true } );
 mkdirSync( fx, { recursive: true } );
-for ( const f of [ 'index.html', 'vite.config.js', 'package.json' ] ) cpSync( join( root, f ), join( fx, f ) );
+for ( const f of [ 'index.html', 'vite.config.js', 'package.json', 'map.json' ] ) cpSync( join( root, f ), join( fx, f ) );
 cpSync( join( root, 'src' ), join( fx, 'src' ), { recursive: true } );
+symlinkSync( join( root, 'node_modules' ), join( fx, 'node_modules' ) );
 mkdirSync( join( fx, 'src/game' ) );
 writeFileSync( join( fx, 'src/game/Game.js' ), 'export class Game {}\n' );
-// a deleted module imported at the top of App.js (prepended, so the fixture cannot silently miss)
-writeFileSync( join( fx, 'src/App.js' ), "import { Fishing } from './game/Fishing.js';\nconsole.log( Fishing );\n" + readFileSync( join( fx, 'src/App.js' ), 'utf8' ) );
+// a deleted module imported at the top of the entry (prepended, so the fixture cannot silently miss)
+writeFileSync( join( fx, 'src/main.js' ), "import { Fishing } from './game/Fishing.js';\nconsole.log( Fishing );\n" + readFileSync( join( fx, 'src/main.js' ), 'utf8' ) );
 
 const MUTATIONS = [
 	[ 'removed path restored (src/game)', 'removals:', () => checkRemovals( fx ) ],

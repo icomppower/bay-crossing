@@ -7,11 +7,11 @@ import { mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSyn
 import { deflateSync, inflateSync } from 'node:zlib';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
-import { root, compareDirs, runOffline, decodeTerrain } from './lib/tiles.mjs';
-import { parseGLB } from '../src/engine/loaders/GLTF.js';
-import { writeGLB } from '../tools/geo/glb.mjs';
-import { toUTM } from '../tools/geo/utm.mjs';
-import { RAW } from '../tools/data/cache.mjs';
+import { root, compareDirs, runOffline, decodeTerrain } from 'harbor-engine/gates/lib/tiles.mjs';
+import { parseGLB } from 'harbor-engine/src/engine/loaders/GLTF.js';
+import { writeGLB } from 'harbor-engine/tools/geo/glb.mjs';
+import { toUTM } from 'harbor-engine/tools/geo/utm.mjs';
+import { RAW } from 'harbor-engine/tools/data/cache.mjs';
 
 const NEG = process.argv.includes( '--negative' );
 const work = join( root, '.verify', 'g2b' );
@@ -100,8 +100,8 @@ async function loaderMatches( dir ) {
 	globalThis.fetch = async ( u ) => new Response( readFileSync( join( dir, String( u ).replace( /^\/?buildings\//, '' ) ) ) );
 	try {
 
-		const { loadBayBuildings } = await import( '../src/world/BayBuildings.js' );
-		const g = await loadBayBuildings( '/' );
+		const { loadBuildingTiles } = await import( 'harbor-engine/src/world/BuildingTiles.js' );
+		const g = await loadBuildingTiles( '/' );
 		const index = JSON.parse( readFileSync( join( dir, 'index.json' ), 'utf8' ) );
 		let bad = 0;
 		for ( const tile of g.children ) {

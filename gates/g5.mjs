@@ -7,7 +7,7 @@
 // recorded swap-out the swap check.
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { readThresholds, freeze } from './lib/thresholds.mjs';
+import { readThresholds, freeze } from 'harbor-engine/gates/lib/thresholds.mjs';
 import { VIEWS, poseFor } from './lib/views.mjs';
 
 const NEG = process.argv.includes( '--negative' );
@@ -62,8 +62,8 @@ function gpuMemory( pid ) {
 
 async function run( sabotage ) {
 
-	const { bootApp } = await import( '../tools/headless/app.mjs' );
-	const { Vector3 } = await import( '../src/engine/index.js' );
+	const { bootApp } = await import( 'harbor-engine/tools/headless/app.mjs' );
+	const { Vector3 } = await import( 'harbor-engine/src/engine/index.js' );
 	const uhd = sabotage === 'uhd';
 	const H = await bootApp( { width: uhd ? 3840 : 1920, height: uhd ? 2160 : 1080, query: '?fly&noAudio&tier=low' } );
 	const app = H.app;

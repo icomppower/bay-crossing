@@ -1,5 +1,7 @@
 // Fixed camera viewpoints shared by the budget / look gates (G2c caps, G5 path, G6 shots).
 // [ name, lat, lon, eye y (m above MSL), look-at lat, lon, y ]
+import 'harbor-engine/tools/lib/configured.mjs';
+
 export const VIEWS = [
 	[ 'embarcadero-street', 37.79530, - 122.39420, 4.2, 37.79250, - 122.39900, 60 ],
 	[ 'ferry-deck-mid-bay', 37.81800, - 122.41500, 8, 37.79500, - 122.40000, 60 ],
@@ -10,8 +12,8 @@ export const VIEWS = [
 
 export async function poseFor( view ) {
 
-	const { toLocal } = await import( '../../src/world/BayFrame.js' );
-	const { toUTM } = await import( '../../tools/geo/utm.mjs' );
+	const { toLocal } = await import( 'harbor-engine/src/world/Frame.js' );
+	const { toUTM } = await import( 'harbor-engine/tools/geo/utm.mjs' );
 	const [ , lat, lon, y, tlat, tlon, ty ] = view;
 	const p = toLocal( ...toUTM( lat, lon ) ), t = toLocal( ...toUTM( tlat, tlon ) );
 	return { x: p.x, y, z: p.z, yaw: Math.atan2( - ( t.x - p.x ), - ( t.z - p.z ) ), pitch: Math.atan2( ty - y, Math.hypot( t.x - p.x, t.z - p.z ) ) };

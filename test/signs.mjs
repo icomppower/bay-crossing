@@ -3,10 +3,11 @@
 // Alcatraz from the north, flights to the other places land clear of the ground with a clear view, and the numpad
 // keys fly to waypoints too. (The DOM half is checked in a browser; this is the maths.)
 //   node test/signs.mjs
-import { bootApp } from '../tools/headless/app.mjs';
-import { WAYPOINTS, waypointPose } from '../src/world/Waypoints.js';
-import { PLACES } from '../src/world/Places.js';
-import { signAnchors, blocked, layout } from '../src/ui/Signs.js';
+import 'harbor-engine/tools/lib/configured.mjs';
+import { bootApp } from 'harbor-engine/tools/headless/app.mjs';
+import { WAYPOINTS, waypointPose } from 'harbor-engine/src/world/Waypoints.js';
+import { PLACES } from 'harbor-engine/src/world/Places.js';
+import { signAnchors, blocked, layout } from 'harbor-engine/src/ui/Signs.js';
 
 const W = 1280, H = 720;
 const T = await bootApp( { width: W, height: H, query: '?noAudio&tier=low' } );

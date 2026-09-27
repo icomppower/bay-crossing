@@ -3,13 +3,14 @@
 // own sun model (SF latitude, late-September declination). The numbers checked are sanity only (non-blank
 // frames, light falling from golden hour to night); the review is human.
 // --negative: a sun frozen at noon must fail the ordering.
+import 'harbor-engine/tools/lib/configured.mjs';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { root } from './lib/tiles.mjs';
+import { root } from 'harbor-engine/gates/lib/tiles.mjs';
 import { VIEWS, poseFor } from './lib/views.mjs';
-import { WORLD } from '../src/world/WorldLayout.js';
+import { WORLD } from 'harbor-engine/src/world/WorldLayout.js';
 
 const NEG = process.argv.includes( '--negative' );
 const SHOTS = [ [ 'golden-hour', 6 ], [ 'blue-hour', - 5 ], [ 'night', - 15 ] ];
@@ -25,9 +26,9 @@ function hoursFor( elev ) {
 
 async function shoot( sabotage, outDir ) {
 
-	const { bootApp } = await import( '../tools/headless/app.mjs' );
-	const { writePNG } = await import( '../test/headless.mjs' );
-	const { Vector3 } = await import( '../src/engine/index.js' );
+	const { bootApp } = await import( 'harbor-engine/tools/headless/app.mjs' );
+	const { writePNG } = await import( 'harbor-engine/test/headless.mjs' );
+	const { Vector3 } = await import( 'harbor-engine/src/engine/index.js' );
 	const H = await bootApp( { width: 1920, height: 1080, query: '?fly&noAudio&tier=low' } );
 	const app = H.app;
 	if ( sabotage === 'noon' ) { const f = app.updateSun.bind( app ); app.updateSun = () => { const t = app.settings.timeOfDay; app.settings.timeOfDay = 13; f(); app.settings.timeOfDay = t; }; }

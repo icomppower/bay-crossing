@@ -5,16 +5,18 @@
     "dev": "vite --host 127.0.0.1 --port 5189",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node test/engine-smoke.mjs",
+    "test": "node test/waypoints.mjs && node test/signs.mjs",
     "verify": "./verify.sh",
-    "fetch-data": "node tools/data/fetch.mjs"
+    "fetch-data": "node pipelines/data/fetch.mjs",
+    "engine:update": "node node_modules/harbor-engine/bin/harbor-engine.mjs update"
   },
   "devDependencies": {
-    "earcut": "^3.2.3",
-    "vite": "^8.3.0",
-    "webgpu": "^0.6.1"
+    "vite": "^8.3.0"
   },
   "license": "MIT",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "harbor-engine": "file:../harbor-engine"
+  }
 }

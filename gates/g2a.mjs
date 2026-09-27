@@ -6,10 +6,10 @@ import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, write
 import { deflateSync, inflateSync } from 'node:zlib';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
-import { root, compareDirs, runOffline, decodeTerrain } from './lib/tiles.mjs';
-import { readTiff, writeTiff } from '../tools/geo/tiff.mjs';
-import { toUTM } from '../tools/geo/utm.mjs';
-import { RAW } from '../tools/data/cache.mjs';
+import { root, compareDirs, runOffline, decodeTerrain } from 'harbor-engine/gates/lib/tiles.mjs';
+import { readTiff, writeTiff } from 'harbor-engine/tools/geo/tiff.mjs';
+import { toUTM } from 'harbor-engine/tools/geo/utm.mjs';
+import { RAW } from 'harbor-engine/tools/data/cache.mjs';
 
 const NEG = process.argv.includes( '--negative' );
 const work = join( root, '.verify', 'g2a' );
@@ -95,8 +95,8 @@ async function loaderMatches( dir, h ) {
 	globalThis.fetch = async ( u ) => new Response( readFileSync( join( dir, String( u ).replace( /^\/?terrain\//, '' ) ) ) );
 	try {
 
-		const { loadBayHeightField } = await import( '../src/world/BayTerrain.js' );
-		const hf = await loadBayHeightField( '/' );
+		const { loadHeightField } = await import( 'harbor-engine/src/world/TerrainTiles.js' );
+		const hf = await loadHeightField( '/' );
 		let bad = 0;
 		for ( let k = 0; k < h.length; k += 997 ) if ( hf.heights[ k ] !== h[ k ] ) bad ++;
 		const A = JSON.parse( readFileSync( join( dir, 'index.json' ), 'utf8' ) ).aerial;

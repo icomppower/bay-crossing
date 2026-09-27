@@ -6,11 +6,11 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { root } from './lib/tiles.mjs';
-import { readThresholds, freeze } from './lib/thresholds.mjs';
+import { root } from 'harbor-engine/gates/lib/tiles.mjs';
+import { readThresholds, freeze } from 'harbor-engine/gates/lib/thresholds.mjs';
 import { VIEWS, poseFor } from './lib/views.mjs';
-import { parseGLB } from '../src/engine/loaders/GLTF.js';
-import { toUTM } from '../tools/geo/utm.mjs';
+import { parseGLB } from 'harbor-engine/src/engine/loaders/GLTF.js';
+import { toUTM } from 'harbor-engine/tools/geo/utm.mjs';
 
 const NEG = process.argv.includes( '--negative' );
 const CAP_FACTOR = 1.5; // calibration rule: cap = 1.5 × the measured maximum (headroom for the ferry, piers, UI)
@@ -18,8 +18,8 @@ const CAP_FACTOR = 1.5; // calibration rule: cap = 1.5 × the measured maximum (
 // ---- in-App measurement (child process: one App per process)
 async function measure( sabotage ) {
 
-	const { bootApp } = await import( '../tools/headless/app.mjs' );
-	const { Vector3, Mesh } = await import( '../src/engine/index.js' );
+	const { bootApp } = await import( 'harbor-engine/tools/headless/app.mjs' );
+	const { Vector3, Mesh } = await import( 'harbor-engine/src/engine/index.js' );
 	const H = await bootApp( { width: 1920, height: 1080, query: '?fly&noAudio' } );
 	const app = H.app;
 	if ( sabotage === 'nolod' ) { app.buildings.userData.lodBias = 1e9; app.landmarks.userData.lodBias = 1e9; }

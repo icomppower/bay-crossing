@@ -6,10 +6,10 @@ import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync, wri
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readTiff } from '../tools/geo/tiff.mjs';
-import { toUTM } from '../tools/geo/utm.mjs';
-import { SOURCES, naipBox, NAIP_BAY } from '../tools/data/fetch.mjs';
-import { readZip, parseCSV } from '../tools/data/zip.mjs';
+import { readTiff } from 'harbor-engine/tools/geo/tiff.mjs';
+import { toUTM } from 'harbor-engine/tools/geo/utm.mjs';
+import { SOURCES, naipBox, NAIP_BAY } from '../pipelines/data/fetch.mjs';
+import { readZip, parseCSV } from 'harbor-engine/tools/data/zip.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const slice = JSON.parse(readFileSync(join(root, 'data/slice.json'), 'utf8'));

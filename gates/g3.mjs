@@ -7,11 +7,11 @@ import { crc32 } from 'node:zlib';
 import { mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
-import { root } from './lib/tiles.mjs';
-import { readThresholds, freeze } from './lib/thresholds.mjs';
+import { root, resolveScript } from 'harbor-engine/gates/lib/tiles.mjs';
+import { readThresholds, freeze } from 'harbor-engine/gates/lib/thresholds.mjs';
 import { controlErrors } from './lib/controls.mjs';
-import { RAW } from '../tools/data/cache.mjs';
-import { readZip } from '../tools/data/zip.mjs';
+import { RAW } from 'harbor-engine/tools/data/cache.mjs';
+import { readZip } from 'harbor-engine/tools/data/zip.mjs';
 
 const NEG = process.argv.includes( '--negative' );
 
@@ -61,7 +61,7 @@ const fixtureRaw = ( file, rewrite ) => {
 };
 const run = ( script, args ) => {
 
-	const r = spawnSync( process.execPath, [ join( root, script ), ...args ], { cwd: root, encoding: 'utf8', env: { ...process.env, BLENDER: process.env.BLENDER || '/opt/homebrew/bin/blender' }, maxBuffer: 1 << 26 } );
+	const r = spawnSync( process.execPath, [ resolveScript( script ), ...args ], { cwd: root, encoding: 'utf8', env: { ...process.env, BLENDER: process.env.BLENDER || '/opt/homebrew/bin/blender' }, maxBuffer: 1 << 26 } );
 	if ( r.status !== 0 ) throw new Error( `${ script } failed: ${ ( r.stderr || r.stdout ).slice( - 400 ) }` );
 
 };
@@ -107,7 +107,7 @@ const MUTATIONS = [
 			return writeZip( z );
 
 		} );
-		run( 'tools/ferry/prepare.mjs', [ '--raw', raw, '--out', join( work, 'schedule.json' ) ] );
+		run( 'pipelines/ferry/prepare.mjs', [ '--raw', raw, '--out', join( work, 'schedule.json' ) ] );
 		return check( { ferry: join( work, 'schedule.json' ) } ).fail;
 
 	} ],

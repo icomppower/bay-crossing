@@ -1,0 +1,78 @@
+// Landmark inputs for the offline Blender build (tools/landmarks/build.py), from the checksummed cache:
+// anchors, footprints (local metres relative to the anchor; x east, z south) and ground heights (local MSL).
+//   node pipelines/landmarks/prepare.mjs [--raw <dir>] --out <file.json>
+import { writeFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { isMain } from 'harbor-engine/tools/lib/title.mjs';
+import { readCached, RAW } from 'harbor-engine/tools/data/cache.mjs';
+import { toUTM } from 'harbor-engine/tools/geo/utm.mjs';
+import { mergeHeights, GRID } from 'harbor-engine/tools/terrain/build.mjs';
+
+const root = join(dirname(fileURLToPath(import.meta.url)), '../..');
+const arg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; };
+const R3 = v => Math.round(v * 1000) / 1000;
+const local = (lat, lon) => { const [E, N] = toUTM(lat, lon); return [R3(E - GRID.originE), R3(GRID.originN - N)]; };
+
+export function prepareLandmarks({ rawDir = RAW } = {}) {
+  const merged = mergeHeights({ rawDir });
+  const { res, size } = GRID, texel = size / res;
+  const ground = ([x, z]) => {
+    const i = Math.max(0, Math.min(res - 1, Math.floor((x + size / 2) / texel))), j = Math.max(0, Math.min(res - 1, Math.floor((z + size / 2) / texel)));
+    return merged.heights[j * res + i] / 100;
+  };
+  const osm = JSON.parse(readCached('landmarks-osm.json', rawDir).toString('utf8')).elements;
+  const way = name => osm.find(e => e.type === 'way' && e.tags?.name === name);
+  const ring = (w, a) => { const r = w.geometry.map(g => local(g.lat, g.lon)).map(([x, z]) => [R3(x - a[0]), R3(z - a[1])]); if (r.length > 1 && r[0][0] === r.at(-1)[0] && r[0][1] === r.at(-1)[1]) r.pop(); return r; };
+  // area centroid of a polygon (falls back to the vertex mean for point sets such as tower-leg clusters);
+  // the vertex mean is biased where outline vertices cluster (Transamerica: 15 m)
+  const centroid = pts => {
+    let A = 0, cx = 0, cz = 0;
+    for (let i = 0; i < pts.length; i++) { const [x0, z0] = pts[i], [x1, z1] = pts[(i + 1) % pts.length], c = x0 * z1 - x1 * z0; A += c; cx += (x0 + x1) * c; cz += (z0 + z1) * c; }
+    if (Math.abs(A) < 1e-6) return [R3(pts.reduce((s, p) => s + p[0], 0) / pts.length), R3(pts.reduce((s, p) => s + p[1], 0) / pts.length)];
+    return [R3(cx / (3 * A)), R3(cz / (3 * A))];
+  };
+  const vertexMean = pts => [R3(pts.reduce((s, p) => s + p[0], 0) / pts.length), R3(pts.reduce((s, p) => s + p[1], 0) / pts.length)];
+  const minGround = (a, r) => Math.min(...r.map(([x, z]) => ground([x + a[0], z + a[1]])));
+
+  // Golden Gate Bridge: tower centres = mean of each tower's OSM leg outlines
+  const legs = osm.filter(e => e.tags?.['tower:type'] === 'bridge' && e.geometry);
+  const tower = north => vertexMean(legs.filter(e => (e.geometry[0].lat > 37.82) === north).flatMap(e => e.geometry.map(g => local(g.lat, g.lon))));
+  const south = tower(false), north = tower(true);
+  const ggAnchor = [R3((south[0] + north[0]) / 2), R3((south[1] + north[1]) / 2)];
+
+  // Ferry Building: OSM outline (the shed) and the clock tower's building:part stack; the anchor is the centroid
+  // of the tallest part (the tower). Its DataSF footprint is left out of the building tiles (D25).
+  const fbWay = way('San Francisco Ferry Building');
+  const inFB = e => e.geometry.every(g => g.lat > 37.7945 && g.lat < 37.7962 && g.lon > -122.3945 && g.lon < -122.3925);
+  const parts = osm.filter(e => e.type === 'way' && e.tags?.['building:part'] && e.geometry?.length >= 4 && inFB(e)).sort((a, b) => a.id - b.id);
+  const H = e => parseFloat(String(e.tags.height || '').replace(/[^\d.]/g, ''));
+  const tallest = parts.reduce((a, b) => (H(b) > H(a) ? b : a));
+  const fbAnchor = centroid(tallest.geometry.slice(0, -1).map(g => local(g.lat, g.lon)));
+  const fbParts = parts.map(e => ({ id: e.id, height: H(e), minHeight: parseFloat(e.tags.min_height) || 0, roof: e.tags['roof:shape'] || '', ring: ring(e, fbAnchor) }));
+
+  const coit = way('Coit Tower'), coitAnchor = centroid(coit.geometry.slice(0, -1).map(g => local(g.lat, g.lon)));
+  const ta = way('Transamerica Pyramid'), taAnchor = centroid(ta.geometry.slice(0, -1).map(g => local(g.lat, g.lon)));
+  const alc = way('Alcatraz Island Lighthouse'), alcAnchor = centroid(alc.geometry.slice(0, -1).map(g => local(g.lat, g.lon)));
+  const alcBuildings = osm.filter(e => e.type === 'way' && e.tags?.building && e.geometry?.length >= 4 && e.geometry[0].lat > 37.824 && e.geometry[0].lat < 37.83 && e.geometry[0].lon > -122.427 && e.geometry[0].lon < -122.419)
+    .sort((a, b) => a.id - b.id)
+    .map(e => { const r = ring(e, alcAnchor); return { id: e.id, name: e.tags.name || '', kind: e.tags.man_made || e.tags.building, height: parseFloat(e.tags.height) || null, levels: parseFloat(e.tags['building:levels']) || null, ground: R3(minGround(alcAnchor, r)), ring: r }; });
+
+  return {
+    note: 'Generated by tools/landmarks/prepare.mjs from data/raw (checksummed). Local metres: x east, z south; heights above local MSL.',
+    landmarks: [
+      { slug: 'golden-gate-bridge', name: 'Golden Gate Bridge', anchor: ggAnchor, ground: 0,
+        towers: [[R3(south[0] - ggAnchor[0]), R3(south[1] - ggAnchor[1])], [R3(north[0] - ggAnchor[0]), R3(north[1] - ggAnchor[1])]] },
+      { slug: 'ferry-building', name: 'Ferry Building', anchor: fbAnchor, ground: R3(ground(fbAnchor)), footprint: ring(fbWay, fbAnchor), shedHeight: H(fbWay) || 15, parts: fbParts },
+      { slug: 'coit-tower', name: 'Coit Tower', anchor: coitAnchor, ground: R3(minGround(coitAnchor, ring(coit, coitAnchor))), footprint: ring(coit, coitAnchor), height: parseFloat(coit.tags.height) },
+      { slug: 'transamerica-pyramid', name: 'Transamerica Pyramid', anchor: taAnchor, ground: R3(minGround(taAnchor, ring(ta, taAnchor))), footprint: ring(ta, taAnchor), height: parseFloat(ta.tags.height) },
+      { slug: 'alcatraz', name: 'Alcatraz', anchor: alcAnchor, ground: R3(ground(alcAnchor)), buildings: alcBuildings },
+    ],
+  };
+}
+
+if (isMain(import.meta.url)) {
+  const out = prepareLandmarks({ rawDir: arg('--raw', RAW) });
+  writeFileSync(arg('--out', join(root, '.verify/landmarks-input.json')), JSON.stringify(out, null, 1) + '\n');
+  for (const l of out.landmarks) console.log(l.slug, 'anchor', l.anchor, 'ground', l.ground, l.towers ? 'span ' + Math.hypot(l.towers[0][0] - l.towers[1][0], l.towers[0][1] - l.towers[1][1]).toFixed(1) : '', l.footprint ? 'footprint ' + l.footprint.length : '', l.buildings ? 'buildings ' + l.buildings.length : '');
+}

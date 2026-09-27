@@ -1,32 +1,7 @@
-import { App } from './App.js';
-import { UI } from './ui/UI.js';
-import { AppUI } from './ui/AppUI.js';
-import { TouchControls, wantsTouch } from './ui/TouchControls.js';
+// SF Bay Crossing: a Harbor Engine title. The engine does everything; this title is its map.json, its baked
+// data in public/ and its pipeline hooks (hooks.js).
+import 'harbor-engine/src/ui/ui.css';
+import map from '../map.json';
+import { boot } from 'harbor-engine';
 
-const ui = new UI();
-const app = new App();
-window.__ui = ui;
-window.__app = app; // debugging / browser checks
-
-app.init( ( p, text, until ) => ui.setLoading( p, text, until ) ).then( async () => {
-
-	app.ui = new AppUI( app, ui );
-	if ( wantsTouch( app.qs ) ) app.touch = new TouchControls( app );
-	ui.setLoading( 1, 'Ready' );
-	await ui.hideLoader();
-	app.start();
-	ui.showStartOverlay( () => {
-
-		document.documentElement.classList.add( 'is-started' );
-
-		app.input.requestLock();
-		if ( app.audio ) app.audio.resume();
-
-	} );
-
-} ).catch( ( e ) => {
-
-	console.error( e );
-	ui.setLoadingError( 'Something went wrong: ' + e.message );
-
-} );
+boot( { map } );

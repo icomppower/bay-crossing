@@ -1,0 +1,229 @@
+{
+  "id": "bay-crossing",
+  "name": "SF Bay Crossing",
+  "frame": { "crs": "EPSG:32610 (WGS84 / UTM zone 10N), metres; heights local MSL", "utmZone": 10, "hemisphere": "N", "originE": 549504, "originN": 4186800, "size": 9600 },
+  "bbox": { "south": 37.785, "west": -122.49, "north": 37.87, "east": -122.385 },
+  "slice": {
+    "extent": { "minE": 544800, "minN": 4182000, "maxE": 554208, "maxN": 4191600 },
+    "note": "Embarcadero + FiDi skyline, the bay to Alcatraz and the Golden Gate, Sausalito waterfront (data/slice.json)"
+  },
+  "sources": [
+    {
+      "id": "sf-buildings",
+      "file": "sf-buildings.geojson",
+      "licence": "ODC PDDL 1.0 (public domain dedication)",
+      "url": "http://opendatacommons.org/licenses/pddl/1.0/"
+    },
+    {
+      "id": "sausalito-osm",
+      "file": "sausalito-osm.json",
+      "licence": "ODbL 1.0 — © OpenStreetMap contributors",
+      "url": "https://www.openstreetmap.org/copyright"
+    },
+    {
+      "id": "terrain-3dep",
+      "file": "terrain-3dep.tif",
+      "licence": "Public domain (US Government work, USGS)",
+      "url": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    },
+    {
+      "id": "bathy-ncei",
+      "file": "bathy-ncei.tif",
+      "licence": "Public domain (US Government work, NOAA NCEI)",
+      "url": "https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ngdc.mgg.dem:999919"
+    },
+    {
+      "id": "noaa-datums",
+      "file": "noaa-datums-9414290.json",
+      "licence": "Public domain (US Government work, NOAA CO-OPS)",
+      "url": "https://tidesandcurrents.noaa.gov/datums.html?id=9414290"
+    },
+    {
+      "id": "landmarks-osm",
+      "file": "landmarks-osm.json",
+      "licence": "ODbL 1.0 — © OpenStreetMap contributors",
+      "url": "https://www.openstreetmap.org/copyright"
+    },
+    {
+      "id": "noaa-enc-landmarks",
+      "file": "noaa-enc-landmarks.json",
+      "licence": "Public domain (US Government work, NOAA Office of Coast Survey)",
+      "url": "https://nauticalcharts.noaa.gov/data/enc-direct-to-gis.html"
+    },
+    {
+      "id": "noaa-enc-pylons",
+      "file": "noaa-enc-pylons.json",
+      "licence": "Public domain (US Government work, NOAA Office of Coast Survey)",
+      "url": "https://nauticalcharts.noaa.gov/data/enc-direct-to-gis.html"
+    },
+    {
+      "id": "ggt-gtfs",
+      "file": "ggt-gtfs.zip",
+      "licence": "No licence stated by the publisher (GGBHTD); used only for facts: stop positions and published trip times; not redistributed",
+      "url": "https://realtime.goldengate.org/gtfsstatic/GTFSTransitData.zip"
+    },
+    {
+      "id": "naip-sf",
+      "file": "naip-sf.tif",
+      "licence": "Public domain (US Government work, USDA Farm Service Agency NAIP)",
+      "url": "https://naip-usdaonline.hub.arcgis.com/"
+    },
+    {
+      "id": "naip-sausalito",
+      "file": "naip-sausalito.tif",
+      "licence": "Public domain (US Government work, USDA Farm Service Agency NAIP)",
+      "url": "https://naip-usdaonline.hub.arcgis.com/"
+    },
+    {
+      "id": "naip-bay",
+      "file": "naip-bay.tif",
+      "licence": "Public domain (US Government work, USDA Farm Service Agency NAIP)",
+      "url": "https://naip-usdaonline.hub.arcgis.com/"
+    }
+  ],
+  "terrain": { "land": "terrain-3dep.tif", "sea": "bathy-ncei.tif", "datum": "noaa-datums-9414290.json", "datumStation": "9414290", "aerial": "naip-bay.tif" },
+  "controlPoints": [
+    { "name": "Ferry Building", "lat": 37.79555, "lon": -122.39365, "ref": "NOAA ENC / OSM (gates/lib/controls.mjs)" },
+    { "name": "Coit Tower", "lat": 37.80239, "lon": -122.40582, "ref": "NOAA ENC / OSM (gates/lib/controls.mjs)" },
+    { "name": "Transamerica Pyramid", "lat": 37.7952, "lon": -122.4028, "ref": "NOAA ENC / OSM (gates/lib/controls.mjs)" },
+    { "name": "Golden Gate Bridge", "lat": 37.8199, "lon": -122.4785, "ref": "NOAA ENC / OSM (gates/lib/controls.mjs)" },
+    { "name": "Alcatraz", "lat": 37.8267, "lon": -122.423, "ref": "NOAA ENC / OSM (gates/lib/controls.mjs)" }
+  ],
+  "vessel": {
+    "name": "MV Golden Gate",
+    "source": "Wikipedia, \"MV Golden Gate\" (DECISIONS D33)",
+    "length": 43.7,
+    "beam": 12,
+    "draft": 1.5,
+    "topSpeedKn": 38,
+    "hullWidth": 3.1,
+    "hullSpacing": 8.6,
+    "deckY": 2.4,
+    "mass": 120000
+  },
+  "route": {
+    "file": "ferry/route.json",
+    "schedule": "ferry/schedule.json",
+    "from": "Ferry Building Gate C",
+    "to": "Sausalito",
+    "source": "Golden Gate Ferry GTFS, route SSSF (facts only)",
+    "planner": {
+      "fromTerminal": "sanFrancisco",
+      "toTerminal": "sausalito",
+      "piersOsm": "landmarks-osm.json",
+      "datums": { "MSL": 2.773, "MLLW": 1.822 },
+      "datumNote": "MSL (NAVD88 + 0.969 m); open water also holds at MLLW"
+    }
+  },
+  "landmarks": [
+    { "slug": "golden-gate-bridge", "name": "Golden Gate Bridge" },
+    { "slug": "ferry-building", "name": "Ferry Building" },
+    { "slug": "coit-tower", "name": "Coit Tower" },
+    { "slug": "transamerica-pyramid", "name": "Transamerica Pyramid" },
+    { "slug": "alcatraz", "name": "Alcatraz" }
+  ],
+  "landmarkScript": "pipelines/landmarks/build.py",
+  "water": {
+    "preset": "bay",
+    "swellDir": [1, 0.12],
+    "optics": {
+      "absorption": [0.5, 0.16, 0.26],
+      "scattering": [0.075, 0.085, 0.055]
+    }
+  },
+  "sun": { "latitude": 37.81, "declination": -0.5 },
+  "palettes": {
+    "walls": {
+      "tower": [[118, 138, 152], [104, 126, 124], [150, 156, 162], [92, 104, 120], [186, 182, 172], [132, 146, 160], [170, 168, 160]],
+      "mid": [[182, 178, 170], [160, 157, 150], [206, 192, 162], [190, 170, 140], [150, 82, 62], [136, 72, 56], [166, 98, 72], [224, 220, 210], [198, 196, 188], [176, 150, 120]],
+      "house": [[214, 226, 205], [238, 222, 160], [230, 192, 190], [182, 206, 226], [240, 236, 226], [202, 192, 222], [226, 206, 172], [168, 180, 168], [236, 214, 196], [196, 216, 214]],
+      "sausalito": [[142, 112, 82], [122, 96, 72], [236, 232, 224], [202, 212, 208], [230, 220, 182], [168, 140, 106], [214, 206, 192]],
+      "pier": [[222, 212, 186], [210, 200, 178], [198, 194, 184]]
+    },
+    "roofs": {
+      "city": [[92, 92, 92], [118, 116, 110], [138, 136, 128], [104, 100, 96], [156, 152, 144]],
+      "sausalito": [[164, 92, 62], [150, 84, 58], [92, 82, 72], [118, 118, 116], [132, 104, 80]]
+    }
+  },
+  "layout": {
+    "anchorUTM": [553383.6, 4183304.4],
+    "pier": { "dx": 70, "dzStart": -60, "dzEnd": 60, "deckHeight": 2.3, "width": 8, "headWidth": 14, "headDepth": 7 },
+    "boatDock": { "dx": 90, "dz": -20, "heading": 0 },
+    "start": { "dx": -40, "dz": 0, "yaw": -1.5707963267948966 }
+  },
+  "places": [
+    { "name": "Golden Gate Bridge", "x": -3611, "z": 855, "model": true, "r": 700, "waypoint": 4 },
+    { "name": "Ferry Building", "x": 3884, "z": 3507, "model": true, "waypoint": 0 },
+    { "name": "Transamerica Pyramid", "x": 3076, "z": 3543, "model": true, "waypoint": 1 },
+    { "name": "Coit Tower", "x": 2802, "z": 2745, "model": true, "waypoint": 2 },
+    { "name": "Alcatraz", "x": 1337, "z": 105, "model": true, "waypoint": 3 },
+    { "name": "Sausalito", "x": -3544, "z": -3185, "waypoint": 5 },
+    { "name": "Pier 39", "x": 2449, "z": 2046 },
+    { "name": "Fisherman's Wharf", "x": 1754, "z": 2128 },
+    { "name": "Ghirardelli Square", "x": 1297, "z": 2375 },
+    { "name": "Lombard Street", "x": 1670, "z": 2783 },
+    { "name": "Fort Mason", "x": 496, "z": 2346 },
+    { "name": "Palace of Fine Arts", "x": -945, "z": 2710 },
+    { "name": "Crissy Field", "x": -2408, "z": 2541 },
+    { "name": "Presidio", "x": -2510, "z": 3163 },
+    { "name": "Fort Point", "x": -3477, "z": 1881 },
+    { "name": "Angel Island", "x": 476, "z": -3823 },
+    { "name": "Exploratorium", "x": 3536, "z": 2838 },
+    { "name": "Chinatown", "x": 2813, "z": 4029 }
+  ],
+  "waypoints": [
+    {
+      "name": "Ferry Building",
+      "eye": [4080, 22, 3560],
+      "at": [3884, 45, 3507]
+    },
+    {
+      "name": "Transamerica Pyramid",
+      "eye": [3520, 190, 3180],
+      "at": [3076, 150, 3543]
+    },
+    {
+      "name": "Coit Tower",
+      "eye": [2850, 140, 3050],
+      "at": [2802, 130, 2745]
+    },
+    {
+      "name": "Alcatraz",
+      "eye": [1720, 45, 520],
+      "at": [1337, 25, 105]
+    },
+    {
+      "name": "Golden Gate Bridge",
+      "eye": [-4550, 60, 250],
+      "at": [-3611, 110, 855]
+    },
+    {
+      "name": "Sausalito",
+      "eye": [-3290, 28, -2930],
+      "at": [-3650, 20, -3260]
+    },
+    {
+      "name": "Mid-bay",
+      "eye": [1984, 8, 1017],
+      "at": [2800, 30, 2600]
+    },
+    {
+      "name": "City from above",
+      "eye": [4629, 350, 1666],
+      "at": [3300, 60, 3300]
+    }
+  ],
+  "ui": {
+    "title": "SF Bay Crossing",
+    "brand": "BAY CROSSING",
+    "autopilot": "Ferry Building → Sausalito",
+    "autopilotHelp": "Sails the route to Sausalito",
+    "howToPlay": "walk the Embarcadero, take the ferry helm at Ferry Building Gate C and cross to Sausalito, by hand or with the autopilot (G). Keys 1–8 fly to the landmarks."
+  },
+  "capabilities": ["water", "vessel", "route", "buildings", "landmarks"],
+  "games": {
+    "default": "sightseeing",
+    "available": ["sightseeing"]
+  },
+  "streaming": false
+}

@@ -3,13 +3,14 @@
 // distance at MV Golden Gate's published top speed (38 kn) to the published timetable (GTFS, 30 min); and the hull
 // is never over water shallower than its draft (1.5 m) on the way.
 // --negative: a shoal on the route, a slow helmsman, and an unreachable berth must each fail.
+import 'harbor-engine/tools/lib/configured.mjs';
 import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync, rmSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { root } from './lib/tiles.mjs';
-import { FERRY, KNOT } from '../src/world/FerrySpec.js';
-import { planRoute } from '../tools/ferry/route.mjs';
+import { root } from 'harbor-engine/gates/lib/tiles.mjs';
+import { FERRY, KNOT } from 'harbor-engine/src/world/VesselSpec.js';
+import { planRoute } from 'harbor-engine/tools/ferry/route.mjs';
 
 const NEG = process.argv.includes( '--negative' );
 const schedule = JSON.parse( readFileSync( join( root, 'public/ferry/schedule.json' ), 'utf8' ) );
@@ -24,7 +25,7 @@ const T_MIN = hav / ( FERRY.topSpeedKn * KNOT ) / 60, T_MAX = Math.max( ...sched
 // ---- the crossing (child process: one App per process)
 async function sail( sabotage ) {
 
-	const { bootApp } = await import( '../tools/headless/app.mjs' );
+	const { bootApp } = await import( 'harbor-engine/tools/headless/app.mjs' );
 	const H = await bootApp( { width: 320, height: 180, query: '?fly&noAudio' } );
 	const app = H.app, b = app.boatCtl;
 	app.renderEnabled = false;
