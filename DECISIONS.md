@@ -220,3 +220,7 @@ are in `docs/archive-hong-kong.md`.
     Alcatraz from the north, all 12 other places reachable) and a browser check (desktop and phone: no signs
     on the start screen, no stacking, click / aim-click / tap fly there, K and photo mode hide them, touch
     controls stay tappable with signs up).
+- **D44** (2026-09-26) Bay Crossing is now a Harbor Engine title (`github:icomppower/harbor-engine#v1.0.0`): this
+  repo keeps `map.json`, `hooks.js` (SF building sources, landmark prep), `pipelines/` (fetch list, GTFS prep,
+  Blender script), baked `public/` and gates G0–G7; the runtime, generic pipelines and gate libraries are the
+  engine's. Extraction proven by engine gate E0: data byte-identical, G0–G7 green, G6 shots bit-exact.

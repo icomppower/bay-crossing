@@ -15,6 +15,8 @@
 
 ## Current
 
+**Harbor Engine title** since 2026-09-26 (D44): G0–G7 re-verified green on harbor-engine v1.0.0.
+
 **DONE.** G0–G5 green in one clean `./verify.sh` run (G6 advisory green); see `DONE`. The G5 block was resolved
 by the owner (docs/resolved-blocks.md, D36).
 

@@ -1,5 +1,10 @@
 # Credits
 
+Built on [Harbor Engine](https://github.com/icomppower/harbor-engine) v1.0.0 (MIT), itself built on
+[Tidewater](https://github.com/dgreenheck/tidewater) (MIT); engine assets and their licences are listed in the
+engine's CREDITS.md.
+
+
 The code in this repository is released under the MIT license (see `LICENSE`). The third-party
 assets below keep their own licences.
 

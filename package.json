@@ -17,6 +17,6 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "harbor-engine": "file:../harbor-engine"
+    "harbor-engine": "github:icomppower/harbor-engine#v1.0.0"
   }
 }
