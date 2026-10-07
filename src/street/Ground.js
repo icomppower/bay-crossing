@@ -100,10 +100,11 @@ export class StreetGround {
 
 	}
 
+	// the height the player stands on: the same surface as at() (slivers and pinholes bridged), or null
 	heightAt( x, z ) {
 
-		const t = this.find( x, z );
-		return t < 0 ? null : this.yAt( t, x, z );
+		const s = this.at( x, z );
+		return s ? s.y : null;
 
 	}
 

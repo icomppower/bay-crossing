@@ -19,7 +19,7 @@ import { Region } from '../pipelines/street/geom.mjs';
 import { readStreet, root } from './lib/street.mjs';
 import { StreetGround } from '../src/street/Ground.js';
 import { local, loadContext, elements } from '../pipelines/street/context.mjs';
-import { route } from './lib/route.mjs';
+import { route, curbIndex } from './lib/route.mjs';
 
 const NEG = process.argv.includes('--negative');
 

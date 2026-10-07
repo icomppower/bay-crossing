@@ -5,7 +5,7 @@ import { noiseModule } from './wgsl.js';
 import { mipChain } from './signDraw.js';
 
 // Street props (D52, D56; public/street/props.*, pipelines/street/props.mjs): one instanced draw per prop type
-// (trees twice: the near ones cast shadows), each instance [ x, y, z, yaw, scale, variant, a, b ] (wires:
+// (trees, palms and cars twice: the near ones cast shadows), each instance [ x, y, z, yaw, scale, variant, a, b ] (wires:
 // [ ax, ay, az, bx, by, bz, radius, kind ]). Templates are built here from boxes, cylinders and blobs; colours and
 // detail come from the shaders. Each type streams the instances of the 100 m tiles within its radius.
 
@@ -292,8 +292,8 @@ const SHADE = {
 
 export const PROP_TYPES = {
 	tree: { template: 'tree', radius: 260, near: 70 },
-	palm: { template: 'palm', radius: 320, shadows: true },
-	car: { template: 'car', radius: 150, shadows: true },
+	palm: { template: 'palm', radius: 320, near: 70 },
+	car: { template: 'car', radius: 150, near: 70 },
 	lamp: { template: 'lamp', radius: 220 },
 	muni: { template: 'muni', radius: 260 },
 	hydrant: { template: 'hydrant', radius: 80 },
@@ -395,7 +395,7 @@ class PropLayer {
 
 		};
 		this.main = make( !! cfg.shadows );
-		// trees: the ones within `near` m cast shadows (a second draw), the rest do not
+		// trees, palms, cars: the ones within `near` m cast shadows (a second draw), the rest do not
 		this.near = cfg.near ? make( true ) : null;
 		this.meshes = [ this.main.mesh, ...( this.near ? [ this.near.mesh ] : [] ) ];
 		this.key = '';

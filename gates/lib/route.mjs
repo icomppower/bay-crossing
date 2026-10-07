@@ -124,7 +124,7 @@ export function astar(ground, a, b, erode = 0) {
 // curb faces in the mesh (vertical quads of materials 7–12; data.w = 1 on their top edge): segment and height,
 // bucketed by 6 m cell
 const segDist = (x, z, s) => { const dx = s.x2 - s.x, dz = s.z2 - s.z, L = dx * dx + dz * dz, t = L > 0 ? Math.max(0, Math.min(1, ((x - s.x) * dx + (z - s.z) * dz) / L)) : 0; return Math.hypot(x - s.x - t * dx, z - s.z - t * dz); };
-function curbIndex({ pos, dat, indices }) {
+export function curbIndex({ pos, dat, indices }) {
   const cells = new Map();
   for (let t = 0; t < indices.length; t += 3) {
     const ks = [indices[t], indices[t + 1], indices[t + 2]];
