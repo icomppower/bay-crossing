@@ -13,8 +13,8 @@
 | G7 Baseline-limits compile | PASS | 2026-09-26 | low / mobile / high × ferry / fly at WebGPU default limits, no optional features: 0 failed pipelines, 0 validation errors; 6/6 negatives (5 reverted fixes + unclamped adapter) |
 | G6 Look (advisory) | PASS | 2026-09-24 | shots/golden-hour.png, blue-hour.png, night.png (solar 17.47 / 18.40 / 19.25 h) for human review |
 | G8 Street data | PASS | 2026-10-07 | OSM streets SF 9.5 MB + Sausalito 0.6 MB (Overpass), DataSF 12,846 trees (PDDL read from metadata), cached + checksummed; 7/7 negatives |
-| G9 Road mesh | TODO | — | run 2 |
-| G10 Sidewalks + walkability | TODO | — | run 2 |
+| G9 Road mesh | PASS | 2026-10-07 | 99.53 % of drivable centerline meshed (floor frozen 99.0 %), max building penetration 0.09 m, 1,505 junctions watertight, mesh area = region area, byte-identical offline ×2 = shipped; 6/6 negatives |
+| G10 Sidewalks + walkability | PASS | 2026-10-07 | 2,183 built-up road sides with curb + sidewalk (D66); real Player walks Ferry Building → Pier 39 (1,887 m) on the street mesh, 0 frames off / under; 3/3 negatives |
 | G11 Storefront band | TODO | — | run 2 |
 | G12 Props | TODO | — | run 2 |
 | G12b Crowd | TODO | — | run 2 |

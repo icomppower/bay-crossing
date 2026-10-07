@@ -276,3 +276,30 @@ Harbor Engine conversion. Later decisions are appended with a one-line reason.
   to a date: a dated (attic) query ran Overpass out of memory and came back empty. The cached file is the snapshot
   (`osm3s.timestamp_osm_base`, 2026-10-07); `fetch.mjs` drops a cached Overpass reply that carries an error remark
   or no elements, so a failed fetch is never cached. Reason: reproducibility comes from the cache, as in run 1.
+- **D61** Street draping: surfaces are clipped to 6 m cells on the terrain's texel-centre grid and their vertices sit
+  on the terrain plus their lift (road +3 cm, paint +4.2 cm, walkways a 15 cm curb above the road within 8 m of one,
+  +6 cm further away). A flat triangle can pass under a bump of the bilinear terrain, so each 6 m cell keeps the
+  largest deficit of its triangles and every vertex is raised by the largest of the cells it touches: the street
+  clears the terrain and road and walkway rise together (the curb stays 15 cm). The raise is capped at 15 cm; past
+  it (a street meeting a retaining wall or stairs the 3 m DEM draws as a slope) the terrain shows through locally
+  (21k triangles, 0.12 km², logged). Reason: an exact 3 m drape tripled the mesh (3.3M triangles), and the plain
+  6 m drape dipped up to 1.6 m under the terrain.
+- **D62** Streets drape on a pit-filled copy of the terrain (priority flood from the domain edge): closed lidar pits
+  such as the Embarcadero station stairwells under Market and Mission are bridged, and water is what stays below
+  +0.3 m after filling. Reason: the pits read as water and cut holes in the sidewalk.
+- **D63** Every junction leg carries a walkable crossing band (4 m, no paint) unless a marked crosswalk is within
+  15 m: California treats each intersection leg as a legal crosswalk, marked or not. Crossing bands span roads and
+  the tram trackway. Reason: G10's walk had to step onto plain asphalt at unmarked junction legs.
+- **D64** Driveways: service road is walkable where it crosses a gap under 8 m in the walkways (a 4 m closing of
+  them). Reason: sidewalks run across driveways in SF; pier and lot entrances cut the Embarcadero sidewalk.
+- **D65** Footways count as walkway within 20 m of a road (promenades, plaza links); park paths further in keep the
+  ground colour (D48). Reason: thin park paths were a third of the walkway triangles for no street-level gain.
+- **D66** G10's "every road edge in built-up blocks": a side of a sidewalk-bearing road class facing buildings within
+  35 m, sampled every 5 m away from junction ends and inside the slice; samples with a building within 1.8 m of the
+  carriageway edge (alleys whose class-default width reaches the building line, D45) and median sides (another
+  carriageway or busway right past the kerb) are counted and left out; a side may miss walkway at max( 1, 10 % ) of
+  its samples; a curb is a 15 ± 3 cm curb face within 1.5 m. Reason: the measured cases are data limits, not gaps.
+- **D67** The street surface ships as one mesh in 100 m tiles (positions f32, normals snorm8, data u8: 20 bytes a
+  vertex, 13.9 MB deflated) and is drawn as one draw call: the runtime rewrites the index buffer with the tiles within
+  450 m when that set changes. The walker stands on the drawn triangles (src/street/Ground.js wraps the terrain the
+  Player reads). Reason: draw-call headroom under the frozen 126 cap is about 40.
