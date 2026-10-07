@@ -31,10 +31,12 @@ export function surfaceMaterial() {
 	// asphalt underneath every road material (paint wears through to it)
 	let patchCell = floor( q / vec2f( 9.0, 5.0 ) );
 	let patchOn = step( 0.8, stHash21( patchCell ) ) * step( 0.35, stNoise( q * 0.4 ) );
-	var asph = vec3f( 0.072, 0.072, 0.076 ) * ( 0.78 + 0.44 * n1 ) * ( 0.9 + 0.2 * n2 );
-	asph = mix( asph, vec3f( 0.105, 0.104, 0.1 ) * ( 0.9 + 0.2 * n2 ), patchOn * 0.8 );
-	let crack = smoothstep( 0.0, 0.018, abs( stNoise( q * 0.9 + 3.0 ) - 0.5 ) );
-	asph *= mix( 0.55, 1.0, crack );
+	var asph = vec3f( 0.068, 0.069, 0.072 ) * ( 0.82 + 0.36 * n1 ) * ( 0.92 + 0.16 * n2 );
+	asph = mix( asph, vec3f( 0.1, 0.1, 0.1 ) * ( 0.9 + 0.2 * n2 ), patchOn * 0.7 );
+	// hairline cracks, only in patches of worn road
+	let crackLine = 1.0 - smoothstep( 0.0, 0.006, abs( stNoise( q * 0.35 + 3.0 ) - 0.5 ) );
+	let crackZone = smoothstep( 0.62, 0.7, stNoise( q * 0.045 + 11.0 ) );
+	asph *= 1.0 - 0.45 * crackLine * crackZone;
 	let wear = smoothstep( 0.25, 0.6, stNoise( q * 1.3 + 7.0 ) * 0.7 + n2 * 0.3 );
 	if ( mat == 0 ) {
 		alb = asph; rough = 0.9;
@@ -53,7 +55,7 @@ export function surfaceMaterial() {
 		let g = abs( fract( r / 1.5 ) - 0.5 ) * 1.5;
 		let joint = 1.0 - ( 1.0 - smoothstep( 0.0, 0.012, g.x ) ) * 0.5 - ( 1.0 - smoothstep( 0.0, 0.012, g.y ) ) * 0.5;
 		let slab = stHash21( floor( r / 1.5 ) );
-		alb = vec3f( 0.36, 0.355, 0.34 ) * ( 0.85 + 0.2 * n1 ) * ( 0.94 + 0.12 * slab ) * joint;
+		alb = vec3f( 0.31, 0.31, 0.3 ) * ( 0.86 + 0.18 * n1 ) * ( 0.94 + 0.12 * slab ) * joint;
 		if ( mat == 6 ) {
 			// pavers: brick-sized, warm grey / terracotta
 			let b = r / vec2f( 0.2, 0.1 );

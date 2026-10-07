@@ -50,6 +50,9 @@ export async function attachStreet( app, { base = BASE, data = null } = {} ) {
 	};
 	street.update( app );
 	app.street = street;
+	// build the street pipelines now (the renderer skips a draw while its pipeline compiles in the background), and
+	// surface any shader error here
+	await app.precompile();
 	return street;
 
 }
