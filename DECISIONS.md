@@ -272,5 +272,7 @@ Harbor Engine conversion. Later decisions are appended with a one-line reason.
 - **D59** The DataSF Street Tree List licence is read from the dataset's own metadata (`/api/views/tkzw-k3nq.json`,
   cached as `datasf-street-trees-meta.json`) and G8 fails unless it says ODC PDDL. Reason: §2 asks for the licence
   to be verified by script.
-- **D60** Overpass street queries are pinned to one snapshot date (`[date:"2026-10-07T00:00:00Z"]`) and sent with a
-  User-Agent (Overpass answers 406 without one). Reason: a `--force` refetch must return the same data.
+- **D60** Overpass street queries are sent with a User-Agent (Overpass answers 406 without one) and are not pinned
+  to a date: a dated (attic) query ran Overpass out of memory and came back empty. The cached file is the snapshot
+  (`osm3s.timestamp_osm_base`, 2026-10-07); `fetch.mjs` drops a cached Overpass reply that carries an error remark
+  or no elements, so a failed fetch is never cached. Reason: reproducibility comes from the cache, as in run 1.

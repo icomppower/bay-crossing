@@ -102,7 +102,7 @@ headless test harness are Tidewater's.
 ### Geospatial data
 
 Every source is fetched by script into `data/raw/` (checksums in `data/raw/MANIFEST.sha256`). Each entry's
-licence is checked at G0.
+licence is checked at G0 (run 1 sources) or G8 (run 2 street sources).
 
 | Cached file | Source | Licence |
 |---|---|---|
@@ -115,9 +115,12 @@ licence is checked at G0.
 | `terrain-3dep.tif` | [USGS 3D Elevation Program](https://www.usgs.gov/3d-elevation-program) (3DEPElevation ImageServer), resampled to the slice grid | Public domain (US Government work) |
 | `noaa-datums-9414290.json` | [NOAA CO-OPS tidal datums](https://tidesandcurrents.noaa.gov/datums.html?id=9414290), San Francisco station 9414290 (sets game sea level = local MSL) | Public domain (US Government work) |
 | `bathy-ncei.tif` | [NOAA NCEI](https://www.ncei.noaa.gov/products/coastal-elevation-models) coastal DEM mosaic (topobathy; DEM_mosaics/DEM_all ImageServer), resampled to the slice grid | Public domain (US Government work) |
+| `osm-streets-sf.json`, `osm-streets-sausalito.json` | [OpenStreetMap](https://www.openstreetmap.org) streets over the two building boxes, via the Overpass API (run 2, G8): road ways with lanes / width / sidewalk / parking tags, crossings, signals, street lamps, tram rails, shop / amenity / tourism features (used only for a storefront's category; no names are shown), trees | ODbL 1.0 — © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) |
+| `datasf-street-trees.json` | [San Francisco Street Tree List](https://data.sf.gov/d/tkzw-k3nq) (DataSF, San Francisco Public Works): street tree positions and species (run 2, G8, G12) | ODC PDDL 1.0 — [public domain dedication](http://opendatacommons.org/licenses/pddl/1.0/); read from the dataset's metadata by G8 |
+| `datasf-street-trees-meta.json` | The Street Tree List's dataset metadata (DataSF API `/api/views/tkzw-k3nq.json`), cached so G8 can check the licence from the publisher's own record | ODC PDDL 1.0 (DataSF metadata) |
 
 Derived tiles in this repository are processed copies. Map data from OpenStreetMap is available under the Open
-Database License; derived building tiles for Sausalito are a Produced Work under ODbL.
+Database License; derived building tiles for Sausalito and the street data in `public/street/` are Produced Works under ODbL.
 
 ### Landmarks: `public/landmarks/`
 
