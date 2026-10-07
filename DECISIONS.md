@@ -224,3 +224,53 @@ are in `docs/archive-hong-kong.md`.
   repo keeps `map.json`, `hooks.js` (SF building sources, landmark prep), `pipelines/` (fetch list, GTFS prep,
   Blender script), baked `public/` and gates G0–G7; the runtime, generic pipelines and gate libraries are the
   engine's. Extraction proven by engine gate E0: data byte-identical, G0–G7 green, G6 shots bit-exact.
+
+## Run 2 — Street level (2026-10-07)
+
+Seeded from the run-2 brief's §3, which numbered them D44–D56; renumbered +1 here because D44 already records the
+Harbor Engine conversion. Later decisions are appended with a one-line reason.
+
+- **D45** Road width = OSM `width`, else `lanes` × 3.3 m, else a default per `highway` class. Every default used
+  is logged with the way ID.
+- **D46** Roads are meshed from centerlines with proper intersection polygons (no overlapping strips). Markings:
+  centre line, lane dividers, crosswalks at intersections with `crossing` tags or signalised nodes. Embarcadero
+  streetcar tracks drawn as rail decals if OSM has them.
+- **D47** Curb 15 cm. Sidewalk width from `sidewalk:width`, else a default per road class. Sidewalk fills the gap
+  to the building line where it is under 6 m.
+- **D48** The NAIP ground colour stays for parks and open ground; under roads and sidewalks it is replaced by the
+  road/sidewalk materials.
+- **D49** Storefront band: a 4–5 m ground-floor module on every building edge facing a street within 3 m. Module =
+  glass, door, awning or roller shutter, sign board. Style picked from the OSM category in that footprint, else a
+  district default (Embarcadero commercial, Fisherman's Wharf tourist, Sausalito waterfront). Upper floors keep
+  run-1 facades.
+- **D50** Signs are **drawn by code** into a sign atlas (Canvas 2D or GPU text), seeded, in a worker — no sign
+  image files. Text is **generic category text only** ("CAFE", "SEAFOOD", "BOOKS"…), English; bilingual
+  English/Chinese in Chinatown. SF sign forms: flat fascia boards, vertical blade signs, painted window lettering,
+  neon on bars at night. No real business names, brand names or logos. Run-1 landmark signs are unchanged.
+- **D51** Facade depth for upper floors via normal/parallax in the shader — not extra geometry — so draw calls and
+  triangles stay inside run-1 caps.
+- **D52** Props, all GPU-instanced: street trees (DataSF positions), street lamps, hydrants, Muni poles, benches,
+  parked cars along kerbs where `parking:lane` allows or as a logged default. Procedural spacing uses a fixed
+  seed.
+- **D53** `mobile` tier: props within 60 m only, no parked cars, no parallax. `low` is the gated tier, as in run 1.
+- **D54** Pedestrians: an instanced crowd (GPU-skinned or vertex-animated walk + idle loops, a handful of
+  body/clothing variants, seeded) walking along sidewalks and clustering at crosswalks; denser at the Ferry
+  Building and Pier 39. No collision AI beyond staying on walkable surfaces. No vehicle traffic and no quests in
+  this run.
+- **D55** Run-1 gates and frozen thresholds stay as they are. G5's floor and memory cap apply to the new
+  street-level path as well.
+- **D56** SF street cues (all cheap decals or instanced props): painted curbs (red / yellow / green / white /
+  blue), ladder crosswalks, Embarcadero streetcar tracks, overhead Muni wires on streets that have them, green
+  street-name blades on poles, parking meters, fire escapes and bay windows on mid-rises, red lanterns over
+  Chinatown streets if the slice reaches them.
+- **D57** Camera and light: walking camera lowered to over-the-shoulder at ~1.7–2.2 m behind the player;
+  street-level shots default to golden hour and evening fog, with storefront windows lit at dusk and night.
+- **D58** Drivable = OSM `highway` motorway … residential, their `_link`s, `living_street`, `service` (not parking
+  aisles or drive-throughs) and `busway`, at ground level: tunnels, bridges and `layer` ≠ 0 ways are not meshed
+  onto the terrain and are left out of G9's coverage base. Reason: the ground mesh drapes on the DEM, which has no
+  decks or tunnels.
+- **D59** The DataSF Street Tree List licence is read from the dataset's own metadata (`/api/views/tkzw-k3nq.json`,
+  cached as `datasf-street-trees-meta.json`) and G8 fails unless it says ODC PDDL. Reason: §2 asks for the licence
+  to be verified by script.
+- **D60** Overpass street queries are pinned to one snapshot date (`[date:"2026-10-07T00:00:00Z"]`) and sent with a
+  User-Agent (Overpass answers 406 without one). Reason: a `--force` refetch must return the same data.

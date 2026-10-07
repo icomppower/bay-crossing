@@ -12,8 +12,21 @@
 | G5 M4 budget | PASS | 2026-09-25 | 51.5 fps p95 @1080p low (floor 40), GPU memory 689 MB (cap 862, recalibrated per D36), 0 swap-outs; 3/3 negatives |
 | G7 Baseline-limits compile | PASS | 2026-09-26 | low / mobile / high × ferry / fly at WebGPU default limits, no optional features: 0 failed pipelines, 0 validation errors; 6/6 negatives (5 reverted fixes + unclamped adapter) |
 | G6 Look (advisory) | PASS | 2026-09-24 | shots/golden-hour.png, blue-hour.png, night.png (solar 17.47 / 18.40 / 19.25 h) for human review |
+| G8 Street data | TODO | — | run 2 |
+| G9 Road mesh | TODO | — | run 2 |
+| G10 Sidewalks + walkability | TODO | — | run 2 |
+| G11 Storefront band | TODO | — | run 2 |
+| G12 Props | TODO | — | run 2 |
+| G12b Crowd | TODO | — | run 2 |
+| G13 Street-level budget | TODO | — | run 2 |
+| G14 Street look (advisory) | TODO | — | run 2 |
 
 ## Current
+
+**Run 2 (street level)** started 2026-10-07 on branch `street-level` (SPEC.md "Run 2 — Street level", D45–D60).
+Baseline before the run: full `./verify.sh` green (G0–G5, G7; G6 advisory).
+
+### Run 1
 
 **Harbor Engine title** since 2026-09-26 (D44): G0–G7 re-verified green on harbor-engine v1.0.0.
 
