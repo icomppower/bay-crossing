@@ -6,6 +6,9 @@ import { StreetGround, streetTerrain } from './Ground.js';
 import { StreetStores, signAtlasImage } from './Stores.js';
 import { patchBuildingFacades } from './Facades.js';
 import { StreetProps } from './Props.js';
+import { Vector3, Color } from 'harbor-engine/src/engine/index.js';
+import { CrowdSim, CrowdView } from './Crowd.js';
+import { PlayerView } from './PlayerView.js';
 
 const BASE = ( typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.BASE_URL ) || '/';
 
@@ -38,6 +41,15 @@ export async function loadProps( base = BASE ) {
 
 }
 
+export async function loadCrowd( base = BASE ) {
+
+	const index = await ( await fetch( base + 'street/crowd.json' ) ).json();
+	const r = await fetch( base + 'street/crowd.bin.deflate' );
+	if ( ! r.ok ) throw new Error( `street: crowd HTTP ${ r.status }` );
+	return { index, pts: new Float32Array( await inflate( r ) ) };
+
+}
+
 export async function loadStores( base = BASE ) {
 
 	const index = await ( await fetch( base + 'street/stores.json' ) ).json();
@@ -63,15 +75,40 @@ export async function attachStreet( app, { base = BASE, data = null } = {} ) {
 	const names = await signAtlasImage( props.index.names, { cellW: 256, cellH: 32, cols: 8, font: 'bold {s}px "Helvetica Neue", Helvetica, Arial, sans-serif' } );
 	street.props = new StreetProps( props, names );
 	for ( const m of street.props.meshes ) app.scene.add( m );
+	// the crowd (seeded; ?crowd=0 turns it off) and the over-the-shoulder walker
+	const qs = app.qs || new URLSearchParams();
+	const crowd = await loadCrowd( base );
+	const population = qs.has( 'crowd' ) ? Number( qs.get( 'crowd' ) ) : app.quality && app.quality.name === 'mobile' ? Math.round( crowd.index.population / 3 ) : crowd.index.population;
+	street.crowd = new CrowdSim( crowd, { seed: Number( qs.get( 'seed' ) || 1975 ), population } );
+	street.crowdView = new CrowdView();
+	for ( const m of street.crowdView.meshes ) app.scene.add( m );
+	street.playerView = new PlayerView();
+	const groundY = ( x, z ) => street.ground.heightAt( x, z ) ?? hf.heightAt( x, z );
 	// the walker stands on the street surface (sidewalks a curb above the road), from the drawn triangles
 	const hf = app.terrainData;
 	street.ground = new StreetGround( data, hf.origin + hf.texel / 2 );
 	app.player.terrain = streetTerrain( app.player.terrain, street.ground );
-	street.update = ( a ) => {
+	// street lamps light the street at night (the engine's local lights: the 8 nearest are shaded): the heads of the
+	// lamps and trolley poles drawn now join the engine's own light sources
+	const lights = app.localLights, baseLights = lights ? lights.sources.slice() : [];
+	const lampColor = new Color( 1.0, 0.8, 0.58 ), down = new Vector3( 0, - 1, 0 );
+	let lampKey = '';
+	const updateLamps = () => {
 
+		if ( ! lights || street.props.lampKey === lampKey ) return;
+		lampKey = street.props.lampKey;
+		lights.sources = baseLights.concat( street.props.lampHeads().map( ( [ x, y, z ] ) => ( { position: new Vector3( x, y, z ), color: lampColor, intensity: 260, range: 24, dir: down, cosInner: 0.55, cosOuter: 0.05, kind: 'street', phase: 0 } ) ) );
+
+	};
+	street.update = ( a, dt = 0 ) => {
+
+		street.playerView.update( a, dt, street.ground );
+		street.crowd.update( dt );
+		street.crowdView.update( street.crowd, a.camera, groundY, street.playerView.figure );
 		street.surface.update( a.camera );
 		street.stores.update( a.camera );
 		street.props.update( a.camera );
+		updateLamps();
 
 	};
 

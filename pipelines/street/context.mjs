@@ -9,6 +9,7 @@ import { mergeHeights, GRID } from 'harbor-engine/tools/terrain/build.mjs';
 import { buildingKit } from 'harbor-engine/tools/buildings/build.mjs';
 import { toUTM } from 'harbor-engine/tools/geo/utm.mjs';
 import { TITLE } from 'harbor-engine/tools/lib/title.mjs';
+import { readTiff } from 'harbor-engine/tools/geo/tiff.mjs';
 
 const MM = v => Math.round(v * 1000) / 1000;
 export const local = (lat, lon) => { const [E, N] = toUTM(lat, lon); return [MM(E - GRID.originE), MM(GRID.originN - N)]; };
@@ -79,7 +80,19 @@ export async function loadContext({ rawDir = RAW } = {}) {
     sausalito: json('osm-streets-sausalito.json').elements,
   };
   const trees = json('datasf-street-trees.json');
-  return { slice, boxes, merged, height, buildings, osm, trees, local, GRID };
+  // NAIP (1 m, the two building boxes): is the ground at (x, z) planted? (green excess), or null outside the imagery
+  const tifs = ['naip-sf.tif', 'naip-sausalito.tif'].map(f => { const t = readTiff(readCached(f, rawDir)); const [, , , e0, n0] = t.tags[33922]; return { t, e0, n0 }; });
+  const naip = (x, z) => {
+    const E = x + GRID.originE, N = GRID.originN - z;
+    for (const { t, e0, n0 } of tifs) {
+      const c = Math.floor(E - e0), r = Math.floor(n0 - N);
+      if (c < 0 || r < 0 || c >= t.width || r >= t.height) continue;
+      const k = r * t.width + c, R = t.bands[0][k], G = t.bands[1][k], B = t.bands[2][k];
+      return { green: (2 * G - R - B) / Math.max(1, R + G + B) > 0.04 || (G > R * 1.08 && G > B * 1.05) };
+    }
+    return null;
+  };
+  return { slice, boxes, merged, height, buildings, osm, trees, naip, local, GRID };
 }
 
 // One de-duplicated element list over both boxes (ways appear once even if both queries return them), sorted

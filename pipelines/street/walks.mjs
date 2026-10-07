@@ -4,7 +4,7 @@
 // buildings. Curb faces (15 cm) where a walkway meets a road, skirts down to the ground elsewhere; curb paint
 // red beside crosswalks, seeded yellow / green / white / blue runs elsewhere.
 import { sidewalkSides } from './osm.mjs';
-import { bufferLine, union, diff, inter, offset, toPath, polygons, Region, clean, perTile } from './geom.mjs';
+import { bufferLine, union, diff, inter, offset, toPath, polygons, Region, clean, perTile, area } from './geom.mjs';
 import { MAT } from './roads.mjs';
 
 export const CURB_PAINT = { grey: 7, red: 8, yellow: 9, green: 10, white: 11, blue: 12 };
@@ -63,13 +63,43 @@ export function buildWalks(ctx, roads, { gapAt = null } = {}) {
   // trackways, buildings and (for plain walks) pedestrian areas
   const TW = 400;
   const tiled = (fn) => perTile(TW, 15, { S0, B, foot, ped, roadAll, boxes }, fn);
+  // (cleaned to 2 cm only: a coarser clean opens slivers between the walkway and the road edge)
   let walk5 = clean(tiled(t => {
     const closed = offset(offset(union(t.S0, t.B), 3, 'miter'), -3, 'miter');
     // footways count within 20 m of a road (promenades, plaza links); park paths further in stay ground colour (D48)
     const foot = inter(union(t.foot), offset(t.roadAll, 20, 'miter'));
     return diff(diff(inter(union(closed, foot), t.boxes), union(t.roadAll, t.B)), union(t.ped));
-  }));
-  const walk6 = tiled(t => diff(inter(union(t.ped), t.boxes), union(t.roadAll, t.B)));
+  }), 0.02);
+  let walk6 = tiled(t => diff(inter(union(t.ped), t.boxes), union(t.roadAll, t.B)));
+  // paved open space (D74): gaps under 40 m between walkways, roads and buildings (a 20 m closing) that the aerial
+  // imagery shows paved, not planted — the Embarcadero promenade, plazas, forecourts — become plaza; lawns and parks
+  // keep the ground colour (D48)
+  if (ctx.naip) {
+    const walkPre = union(walk5, walk6);
+    const cand = perTile(TW, 45, { W: walkPre, roadAll, B, boxes }, t => {
+      const solid = union(t.W, union(t.roadAll, t.B));
+      return diff(inter(offset(offset(solid, 20, 'miter'), -20, 'miter'), t.boxes), solid);
+    });
+    const paved = [];
+    for (const poly of polygons(cand, false)) {
+      const area = Math.abs(ringArea(poly[0])) - poly.slice(1).reduce((a, h) => a + Math.abs(ringArea(h)), 0);
+      if (area < 4) continue;
+      let n = 0, hard = 0, wet = 0;
+      let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity;
+      for (const [x, z] of poly[0]) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); z0 = Math.min(z0, z); z1 = Math.max(z1, z); }
+      const step = Math.max(1, Math.sqrt((x1 - x0) * (z1 - z0) / 400));
+      for (let z = z0 + step / 2; z < z1; z += step) for (let x = x0 + step / 2; x < x1; x += step) {
+        if (!inRings(poly, x, z)) continue;
+        n++;
+        if (ctx.height.filled(x, z) < 0.3) { wet++; continue; }
+        const c = ctx.naip(x, z);
+        if (c && !c.green) hard++;
+      }
+      if (n && wet === 0 && hard >= 0.75 * n) paved.push(...polyPaths(poly));
+    }
+    log.pavedFill = Math.round(area(union(paved)));
+    walk6 = union(walk6, diff(union(paved), union(roadAll, B)));
+  }
   // G10 negative fixture: a 6 m gap cut across the walk at a point
   if (gapAt) walk5 = diff(walk5, bufferLine([[gapAt[0] - 0.01, gapAt[1]], [gapAt[0] + 0.01, gapAt[1]]], 3, 'round'));
   const walkAll = union(walk5, walk6);
@@ -96,13 +126,13 @@ export function buildWalks(ctx, roads, { gapAt = null } = {}) {
   };
 
   // curb faces and skirts along every walkway boundary edge, cut into ≤ 6 m pieces
-  const roadRegion = new Region(polygons(roadAll));
+  const roadRegion = new Region(polygons(roadAll, false));
   const bldRegion = ctx.buildingRegion;
-  const walkRegion = new Region(polygons(walkAll));
+  const walkRegion = new Region(polygons(walkAll, false));
   const crossC = roads.crosswalks.map(c => c.centre);
   const edges = []; // { a, b, kind: 'curb' | 'skirt', mat }
   let ringId = 0;
-  for (const poly of polygons(walkAll)) for (const ring of poly) {
+  for (const poly of polygons(walkAll, false)) for (const ring of poly) {
     ringId++;
     let along = 0;
     for (let i = 0; i < ring.length; i++) {
@@ -151,3 +181,8 @@ export function buildWalks(ctx, roads, { gapAt = null } = {}) {
     walkAll, edges, angleAt, roadRegion, S0, log,
   };
 }
+
+const ringArea = r => { let a = 0; for (let i = 0; i < r.length; i++) { const p = r[i], q = r[(i + 1) % r.length]; a += p[0] * q[1] - q[0] * p[1]; } return a / 2; };
+const inRing = (r, x, z) => { let c = false; for (let i = 0, j = r.length - 1; i < r.length; j = i++) { const [xi, zi] = r[i], [xj, zj] = r[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; };
+const inRings = (poly, x, z) => inRing(poly[0], x, z) && !poly.slice(1).some(h => inRing(h, x, z));
+const polyPaths = poly => poly.map(r => toPath(r));

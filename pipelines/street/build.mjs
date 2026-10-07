@@ -13,6 +13,7 @@ import { union, diff, inter, toPath, area, Region, clean, perTile, offset } from
 import { buildWalks } from './walks.mjs';
 import { buildStores } from './stores.mjs';
 import { buildProps, TYPES } from './props.mjs';
+import { buildCrowdGraph } from './crowd.mjs';
 import { buildRoads, MAT } from './roads.mjs';
 import { MeshBuilder, LIFT, TILE, f32 } from './mesh.mjs';
 
@@ -93,12 +94,15 @@ export async function buildStreet({ rawDir, roadOptions = {}, walkOptions = {}, 
   // street props (G12)
   const props = roadsOnly ? null : buildProps(ctx, roads, walks, stores, (x, z, keep) => mesh.surfaceAt(x, z, keep));
   if (props) lap('props');
+  // the crowd's walking lanes and crossings (G12b)
+  const crowd = roadsOnly ? null : buildCrowdGraph(ctx, roads, walks, (x, z, keep) => mesh.surfaceAt(x, z, keep), (x, z) => mesh.walkableAt(x, z));
+  if (crowd) lap('crowd');
   const packed = mesh.pack();
   // gate fixture (G9 --negative): a non-deterministic run
   if (process.env.STREET_FIXTURE === 'jitter') packed.vertices[10 * Math.floor(Math.random() * 1000) + 1] += 1e-3;
   if (stores && process.env.STREET_FIXTURE === 'jitter-stores') stores.modules[Math.floor(Math.random() * stores.modules.length)].height += 0.01;
-  const log = { roads: roads.log, walks: walks.log, stores: stores?.log, props: props?.log, surfaces: stats };
-  return { ctx, roads, walks, stores, props, packed, log };
+  const log = { roads: roads.log, walks: walks.log, stores: stores?.log, props: props?.log, crowd: crowd?.log, surfaces: stats };
+  return { ctx, roads, walks, stores, props, crowd, packed, log };
 }
 
 // Shipped layout (surface.bin.deflate): positions Float32 ×3, normals Int8 ×4 (snorm), data Uint8 ×4 (material,
@@ -157,6 +161,19 @@ export function writeProps(props, out) {
   writeFileSync(join(out, 'props.json'), JSON.stringify({ version: VERSION, tile: TILE, stride: 8, types, names: props.names, sha256: createHash('sha256').update(body).digest('hex') }) + '\n');
 }
 
+// crowd.bin.deflate: lane points (Float32 x, z, clear half-width); crowd.json: lanes [first point, count, weight], crossings [lane a, point a,
+// lane b, point b, band end a x, z, band end b x, z], the low-tier population
+export const POPULATION = 17000;
+export function writeCrowd(crowd, out) {
+  // per lane point: x, z and the clear half-width of the segment that starts there (the last point repeats it)
+  const pts = [], lanes = [];
+  for (const l of crowd.lanes) { lanes.push([pts.length / 3, l.pts.length, Math.round(l.w * 1000) / 1000]); l.pts.forEach(([x, z], i) => pts.push(x, z, l.hw[Math.min(i, l.hw.length - 1)])); }
+  const body = Buffer.from(new Float32Array(pts).buffer);
+  writeFileSync(join(out, 'crowd.bin.deflate'), deflateSync(body, { level: 9 }));
+  const r = v => Math.fround(v);
+  writeFileSync(join(out, 'crowd.json'), JSON.stringify({ version: VERSION, population: POPULATION, lanes, crossings: crowd.crossings.map(c => c.map((v, i) => i < 4 ? v : r(v))), sha256: createHash('sha256').update(body).digest('hex') }) + '\n');
+}
+
 export function writeStreet(res, { out, logFile }) {
   const { packed, log } = res;
   mkdirSync(out, { recursive: true });
@@ -174,6 +191,7 @@ export function writeStreet(res, { out, logFile }) {
   writeFileSync(join(out, 'street.json'), JSON.stringify(index) + '\n');
   if (res.stores) writeStores(res.stores, out);
   if (res.props) writeProps(res.props, out);
+  if (res.crowd) writeCrowd(res.crowd, out);
   mkdirSync(dirname(logFile), { recursive: true });
   writeFileSync(logFile, JSON.stringify(log, null, 1) + '\n');
   return { bytes: bin.length, vertices: index.vertices, triangles: index.indices / 3 };

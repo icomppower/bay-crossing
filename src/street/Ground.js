@@ -1,7 +1,7 @@
 // The street mesh as ground: surface height and walkability at (x, z), from the same triangles that are drawn.
 // Every draped street triangle lies inside one 6 m block of the terrain-aligned grid (pipelines/street/mesh.mjs),
 // so a lookup tests only the triangles of one cell. Walkable = sidewalk / plaza (materials 5, 6) or a road
-// triangle inside a crosswalk band (data.z = 1). Curb faces and skirts (vertical) are not ground.
+// triangle inside a crosswalk band (data.z = 1). Paint / rail decals and curb faces / skirts are not ground.
 const CELL = 6; // pipelines/street/mesh.mjs BLOCK: every triangle lies inside one
 
 export class StreetGround {
@@ -14,6 +14,9 @@ export class StreetGround {
 		for ( let t = 0; t < indices.length; t += 3 ) {
 
 			const a = indices[ t ] * st, b = indices[ t + 1 ] * st, c = indices[ t + 2 ] * st;
+			// paint and rail decals (materials 1–3, 12 mm above the road) and curb faces / skirts (7+) are not ground
+			const mat = dat[ indices[ t ] * 4 ];
+			if ( ( mat >= 1 && mat <= 3 ) || mat >= 7 ) continue;
 			// vertical faces have no area in plan
 			const area = ( vertices[ b ] - vertices[ a ] ) * ( vertices[ c + 2 ] - vertices[ a + 2 ] ) - ( vertices[ b + 2 ] - vertices[ a + 2 ] ) * ( vertices[ c ] - vertices[ a ] );
 			if ( Math.abs( area ) < 1e-6 ) continue;
@@ -68,11 +71,30 @@ export class StreetGround {
 
 	material( t ) { return this.d[ this.ix[ t ] * 4 ]; }
 
-	// { y, mat, walkable } at (x, z), or null off the street mesh
+	// { y, mat, walkable } at (x, z), or null off the street mesh. A point in a sliver under 5 cm wide between two
+	// surfaces (kerb lines, band ends: clipping topology) takes the surface beside it.
 	at( x, z ) {
 
-		const t = this.find( x, z );
-		if ( t < 0 ) return null;
+		let t = this.find( x, z );
+		for ( let k = 0; t < 0 && k < 4; k ++ ) t = this.find( x + [ 0.05, - 0.05, 0, 0 ][ k ], z + [ 0, 0, 0.05, - 0.05 ][ k ] );
+		// a pinhole (under 0.4 m) inside a walkway — a footprint the size of a bollard, a clipping sliver — is walkway
+		// when walkway surrounds it (6 of 8 directions at 0.2 m)
+		if ( t < 0 ) {
+
+			let hits = 0, first = - 1;
+			for ( let k = 0; k < 8; k ++ ) {
+
+				const u = this.find( x + Math.cos( k * 0.785 ) * 0.2, z + Math.sin( k * 0.785 ) * 0.2 );
+				if ( u < 0 ) continue;
+				const m = this.d[ this.ix[ u ] * 4 ];
+				if ( m === 5 || m === 6 || this.d[ this.ix[ u ] * 4 + 2 ] === 1 ) { hits ++; if ( first < 0 ) first = u; }
+
+			}
+
+			if ( hits < 6 ) return null;
+			t = first;
+
+		}
 		const k = this.ix[ t ] * 4, mat = this.d[ k ];
 		return { y: this.yAt( t, x, z ), mat, walkable: mat === 5 || mat === 6 || this.d[ k + 2 ] === 1 };
 

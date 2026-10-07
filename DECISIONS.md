@@ -338,3 +338,25 @@ Harbor Engine conversion. Later decisions are appended with a one-line reason.
   strung every 9 m across Grant Avenue in Chinatown; fire escapes and bay windows on mid-rise street faces. Only the
   trees within 70 m, palms and cars cast shadows (the frame triangle cap). Street-layer materials stay out of the
   refraction pass (they never reach the water), and storefronts cast no shadows.
+- **D74** Paved open space: gaps under 40 m between walkways, roads and buildings (a 20 m closing) that the 1 m NAIP
+  imagery shows as hard surface (≥ 75 % of samples not green-excess, none over water) become plaza (0.92 km²: the
+  Embarcadero promenade, the Ferry Building plaza, forecourts and lots); lawns and parks keep the ground colour (D48).
+  Reason: OSM maps the promenade and plazas as thin footways, which left bare ground at the featured places.
+- **D75** Crowd (D54, pipelines/street/crowd.mjs, src/street/Crowd.js): 17,000 pedestrians (low tier; a third on
+  mobile; ?crowd=n), seed 1975 (?seed=), walk lanes 1.5 / 3.3 / 5.1 / 7 m out from the road edge (the inner ones
+  only where the walkway is that wide), spread across each lane's clear width; lanes and crossings are kept only
+  where the walkway is under them (a conservative 0.25 m raster, eroded one cell, sampled every 0.2 m along lanes
+  and 0.1 m along crossings). Density weights: the Embarcadero within 60 m ×30, the Ferry Building and Pier 39 ×20,
+  the Wharf and Chinatown ×3–4. Walkers stop now and then, wait 2–16 s at the kerb, and cross on the band. Drawn:
+  the nearest 360 in view (frustum) or within 15 m, one instanced figure (13 bones, procedural walk / idle), those
+  within 30 m casting shadows. Reason: G12b's 150 floor along the waterfront path, and walkers that stay on the
+  walkway by construction.
+- **D76** Street meshing robustness: earcut results are checked by area and replaced by slab trapezoids where earcut
+  was wrong (it produced overlapping triangles on holes in small cell pieces); `polygons()` is strictly simple for
+  triangulation only (it is slow on big sets); the walkway outline is cleaned to 2 cm (10 cm opened slivers at the
+  kerb). The runtime ground ignores paint / rail decals and curb faces, closes slivers under 5 cm and pinholes under
+  0.4 m that walkway surrounds. Reason: the crowd's 60 s walkability run found each of these.
+- **D77** Night: the street lamps and trolley poles drawn near the camera are registered as the engine's local
+  lights (downward spots, 260 at 8 m, range 24 m; the engine shades the nearest 8). Over-the-shoulder walking camera
+  (D57): 2 m behind, 0.45 m right, 1.7 m up, the walker drawn as instance 0 of the crowd; the boom shortens where no
+  street is under it; V toggles first / third person. G14's golden hour is 17:36 with haze ×2.2 ("evening fog").

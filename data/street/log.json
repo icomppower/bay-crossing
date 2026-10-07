@@ -6608,41 +6608,42 @@
   "oneSided": 180,
   "footways": 3674,
   "pedestrianAreas": 58,
-  "curbEdges": 56361,
-  "skirtEdges": 58437,
+  "pavedFill": 922458,
+  "curbEdges": 69040,
+  "skirtEdges": 26620,
   "curbPaint": {
-   "7": 30516,
-   "8": 19827,
-   "9": 2689,
-   "10": 1557,
-   "11": 1198,
-   "12": 574
+   "7": 37473,
+   "8": 24056,
+   "9": 3354,
+   "10": 1937,
+   "11": 1548,
+   "12": 672
   }
  },
  "stores": {
   "buildings": 9935,
   "edges": 75952,
-  "facing": 36453,
-  "modules": 64221,
+  "facing": 47141,
+  "modules": 83130,
   "withPoi": 1589,
   "poiAssigned": 2697,
   "poiUnplaced": 132,
-  "residential": 20766,
+  "residential": 27188,
   "byDistrict": {
-   "sausalito": 6744,
-   "embarcadero": 44542,
-   "wharf": 2542,
-   "chinatown": 3641,
-   "northbeach": 6752
+   "sausalito": 6984,
+   "embarcadero": 59255,
+   "wharf": 4012,
+   "chinatown": 4472,
+   "northbeach": 8407
   },
   "byKind": {
-   "0": 27139,
-   "1": 11380,
-   "2": 1811,
-   "3": 13492,
-   "4": 10399
+   "0": 34221,
+   "1": 14905,
+   "2": 2273,
+   "3": 17928,
+   "4": 13803
   },
-  "signs": 26098
+  "signs": 32947
  },
  "props": {
   "treesDataSF": 12844,
@@ -6650,18 +6651,18 @@
   "treesOSM": 0,
   "treesSeeded": 244,
   "lampsOSM": 462,
-  "lampsSeeded": 4351,
-  "muniPoles": 1208,
+  "lampsSeeded": 4350,
+  "muniPoles": 1256,
   "wires": 6267,
   "parkingDefaultSides": 1847,
   "cars": 18797,
-  "meters": 6585,
-  "blades": 726,
-  "hydrants": 472,
+  "meters": 6777,
+  "blades": 733,
+  "hydrants": 479,
   "benches": 672,
   "lanterns": 717,
-  "fireEscapes": 1979,
-  "bayWindows": 14602,
+  "fireEscapes": 2644,
+  "bayWindows": 19084,
   "byShape": {
    "0": 9243,
    "1": 880,
@@ -6669,60 +6670,66 @@
    "3": 2303
   }
  },
+ "crowd": {
+  "lanes": 8393,
+  "points": 310840,
+  "crossings": 2845,
+  "metres": 604894
+ },
  "surfaces": {
   "0": {
-   "tris": 247728,
-   "overWater": 390,
-   "meshArea": 1291742.2793454882,
-   "waterArea": 1379.7617919999982,
+   "tris": 244157,
+   "overWater": 389,
+   "meshArea": 1291303.0750994908,
+   "waterArea": 1379.7597149999988,
    "polyArea": 1292671.1846755
   },
   "1": {
-   "tris": 33390,
+   "tris": 33394,
    "overWater": 0,
-   "meshArea": 5920.739812999818,
+   "meshArea": 5920.739796999818,
    "waterArea": 0,
    "polyArea": 5920.8371835
   },
   "2": {
-   "tris": 101355,
+   "tris": 101367,
    "overWater": 25,
-   "meshArea": 26308.153390000392,
+   "meshArea": 26308.15166650036,
    "waterArea": 9.696102999999873,
    "polyArea": 26317.822781
   },
   "3": {
-   "tris": 28906,
+   "tris": 28914,
    "overWater": 0,
-   "meshArea": 4288.8104140000405,
+   "meshArea": 4288.810416000043,
    "waterArea": 0,
    "polyArea": 4288.8670345
   },
   "4": {
-   "tris": 8172,
+   "tris": 8154,
    "overWater": 0,
-   "meshArea": 18231.361939999864,
+   "meshArea": 18231.126651999857,
    "waterArea": 0,
    "polyArea": 18231.0721175
   },
   "5": {
-   "tris": 427836,
-   "overWater": 1160,
-   "meshArea": 1455400.8252089717,
-   "waterArea": 2311.75294949997,
-   "polyArea": 1457550.9108315
+   "tris": 435601,
+   "overWater": 1178,
+   "meshArea": 1455375.1822029676,
+   "waterArea": 2311.6425309999718,
+   "polyArea": 1457686.7110095
   },
   "6": {
-   "tris": 6674,
-   "overWater": 486,
-   "meshArea": 44633.38825199994,
-   "waterArea": 3977.746976500004,
-   "polyArea": 48611.076522
+   "tris": 179094,
+   "overWater": 523,
+   "meshArea": 967032.8817435133,
+   "waterArea": 4034.808413500007,
+   "polyArea": 971067.816097
   },
-  "walls": 99598,
+  "walls": 88082,
   "raiseCapped": {
-   "triangles": 20181,
-   "area": 114949
+   "triangles": 38449,
+   "area": 294684
   }
  }
 }

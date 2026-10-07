@@ -46,8 +46,11 @@ export const clean = (paths, d = 0.1) => C.Clipper.CleanPolygons(paths, d * S).f
 export const area = paths => paths.reduce((s, p) => s + C.Clipper.Area(p), 0) / (S * S); // m², holes negative
 
 // Polygons as [outer, ...holes] (metres) from clipper paths, via a PolyTree (outer contours own their holes).
-export function polygons(paths) {
+// strict (for triangulation): no rings touching at a vertex — earcut mis-triangulates those into overlapping
+// triangles; slow on big sets, so region tests and edge walks pass strict = false
+export function polygons(paths, strict = true) {
   const c = new C.Clipper();
+  c.StrictlySimple = strict;
   c.AddPaths(paths, C.PolyType.ptSubject, true);
   const tree = new C.PolyTree();
   c.Execute(C.ClipType.ctUnion, tree, C.PolyFillType.pftNonZero, C.PolyFillType.pftNonZero);

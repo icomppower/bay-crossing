@@ -17,7 +17,7 @@ const pickWeighted = (mix, r) => { const e = Object.entries(mix), tot = e.reduce
 export function buildStores(ctx, roads, walks) {
   const { local } = ctx;
   const log = { buildings: 0, edges: 0, facing: 0, modules: 0, withPoi: 0, poiAssigned: 0, poiUnplaced: 0, residential: 0, byDistrict: {}, byKind: {}, signs: 0 };
-  const street = new Region(polygons(union(walks.walkAll, union(roads.R, roads.T))));
+  const street = new Region(polygons(union(walks.walkAll, union(roads.R, roads.T)), false));
   const districts = DISTRICTS.map(d => ({ ...d, ring: [[d.south, d.west], [d.south, d.east], [d.north, d.east], [d.north, d.west]].map(([la, lo]) => local(la, lo)) }));
   const distRegions = districts.map(d => ({ name: d.name, r: new Region([[d.ring]]) }));
   const sausalito = new Region([[ctx.boxes.find(b => b.name === 'sausalito').ring]]);

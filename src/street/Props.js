@@ -22,9 +22,25 @@ class T {
 
 	}
 	quad( a, b, c, d, part ) { this.tri( a, b, c, part ); this.tri( a, c, d, part ); }
+	// wind the triangles added since vertex `from` to face away from centre( triangle midpoint )
+	orient( from, centre ) {
+
+		const p = this.p, n = this.n;
+		for ( let o = from * 3; o < p.length; o += 9 ) {
+
+			const m = [ ( p[ o ] + p[ o + 3 ] + p[ o + 6 ] ) / 3, ( p[ o + 1 ] + p[ o + 4 ] + p[ o + 7 ] ) / 3, ( p[ o + 2 ] + p[ o + 5 ] + p[ o + 8 ] ) / 3 ];
+			const c = centre( m );
+			if ( ( m[ 0 ] - c[ 0 ] ) * n[ o ] + ( m[ 1 ] - c[ 1 ] ) * n[ o + 1 ] + ( m[ 2 ] - c[ 2 ] ) * n[ o + 2 ] >= 0 ) continue;
+			for ( let k = 0; k < 3; k ++ ) { const sw = p[ o + 3 + k ]; p[ o + 3 + k ] = p[ o + 6 + k ]; p[ o + 6 + k ] = sw; }
+			for ( let k = 0; k < 9; k ++ ) n[ o + k ] = - n[ o + k ];
+
+		}
+
+	}
 	// axis-aligned box (x0..x1, y0..y1, z0..z1), outward faces
 	box( x0, y0, z0, x1, y1, z1, part, faces = 'all' ) {
 
+		const from = this.p.length / 3, cen = [ ( x0 + x1 ) / 2, ( y0 + y1 ) / 2, ( z0 + z1 ) / 2 ];
 		const P = ( x, y, z ) => [ x, y, z ];
 		const f = faces === 'all' ? 'xXyYzZ' : faces;
 		if ( f.includes( 'Z' ) ) this.quad( P( x0, y0, z1 ), P( x1, y0, z1 ), P( x1, y1, z1 ), P( x0, y1, z1 ), part );
@@ -33,10 +49,13 @@ class T {
 		if ( f.includes( 'x' ) ) this.quad( P( x0, y0, z0 ), P( x0, y0, z1 ), P( x0, y1, z1 ), P( x0, y1, z0 ), part );
 		if ( f.includes( 'Y' ) ) this.quad( P( x0, y1, z1 ), P( x1, y1, z1 ), P( x1, y1, z0 ), P( x0, y1, z0 ), part );
 		if ( f.includes( 'y' ) ) this.quad( P( x0, y0, z0 ), P( x1, y0, z0 ), P( x1, y0, z1 ), P( x0, y0, z1 ), part );
+		this.orient( from, () => cen );
 
 	}
 	// cylinder along y (open), from y0 to y1, radius r0 → r1, centred at (cx, cz)
 	cyl( cx, cz, y0, y1, r0, r1, sides, part, cap = false ) {
+
+		const from = this.p.length / 3;
 
 		for ( let i = 0; i < sides; i ++ ) {
 
@@ -47,9 +66,13 @@ class T {
 
 		}
 
+		this.orient( from, ( m ) => Math.abs( m[ 1 ] - y1 ) < 1e-6 && cap ? [ cx, y1 - 1, cz ] : [ cx, m[ 1 ], cz ] );
+
 	}
 	// a lumpy blob (octahedron subdivided once, pushed to a sphere): crowns, lanterns
 	blob( cx, cy, cz, rx, ry, rz, part, subdiv = 1 ) {
+
+		const from = this.p.length / 3;
 
 		let faces = [ [ [ 1, 0, 0 ], [ 0, 1, 0 ], [ 0, 0, 1 ] ], [ [ 0, 0, 1 ], [ 0, 1, 0 ], [ - 1, 0, 0 ] ], [ [ - 1, 0, 0 ], [ 0, 1, 0 ], [ 0, 0, - 1 ] ], [ [ 0, 0, - 1 ], [ 0, 1, 0 ], [ 1, 0, 0 ] ],
 			[ [ 0, 0, 1 ], [ 0, - 1, 0 ], [ 1, 0, 0 ] ], [ [ - 1, 0, 0 ], [ 0, - 1, 0 ], [ 0, 0, 1 ] ], [ [ 0, 0, - 1 ], [ 0, - 1, 0 ], [ - 1, 0, 0 ] ], [ [ 1, 0, 0 ], [ 0, - 1, 0 ], [ 0, 0, - 1 ] ] ];
@@ -78,8 +101,34 @@ class T {
 
 		}
 
+		this.orient( from, () => [ cx, cy, cz ] );
+
 	}
-	build() { return { position: new Float32Array( this.p ), normal: new Float32Array( this.n ), part: new Float32Array( this.k ) }; }
+	// convex = true: wind every face away from the whole template's centre (bay windows, the wire tube); otherwise the
+	// primitives have oriented their own faces
+	build( convex = false ) {
+
+		if ( convex ) {
+
+			let cx = 0, cy = 0, cz = 0;
+			const nv = this.p.length / 3;
+			for ( let i = 0; i < nv; i ++ ) { cx += this.p[ i * 3 ]; cy += this.p[ i * 3 + 1 ]; cz += this.p[ i * 3 + 2 ]; }
+			cx /= nv; cy /= nv; cz /= nv;
+			for ( let t = 0; t < nv; t += 3 ) {
+
+				const o = t * 3, p = this.p, n = this.n;
+				const mx = ( p[ o ] + p[ o + 3 ] + p[ o + 6 ] ) / 3 - cx, my = ( p[ o + 1 ] + p[ o + 4 ] + p[ o + 7 ] ) / 3 - cy, mz = ( p[ o + 2 ] + p[ o + 5 ] + p[ o + 8 ] ) / 3 - cz;
+				if ( mx * n[ o ] + my * n[ o + 1 ] + mz * n[ o + 2 ] >= 0 ) continue;
+				for ( let k = 0; k < 3; k ++ ) { const sw = p[ o + 3 + k ]; p[ o + 3 + k ] = p[ o + 6 + k ]; p[ o + 6 + k ] = sw; }
+				for ( let v = 0; v < 3; v ++ ) for ( let k = 0; k < 3; k ++ ) n[ o + v * 3 + k ] = - n[ o + v * 3 + k ];
+
+			}
+
+		}
+
+		return { position: new Float32Array( this.p ), normal: new Float32Array( this.n ), part: new Float32Array( this.k ) };
+
+	}
 
 }
 
@@ -158,11 +207,11 @@ const TEMPLATES = {
 
 		t.quad( P( - 1.7, 2.75, 0 ), P( 1.7, 2.75, 0 ), P( 1.2, 2.75, - 0.75 ), P( - 1.2, 2.75, - 0.75 ), 0 );
 		t.quad( P( - 1.2, 0, - 0.75 ), P( 1.2, 0, - 0.75 ), P( 1.7, 0, 0 ), P( - 1.7, 0, 0 ), 0 );
-		return t.build();
+		return t.build( true );
 
 	},
 	// unit segment along +x (0..1), a thin square tube; the vertex shader stretches it from A to B
-	wire() { const t = new T(); const P = ( x, a ) => [ x, Math.sin( a ), Math.cos( a ) ]; for ( let i = 0; i < 4; i ++ ) { const a0 = i * Math.PI / 2 + 0.785, a1 = a0 + Math.PI / 2; t.quad( P( 0, a0 ), P( 1, a0 ), P( 1, a1 ), P( 0, a1 ), 0 ); } return t.build(); },
+	wire() { const t = new T(); const P = ( x, a ) => [ x, Math.sin( a ), Math.cos( a ) ]; for ( let i = 0; i < 4; i ++ ) { const a0 = i * Math.PI / 2 + 0.785, a1 = a0 + Math.PI / 2; t.quad( P( 0, a0 ), P( 1, a0 ), P( 1, a1 ), P( 0, a1 ), 0 ); } return t.build( true ); },
 };
 
 // per type: radius (m), shadows, shading (WGSL surface body; in.vs.vK = part, vV = (variant, a, b, scale), vL = local position)
@@ -171,14 +220,14 @@ const SHADE = {
 	let crown = vK > 0.5;
 	let g = stNoise( in.P.xz * 1.7 + in.P.y * 1.3 ) * 0.6 + stNoise( in.P.xz * 5.0 - in.P.y * 4.0 ) * 0.4;
 	let tone = vV.y;
-	let leaf = mix( mix( vec3f( 0.08, 0.16, 0.05 ), vec3f( 0.16, 0.22, 0.07 ), tone ), vec3f( 0.22, 0.24, 0.1 ), step( 0.85, tone ) );
-	alb = select( vec3f( 0.18, 0.13, 0.09 ) * ( 0.8 + 0.4 * stNoise( in.P.xz * 9.0 + in.P.y * 3.0 ) ), leaf * ( 0.55 + 0.75 * g ), crown );
+	let leaf = mix( mix( vec3f( 0.045, 0.075, 0.03 ), vec3f( 0.07, 0.1, 0.04 ), tone ), vec3f( 0.1, 0.11, 0.06 ), step( 0.85, tone ) );
+	alb = select( vec3f( 0.14, 0.11, 0.08 ) * ( 0.8 + 0.4 * stNoise( in.P.xz * 9.0 + in.P.y * 3.0 ) ), leaf * ( 0.5 + 0.9 * g ), crown );
 	rough = 0.9;
-	if ( crown ) { s.translucency = vec3f( 0.25, 0.32, 0.12 ); s.ao = 0.55 + 0.45 * clamp( ( in.vs.vL.y - 3.0 ) / 4.5, 0.0, 1.0 ); }`,
+	if ( crown ) { s.translucency = vec3f( 0.04, 0.06, 0.02 ); s.ao = 0.55 + 0.45 * clamp( ( in.vs.vL.y - 3.0 ) / 4.5, 0.0, 1.0 ); }`,
 	palm: /* wgsl */`
-	alb = select( select( vec3f( 0.3, 0.24, 0.17 ) * ( 0.75 + 0.35 * step( 0.5, fract( in.vs.vL.y * 2.2 ) ) ), vec3f( 0.3, 0.26, 0.15 ), vK > 1.5 ), vec3f( 0.14, 0.25, 0.08 ) * ( 0.7 + 0.5 * stNoise( in.vs.vL.xz * 6.0 ) ), vK > 2.5 );
+	alb = select( select( vec3f( 0.3, 0.24, 0.17 ) * ( 0.75 + 0.35 * step( 0.5, fract( in.vs.vL.y * 2.2 ) ) ), vec3f( 0.3, 0.26, 0.15 ), vK > 1.5 ), vec3f( 0.07, 0.12, 0.04 ) * ( 0.7 + 0.5 * stNoise( in.vs.vL.xz * 6.0 ) ), vK > 2.5 );
 	rough = 0.85;
-	if ( vK > 2.5 ) { s.translucency = vec3f( 0.2, 0.3, 0.1 ); }`,
+	if ( vK > 2.5 ) { s.translucency = vec3f( 0.03, 0.05, 0.015 ); }`,
 	car: /* wgsl */`
 	let paints = array<vec3f, 12>( vec3f( 0.6, 0.6, 0.62 ), vec3f( 0.05, 0.05, 0.06 ), vec3f( 0.75, 0.74, 0.72 ), vec3f( 0.35, 0.03, 0.03 ), vec3f( 0.04, 0.08, 0.2 ),
 		vec3f( 0.2, 0.2, 0.22 ), vec3f( 0.75, 0.74, 0.72 ), vec3f( 0.05, 0.05, 0.06 ), vec3f( 0.45, 0.42, 0.36 ), vec3f( 0.08, 0.2, 0.12 ), vec3f( 0.6, 0.6, 0.62 ), vec3f( 0.3, 0.32, 0.36 ) );
@@ -432,6 +481,30 @@ export class StreetProps {
 	}
 
 	get meshes() { return Object.values( this.layers ).flatMap( ( l ) => l.meshes ); }
+
+	// light heads of the lamps and trolley poles drawn now (world positions), and a key that changes with the set
+	lampHeads() {
+
+		const out = [];
+		for ( const [ type, head ] of [ [ 'lamp', [ - 2.1, 7.86 ] ], [ 'muni', [ - 1.65, 7.45 ] ] ] ) {
+
+			const l = this.layers[ type ];
+			if ( ! l ) continue;
+			const live = l.main.live;
+			for ( let i = 0; i < l.main.n; i ++ ) {
+
+				const o = i * 8, c = Math.cos( live[ o + 3 ] ), sn = Math.sin( live[ o + 3 ] );
+				out.push( [ live[ o ] + sn * head[ 0 ], live[ o + 1 ] + head[ 1 ], live[ o + 2 ] + c * head[ 0 ] ] );
+
+			}
+
+		}
+
+		return out;
+
+	}
+
+	get lampKey() { return ( this.layers.lamp ? this.layers.lamp.key : '' ) + '|' + ( this.layers.muni ? this.layers.muni.key : '' ); }
 
 	update( camera ) { for ( const l of Object.values( this.layers ) ) l.update( camera ); }
 

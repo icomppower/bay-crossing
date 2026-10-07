@@ -13,7 +13,7 @@
 // Triangles over water (terrain below +0.3 m) are dropped. Vertex: position (x, y, z), normal, data (material, u, v,
 // seed). Tiles of TILE metres keep their own vertex and index ranges so the runtime draws only the near ones. Every
 // triangle lies inside one CELL.
-import { polygons, triangulate, inter, S } from './geom.mjs';
+import { polygons, triangulate, inter, S, toPath } from './geom.mjs';
 import { CURB } from './osm.mjs';
 
 export const TILE = 100;
@@ -123,7 +123,7 @@ export class MeshBuilder {
             this.emitTri([[xa, za], [xb, zb], [xa, zb]], lift, data, acc);
             continue;
           }
-          for (const poly of polygons(inter(row, [rectPath(xa, za, xb, zb)]))) for (const tri of triangulate(poly)) this.emitTri(tri, lift, data, acc);
+          for (const poly of polygons(inter(row, [rectPath(xa, za, xb, zb)]))) for (const tri of safeTriangles(poly)) this.emitTri(tri, lift, data, acc);
         }
       }
     }
@@ -132,7 +132,7 @@ export class MeshBuilder {
       stats.meshArea = (stats.meshArea || 0) + acc.mesh; stats.waterArea = (stats.waterArea || 0) + acc.water;
     }
   }
-  // the finished surface height among triangles that `keep( material )`: the triangle at (x, z), its plane evaluated
+  // the finished surface height among triangles that `keep( material, data )`: the triangle at (x, z), its plane evaluated
   // at `at` (default (x, z)); null if there is none
   surfaceAt(x, z, keep, at = null) {
     if (!this.cellIndex) {
@@ -146,7 +146,7 @@ export class MeshBuilder {
     const list = this.cellIndex.get(Math.floor((z - this.o) / CELL) * 100000 + Math.floor((x - this.o) / CELL)) || [];
     for (const i of list) {
       const r = this.tris[i];
-      if (!keep(r.data[0][0])) continue;
+      if (!keep(r.data[0][0], r.data[0])) continue;
       const [[x0, z0], [x1, z1], [x2, z2]] = r.p;
       const det = (z1 - z2) * (x0 - x2) + (x2 - x1) * (z0 - z2);
       const l0 = ((z1 - z2) * (x - x2) + (x2 - x1) * (z - z2)) / det, l1 = ((z2 - z0) * (x - x2) + (x0 - x2) * (z - z2)) / det, l2 = 1 - l0 - l1;
@@ -157,6 +157,35 @@ export class MeshBuilder {
       return m0 * y[0] + m1 * y[1] + (1 - m0 - m1) * y[2];
     }
     return null;
+  }
+  // walkable (sidewalk / plaza, or a crossing / driveway band) at (x, z), conservatively: a 0.25 m bitset in 64 m
+  // tiles, rasterised once from the walkable triangles (a cell is walkable when its centre is inside one), eroded
+  walkableAt(x, z) {
+    if (!this.walkBits) {
+      const R = 0.25, TS = 256, bits = this.walkBits = new Map();
+      for (const r of this.tris) {
+        const [mat, , flag] = r.data[0];
+        if (!(mat === 5 || mat === 6 || flag === 1)) continue;
+        const [[x0, z0], [x1, z1], [x2, z2]] = r.p;
+        const gx0 = Math.ceil(Math.min(x0, x1, x2) / R - 0.5), gx1 = Math.floor(Math.max(x0, x1, x2) / R - 0.5);
+        const gz0 = Math.ceil(Math.min(z0, z1, z2) / R - 0.5), gz1 = Math.floor(Math.max(z0, z1, z2) / R - 0.5);
+        const d = (ax, az, bx, bz, px, pz) => (bx - ax) * (pz - az) - (bz - az) * (px - ax);
+        for (let gz = gz0; gz <= gz1; gz++) for (let gx = gx0; gx <= gx1; gx++) {
+          const px = (gx + 0.5) * R, pz = (gz + 0.5) * R;
+          const a = d(x0, z0, x1, z1, px, pz), b = d(x1, z1, x2, z2, px, pz), c = d(x2, z2, x0, z0, px, pz);
+          if (!((a >= 0 && b >= 0 && c >= 0) || (a <= 0 && b <= 0 && c <= 0))) continue;
+          const tx = Math.floor(gx / TS), tz = Math.floor(gz / TS), k = tz * 100000 + tx;
+          let t = bits.get(k);
+          if (!t) bits.set(k, t = new Uint8Array(TS * TS / 8));
+          const i = (gz - tz * TS) * TS + (gx - tx * TS);
+          t[i >> 3] |= 1 << (i & 7);
+        }
+      }
+    }
+    // eroded by one cell (the cell and its four neighbours): a walkable answer is at least a quarter metre inside
+    const R = 0.25, TS = 256, gx = Math.floor(x / R), gz = Math.floor(z / R);
+    const bit = (cx, cz) => { const tx = Math.floor(cx / TS), tz = Math.floor(cz / TS), t = this.walkBits.get(tz * 100000 + tx); if (!t) return false; const i = (cz - tz * TS) * TS + (cx - tx * TS); return (t[i >> 3] >> (i & 7) & 1) === 1; };
+    return bit(gx, gz) && bit(gx + 1, gz) && bit(gx - 1, gz) && bit(gx, gz + 1) && bit(gx, gz - 1);
   }
   // the finished height of a surface vertex (terrain + raise + lift)
   vertexY(x, z, lift) { return f32(this.h.filled(x, z) + this.raiseAt(x, z) + lift); }
@@ -222,4 +251,27 @@ function bucket(paths) {
     }
   }
   return [...m.keys()].sort((a, b) => a - b).map(k => [m.get(k).tile, m.get(k).paths]);
+}
+
+// Triangles of a polygon [outer, ...holes]: earcut, checked by area; where earcut is wrong (it can be, on a hole in a
+// small cell piece), horizontal slabs through every vertex height instead — each slab of the polygon is a set of
+// convex trapezoids.
+const ringArea2 = r => { let a = 0; for (let i = 0; i < r.length; i++) { const p = r[i], q = r[(i + 1) % r.length]; a += p[0] * q[1] - q[0] * p[1]; } return a / 2; };
+export function safeTriangles(poly) {
+  const want = Math.abs(ringArea2(poly[0])) - poly.slice(1).reduce((a, h) => a + Math.abs(ringArea2(h)), 0);
+  const tris = triangulate(poly);
+  const got = tris.reduce((a, t) => a + Math.abs(ringArea2(t)), 0);
+  if (Math.abs(got - want) <= 1e-6 * Math.max(1, want)) return tris;
+  const zs = [...new Set(poly.flat().map(p => p[1]))].sort((a, b) => a - b);
+  let x0 = Infinity, x1 = -Infinity;
+  for (const [x] of poly.flat()) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); }
+  const paths = poly.map(r => toPath(r)), out = [];
+  for (let k = 0; k + 1 < zs.length; k++) {
+    if (zs[k + 1] - zs[k] < 1e-9) continue;
+    for (const piece of polygons(inter(paths, [toPath([[x0 - 1, zs[k]], [x1 + 1, zs[k]], [x1 + 1, zs[k + 1]], [x0 - 1, zs[k + 1]]])]))) {
+      const r = piece[0];
+      for (let i = 1; i + 1 < r.length; i++) out.push([r[0], r[i], r[i + 1]]);
+    }
+  }
+  return out;
 }

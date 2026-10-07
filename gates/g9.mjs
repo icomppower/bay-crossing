@@ -113,7 +113,7 @@ const base = {
   boxes: new Region(ctx.boxes.map(b => [b.ring])),
 };
 // road region (all road-level surfaces) and a sample grid over it
-base.roadPolys = polygons(full.roads.R.concat(full.roads.T));
+base.roadPolys = polygons(full.roads.R.concat(full.roads.T), false);
 const roadRegion = new Region(base.roadPolys);
 base.regionSamples = [];
 {

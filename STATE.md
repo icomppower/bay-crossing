@@ -17,9 +17,9 @@
 | G10 Sidewalks + walkability | PASS | 2026-10-07 | 2,183 built-up road sides with curb + sidewalk (D66); real Player walks Ferry Building → Pier 39 (1,887 m) on the street mesh, 0 frames off / under; 3/3 negatives |
 | G11 Storefront band | PASS | 2026-10-07 | 64,221 modules; 36,407 / 36,411 street-facing edges carry them (floor frozen 97 %); 133 sign strings, all generic, none an OSM name; byte-identical ×2 = shipped; 5/5 negatives |
 | G12 Props | PASS | 2026-10-07 | 12,844 trees vs DataSF 12,846 (0.02 %), seeded lamps 24–36 m apart (2,440 gaps), 13 prop types instanced; with the street layer the run-1 frame caps hold at all views; street layer ≤ 231k triangles (cap frozen 260,359, D72); 4/4 negatives |
-| G12b Crowd | TODO | — | run 2 |
-| G13 Street-level budget | TODO | — | run 2 |
-| G14 Street look (advisory) | TODO | — | run 2 |
+| G12b Crowd | PASS | 2026-10-07 | ≥ 174 pedestrians visible or near all along the Ferry Building → Pier 39 path (floor frozen 156); 17,000 stay on the walkable surface for 60 s; instanced; seeded; 4/4 negatives |
+| G13 Street-level budget | PASS | 2026-10-07 | street path 58.5 fps p95 / 763 MB; G5 path with the street layer 48.6 fps / 776 MB (floor 40, cap 862), no swap; 3/3 negatives |
+| G14 Street look (advisory) | PASS | 2026-10-07 | shots/street/: Ferry plaza, Embarcadero at Pier 7, Sausalito Bridgeway × midday / night / golden fog, + run-1 before pairs |
 
 ## Current
 
