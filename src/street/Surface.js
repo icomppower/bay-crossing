@@ -10,6 +10,7 @@ export function surfaceMaterial() {
 
 	return new Material( {
 		name: 'street-surface',
+		underwaterLighting: 'none', // above the water: kept out of the refraction pass
 		modules: [ noiseModule ],
 		attributes: { aNrm: 'vec4f', aData: 'vec4u' },
 		varyings: { vData: 'vec4f' },

@@ -321,3 +321,20 @@ Harbor Engine conversion. Later decisions are appended with a one-line reason.
 - **D71** The street layer precompiles its pipelines when it attaches (App.precompile(); the renderer skips a draw
   while its pipeline compiles in the background, and a shader error is reported instead of silently drawing
   nothing) and hooks the frame after that (precompile() restarts the game hook).
+- **D72** G12's street-layer triangle cap (`G12.streetTriangles`, frozen 260,359) is measured by counting the street
+  meshes' submitted triangles (instances × template or draw range, plus three shadow cascades for casters), not as
+  the frame difference with and without the layer: that difference mixed in unrelated frame-to-frame changes (−40k
+  at aerial-city, +208k at a view with no street in it). The frozen value is unchanged; its text already says what
+  is counted. Reason: the first measurement was noise.
+- **D73** Props (D52, D56), all instanced, one draw per type (pipelines/street/props.mjs, src/street/Props.js): all
+  12,844 DataSF trees at their positions (species → broad / columnar / palm / small; DBH → size; palms their own
+  draw), Sausalito trees seeded every 15 m along Bridgeway (OSM maps none there, logged); OSM street lamps plus seeded
+  lamps every 24–36 m (per side, seeded) where none stands within half the spacing; Muni trolley poles every 35 m
+  and overhead wire pairs at 5.8 m on streets OSM tags `trolley_wire=yes` (a pole replaces a lamp within 4 m);
+  parked cars every 6.4 m in the kerb lane where OSM parking tags allow, else on residential / tertiary / secondary /
+  unclassified sides by default (1,847 sides logged), a fifth of the slots free, none within 9 m of a crossing;
+  parking meters beside them on commercial streets; green street-name blades (real street names, SF abbreviations,
+  their own small atlas) and hydrants (white, red or blue bonnet) at junction corners; OSM benches; red lanterns
+  strung every 9 m across Grant Avenue in Chinatown; fire escapes and bay windows on mid-rise street faces. Only the
+  trees within 70 m, palms and cars cast shadows (the frame triangle cap). Street-layer materials stay out of the
+  refraction pass (they never reach the water), and storefronts cast no shadows.

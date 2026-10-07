@@ -16,7 +16,7 @@
 | G9 Road mesh | PASS | 2026-10-07 | 99.53 % of drivable centerline meshed (floor frozen 99.0 %), max building penetration 0.09 m, 1,505 junctions watertight, mesh area = region area, byte-identical offline ×2 = shipped; 6/6 negatives |
 | G10 Sidewalks + walkability | PASS | 2026-10-07 | 2,183 built-up road sides with curb + sidewalk (D66); real Player walks Ferry Building → Pier 39 (1,887 m) on the street mesh, 0 frames off / under; 3/3 negatives |
 | G11 Storefront band | PASS | 2026-10-07 | 64,221 modules; 36,407 / 36,411 street-facing edges carry them (floor frozen 97 %); 133 sign strings, all generic, none an OSM name; byte-identical ×2 = shipped; 5/5 negatives |
-| G12 Props | TODO | — | run 2 |
+| G12 Props | PASS | 2026-10-07 | 12,844 trees vs DataSF 12,846 (0.02 %), seeded lamps 24–36 m apart (2,440 gaps), 13 prop types instanced; with the street layer the run-1 frame caps hold at all views; street layer ≤ 231k triangles (cap frozen 260,359, D72); 4/4 negatives |
 | G12b Crowd | TODO | — | run 2 |
 | G13 Street-level budget | TODO | — | run 2 |
 | G14 Street look (advisory) | TODO | — | run 2 |

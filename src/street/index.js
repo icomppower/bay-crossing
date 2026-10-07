@@ -5,6 +5,7 @@ import { StreetSurface } from './Surface.js';
 import { StreetGround, streetTerrain } from './Ground.js';
 import { StreetStores, signAtlasImage } from './Stores.js';
 import { patchBuildingFacades } from './Facades.js';
+import { StreetProps } from './Props.js';
 
 const BASE = ( typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.BASE_URL ) || '/';
 
@@ -28,6 +29,15 @@ export async function loadStreet( base = BASE ) {
 
 }
 
+export async function loadProps( base = BASE ) {
+
+	const index = await ( await fetch( base + 'street/props.json' ) ).json();
+	const r = await fetch( base + 'street/props.bin.deflate' );
+	if ( ! r.ok ) throw new Error( `street: props HTTP ${ r.status }` );
+	return { index, all: new Float32Array( await inflate( r ) ) };
+
+}
+
 export async function loadStores( base = BASE ) {
 
 	const index = await ( await fetch( base + 'street/stores.json' ) ).json();
@@ -48,6 +58,11 @@ export async function attachStreet( app, { base = BASE, data = null } = {} ) {
 	street.stores = new StreetStores( stores, await signAtlasImage( stores.index.texts ) );
 	app.scene.add( street.stores.mesh );
 	patchBuildingFacades( app );
+	// street props (one instanced draw per type); the street-name blades read their own small atlas
+	const props = await loadProps( base );
+	const names = await signAtlasImage( props.index.names, { cellW: 256, cellH: 32, cols: 8, font: 'bold {s}px "Helvetica Neue", Helvetica, Arial, sans-serif' } );
+	street.props = new StreetProps( props, names );
+	for ( const m of street.props.meshes ) app.scene.add( m );
 	// the walker stands on the street surface (sidewalks a curb above the road), from the drawn triangles
 	const hf = app.terrainData;
 	street.ground = new StreetGround( data, hf.origin + hf.texel / 2 );
@@ -56,6 +71,7 @@ export async function attachStreet( app, { base = BASE, data = null } = {} ) {
 
 		street.surface.update( a.camera );
 		street.stores.update( a.camera );
+		street.props.update( a.camera );
 
 	};
 

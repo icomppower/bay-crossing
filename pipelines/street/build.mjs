@@ -12,6 +12,7 @@ import { loadContext, elements } from './context.mjs';
 import { union, diff, inter, toPath, area, Region, clean, perTile, offset } from './geom.mjs';
 import { buildWalks } from './walks.mjs';
 import { buildStores } from './stores.mjs';
+import { buildProps, TYPES } from './props.mjs';
 import { buildRoads, MAT } from './roads.mjs';
 import { MeshBuilder, LIFT, TILE, f32 } from './mesh.mjs';
 
@@ -89,12 +90,15 @@ export async function buildStreet({ rawDir, roadOptions = {}, walkOptions = {}, 
     for (const m of stores.modules) { m.y0 = f32(front(m.x0, m.z0, m.ox, m.oz)); m.y1 = f32(front(m.x1, m.z1, m.ox, m.oz)); }
     lap('stores');
   }
+  // street props (G12)
+  const props = roadsOnly ? null : buildProps(ctx, roads, walks, stores, (x, z, keep) => mesh.surfaceAt(x, z, keep));
+  if (props) lap('props');
   const packed = mesh.pack();
   // gate fixture (G9 --negative): a non-deterministic run
   if (process.env.STREET_FIXTURE === 'jitter') packed.vertices[10 * Math.floor(Math.random() * 1000) + 1] += 1e-3;
   if (stores && process.env.STREET_FIXTURE === 'jitter-stores') stores.modules[Math.floor(Math.random() * stores.modules.length)].height += 0.01;
-  const log = { roads: roads.log, walks: walks.log, stores: stores?.log, surfaces: stats };
-  return { ctx, roads, walks, stores, packed, log };
+  const log = { roads: roads.log, walks: walks.log, stores: stores?.log, props: props?.log, surfaces: stats };
+  return { ctx, roads, walks, stores, props, packed, log };
 }
 
 // Shipped layout (surface.bin.deflate): positions Float32 ×3, normals Int8 ×4 (snorm), data Uint8 ×4 (material,
@@ -128,6 +132,31 @@ export function writeStores(stores, out) {
   writeFileSync(join(out, 'stores.json'), JSON.stringify({ version: VERSION, tile: TILE, count: mods.length, texts: stores.texts, tiles, sha256: createHash('sha256').update(body).digest('hex') }) + '\n');
 }
 
+// props.bin.deflate: per type (props.json `types`, in TYPES order), 8 Float32 an instance (pipelines/street/props.mjs),
+// grouped in 100 m tiles [tx, tz, first, count] (first counts instances within the type)
+export function writeProps(props, out) {
+  const types = {}, parts = [];
+  let offset = 0;
+  for (const k of TYPES) {
+    const list = props.props[k].map(r => {
+      const x = k === 'wire' ? (r[0] + r[3]) / 2 : r[0], z = k === 'wire' ? (r[2] + r[5]) / 2 : r[2];
+      return { r, t: [Math.floor(x / TILE), Math.floor(z / TILE)] };
+    }).sort((a, b) => a.t[1] - b.t[1] || a.t[0] - b.t[0]);
+    const arr = new Float32Array(list.length * 8), tiles = [];
+    list.forEach(({ r, t }, i) => {
+      arr.set(r, i * 8);
+      const last = tiles[tiles.length - 1];
+      if (last && last[0] === t[0] && last[1] === t[1]) last[3]++; else tiles.push([t[0], t[1], i, 1]);
+    });
+    types[k] = { offset, count: list.length, tiles };
+    offset += list.length;
+    parts.push(Buffer.from(arr.buffer));
+  }
+  const body = Buffer.concat(parts);
+  writeFileSync(join(out, 'props.bin.deflate'), deflateSync(body, { level: 9 }));
+  writeFileSync(join(out, 'props.json'), JSON.stringify({ version: VERSION, tile: TILE, stride: 8, types, names: props.names, sha256: createHash('sha256').update(body).digest('hex') }) + '\n');
+}
+
 export function writeStreet(res, { out, logFile }) {
   const { packed, log } = res;
   mkdirSync(out, { recursive: true });
@@ -144,6 +173,7 @@ export function writeStreet(res, { out, logFile }) {
   };
   writeFileSync(join(out, 'street.json'), JSON.stringify(index) + '\n');
   if (res.stores) writeStores(res.stores, out);
+  if (res.props) writeProps(res.props, out);
   mkdirSync(dirname(logFile), { recursive: true });
   writeFileSync(logFile, JSON.stringify(log, null, 1) + '\n');
   return { bytes: bin.length, vertices: index.vertices, triangles: index.indices / 3 };

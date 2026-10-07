@@ -12,3 +12,4 @@ changing a frozen value needs a BLOCKED.md.
 - `G5.gpuMemoryMB`: 862 — GPU memory (footprint "(graphics)" categories: Metal allocations) of the App process on the path, peak; measured 689 MB on 2026-09-25; cap = 1.25 × measured
 - `G9.roadCoverage`: 0.99 — share of OSM drivable ground centerline metres (D58) inside the slice boxes and over land covered by the road mesh; measured 99.52 % on 2026-10-07; value = max( 0.95, measured − 0.5 % )
 - `G11.storefrontShare`: 0.97 — share of street-facing building edges (≥ 2.5 m, walkway or road within 3 m in front, judged on the shipped street mesh) carrying ground-floor modules over ≥ 80 % of their length; measured 100.0 % on 2026-10-07; value = max( 0.80, measured − 2 % )
+- `G12.streetTriangles`: 260359 — triangles a frame added by the street layer (surface, storefronts, props; all passes) at the fixed views (gates/lib/views.mjs), 1920×1080; measured max 208287 on 2026-10-07; cap = 1.25 × measured

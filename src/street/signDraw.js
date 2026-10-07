@@ -19,9 +19,11 @@ const CJK = 'bold {s}px "PingFang TC", "Hiragino Sans", "Noto Sans CJK TC", "Mic
 const hash = ( s ) => { let h = 2166136261; for ( let i = 0; i < s.length; i ++ ) { h ^= s.charCodeAt( i ); h = Math.imul( h, 16777619 ); } return h >>> 0; };
 const isCJK = ( c ) => c.charCodeAt( 0 ) >= 0x2e80;
 
-// texts → { width, height, rows, data: Uint8Array (r8, row 0 = top) }; makeCanvas( w, h ) returns a canvas-like
-export function drawSigns( texts, makeCanvas ) {
+// texts → { width, height, rows, cols, data: Uint8Array (r8, row 0 = top) }; makeCanvas( w, h ) returns a canvas-like;
+// layout: cell size and columns (street-name blades use smaller cells)
+export function drawSigns( texts, makeCanvas, { cellW = CELL_W, cellH = CELL_H, cols = COLS, fontFor = null } = {} ) {
 
+	const CELL_W = cellW, CELL_H = cellH, COLS = cols;
 	const rows = Math.max( 1, Math.ceil( texts.length / COLS ) );
 	const width = CELL_W * COLS, height = CELL_H * rows;
 	const canvas = makeCanvas( width, height );
@@ -32,12 +34,12 @@ export function drawSigns( texts, makeCanvas ) {
 	texts.forEach( ( text, i ) => {
 
 		const cx = ( i % COLS ) * CELL_W, cy = Math.floor( i / COLS ) * CELL_H;
-		const font = FONTS[ hash( text ) % FONTS.length ];
+		const font = fontFor ? fontFor( text ) : FONTS[ hash( text ) % FONTS.length ];
 		// a leading Chinese character is set in a CJK face, the English after it in the sign's face
 		const parts = text.split( ' ' );
 		const zh = isCJK( parts[ 0 ] ) ? parts.shift() : null;
 		const en = parts.join( ' ' );
-		const size = 46;
+		const size = Math.round( CELL_H * 0.72 );
 		ctx.save();
 		ctx.font = font.replace( '{s}', size );
 		const wEn = ctx.measureText( en ).width;
@@ -56,7 +58,7 @@ export function drawSigns( texts, makeCanvas ) {
 	const rgba = ctx.getImageData( 0, 0, width, height ).data;
 	const data = new Uint8Array( width * height );
 	for ( let k = 0; k < data.length; k ++ ) data[ k ] = rgba[ k * 4 + 3 ];
-	return { width, height, rows, data };
+	return { width, height, rows, cols: COLS, data };
 
 }
 

@@ -70,6 +70,7 @@ export function storesMaterial( atlas, rows ) {
 
 	return new Material( {
 		name: 'street-stores',
+		underwaterLighting: 'none', // above the water: kept out of the refraction pass
 		modules: [ noiseModule ],
 		attributes: { aPart: 'f32', iA: 'vec4f', iB: 'vec4f', iC: 'vec4f' },
 		varyings: { vL: 'vec4f', vI: 'vec4f', vS: 'vec4f' },
@@ -252,7 +253,7 @@ export class StreetStores {
 		this.mesh = new Mesh( g, this.material );
 		this.mesh.name = 'street-stores';
 		this.mesh.frustumCulled = false;
-		this.mesh.castShadow = true;
+		this.mesh.castShadow = false; // the frame triangle cap has no room for three more cascades of storefronts
 		this.mesh.receiveShadow = true;
 		this.radius = 300;
 		this.key = '';
@@ -290,12 +291,13 @@ export class StreetStores {
 
 // the sign atlas image for a list of strings: in a worker (OffscreenCanvas) in the browser, on this thread with a
 // Canvas 2D implementation in Node (headless gates)
-export async function signAtlasImage( texts ) {
+// layout (optional): { cellW, cellH, cols, font } — one font for every string (street-name blades)
+export async function signAtlasImage( texts, layout = null ) {
 
 	if ( typeof OffscreenCanvas !== 'undefined' && typeof Worker !== 'undefined' ) {
 
 		const w = new Worker( new URL( './signWorker.js', import.meta.url ), { type: 'module' } );
-		const img = await new Promise( ( resolve, reject ) => { w.onmessage = ( e ) => resolve( e.data ); w.onerror = reject; w.postMessage( { texts } ); } );
+		const img = await new Promise( ( resolve, reject ) => { w.onmessage = ( e ) => resolve( e.data ); w.onerror = reject; w.postMessage( { texts, layout } ); } );
 		w.terminate();
 		return img;
 
@@ -303,7 +305,7 @@ export async function signAtlasImage( texts ) {
 
 	const name = '@napi-rs/canvas';
 	const { createCanvas } = await import( /* @vite-ignore */ name );
-	return drawSigns( texts, ( w, h ) => createCanvas( w, h ) );
+	return drawSigns( texts, ( w, h ) => createCanvas( w, h ), layout ? { ...layout, fontFor: layout.font ? () => layout.font : null } : {} );
 
 }
 

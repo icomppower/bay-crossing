@@ -6644,6 +6644,31 @@
   },
   "signs": 26098
  },
+ "props": {
+  "treesDataSF": 12844,
+  "treesDropped": 2,
+  "treesOSM": 0,
+  "treesSeeded": 244,
+  "lampsOSM": 462,
+  "lampsSeeded": 4351,
+  "muniPoles": 1208,
+  "wires": 6267,
+  "parkingDefaultSides": 1847,
+  "cars": 18797,
+  "meters": 6585,
+  "blades": 726,
+  "hydrants": 472,
+  "benches": 672,
+  "lanterns": 717,
+  "fireEscapes": 1979,
+  "bayWindows": 14602,
+  "byShape": {
+   "0": 9243,
+   "1": 880,
+   "2": 418,
+   "3": 2303
+  }
+ },
  "surfaces": {
   "0": {
    "tris": 247728,
