@@ -11,3 +11,4 @@ changing a frozen value needs a BLOCKED.md.
 - `G5.fpsFloor`: 40 — 95th-percentile fps on the camera path (gates/g5.mjs), 1920×1080, low tier, M4 (Metal); measured 51.2 fps (p95 19.5 ms, CPU+GPU serialised) on 2026-09-24; floor = max( 30, 0.8 × measured )
 - `G5.gpuMemoryMB`: 862 — GPU memory (footprint "(graphics)" categories: Metal allocations) of the App process on the path, peak; measured 689 MB on 2026-09-25; cap = 1.25 × measured
 - `G9.roadCoverage`: 0.99 — share of OSM drivable ground centerline metres (D58) inside the slice boxes and over land covered by the road mesh; measured 99.52 % on 2026-10-07; value = max( 0.95, measured − 0.5 % )
+- `G11.storefrontShare`: 0.97 — share of street-facing building edges (≥ 2.5 m, walkway or road within 3 m in front, judged on the shipped street mesh) carrying ground-floor modules over ≥ 80 % of their length; measured 100.0 % on 2026-10-07; value = max( 0.80, measured − 2 % )

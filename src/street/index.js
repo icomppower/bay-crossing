@@ -3,6 +3,8 @@
 // it after bootApp(). The per-frame update rides on the App's game hook (after the player and camera update).
 import { StreetSurface } from './Surface.js';
 import { StreetGround, streetTerrain } from './Ground.js';
+import { StreetStores, signAtlasImage } from './Stores.js';
+import { patchBuildingFacades } from './Facades.js';
 
 const BASE = ( typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.BASE_URL ) || '/';
 
@@ -26,12 +28,26 @@ export async function loadStreet( base = BASE ) {
 
 }
 
+export async function loadStores( base = BASE ) {
+
+	const index = await ( await fetch( base + 'street/stores.json' ) ).json();
+	const r = await fetch( base + 'street/stores.bin.deflate' );
+	if ( ! r.ok ) throw new Error( `street: stores HTTP ${ r.status }` );
+	return { index, modules: new Float32Array( await inflate( r ) ) };
+
+}
+
 // data: preloaded { index, pos, nrm, dat, indices } (gate fixtures), else fetched from base
 export async function attachStreet( app, { base = BASE, data = null } = {} ) {
 
 	data = data || await loadStreet( base );
 	const street = { surface: new StreetSurface( data ) };
 	app.scene.add( street.surface.mesh );
+	// storefronts: their sign atlas is drawn by code (in a worker in the browser)
+	const stores = await loadStores( base );
+	street.stores = new StreetStores( stores, await signAtlasImage( stores.index.texts ) );
+	app.scene.add( street.stores.mesh );
+	patchBuildingFacades( app );
 	// the walker stands on the street surface (sidewalks a curb above the road), from the drawn triangles
 	const hf = app.terrainData;
 	street.ground = new StreetGround( data, hf.origin + hf.texel / 2 );
@@ -39,9 +55,13 @@ export async function attachStreet( app, { base = BASE, data = null } = {} ) {
 	street.update = ( a ) => {
 
 		street.surface.update( a.camera );
+		street.stores.update( a.camera );
 
 	};
 
+	// build the street pipelines now (the renderer skips a draw while its pipeline compiles in the background), and
+	// surface any shader error here. (precompile() ends by starting the game afresh, so the hook goes on after it.)
+	await app.precompile();
 	// chain into the App's per-frame game hook
 	const game = app.game;
 	app.game = {
@@ -50,9 +70,6 @@ export async function attachStreet( app, { base = BASE, data = null } = {} ) {
 	};
 	street.update( app );
 	app.street = street;
-	// build the street pipelines now (the renderer skips a draw while its pipeline compiles in the background), and
-	// surface any shader error here
-	await app.precompile();
 	return street;
 
 }

@@ -11,6 +11,7 @@ import { TITLE, isMain } from 'harbor-engine/tools/lib/title.mjs';
 import { loadContext, elements } from './context.mjs';
 import { union, diff, inter, toPath, area, Region, clean, perTile, offset } from './geom.mjs';
 import { buildWalks } from './walks.mjs';
+import { buildStores } from './stores.mjs';
 import { buildRoads, MAT } from './roads.mjs';
 import { MeshBuilder, LIFT, TILE, f32 } from './mesh.mjs';
 
@@ -81,11 +82,19 @@ export async function buildStreet({ rawDir, roadOptions = {}, walkOptions = {}, 
   stats.walls = walls;
   stats.raiseCapped = { triangles: mesh.capped || 0, area: Math.round(mesh.cappedArea || 0) };
   lap('walls');
+  // storefront modules (G11): their base follows the walkway (or road) in front of the wall
+  const stores = roadsOnly ? null : buildStores(ctx, roads, walks);
+  if (stores) {
+    const front = (x, z, ox, oz) => mesh.surfaceAt(x + ox * 0.5, z + oz * 0.5, m => isWalk(m) || isRoad(m)) ?? ctx.height.filled(x, z) + LIFT.walk;
+    for (const m of stores.modules) { m.y0 = f32(front(m.x0, m.z0, m.ox, m.oz)); m.y1 = f32(front(m.x1, m.z1, m.ox, m.oz)); }
+    lap('stores');
+  }
   const packed = mesh.pack();
   // gate fixture (G9 --negative): a non-deterministic run
   if (process.env.STREET_FIXTURE === 'jitter') packed.vertices[10 * Math.floor(Math.random() * 1000) + 1] += 1e-3;
-  const log = { roads: roads.log, walks: walks.log, surfaces: stats };
-  return { ctx, roads, walks, packed, log };
+  if (stores && process.env.STREET_FIXTURE === 'jitter-stores') stores.modules[Math.floor(Math.random() * stores.modules.length)].height += 0.01;
+  const log = { roads: roads.log, walks: walks.log, stores: stores?.log, surfaces: stats };
+  return { ctx, roads, walks, stores, packed, log };
 }
 
 // Shipped layout (surface.bin.deflate): positions Float32 ×3, normals Int8 ×4 (snorm), data Uint8 ×4 (material,
@@ -100,6 +109,23 @@ export function compact(packed) {
     dat[i * 4] = v[o + 6]; dat[i * 4 + 1] = Math.round((v[o + 7] + Math.PI) / (2 * Math.PI) * 255) & 255; dat[i * 4 + 2] = v[o + 8]; dat[i * 4 + 3] = v[o + 9];
   }
   return { pos, nrm, dat };
+}
+
+// stores.bin.deflate: 12 Float32 a module (src/street/Stores.js): x0 z0 y0 H | x1 z1 y1 seed | kind flags sign palette,
+// grouped in 100 m tiles (stores.json: texts, tiles [tx, tz, first, count])
+export function writeStores(stores, out) {
+  const tileOf = m => [Math.floor((m.x0 + m.x1) / 2 / TILE), Math.floor((m.z0 + m.z1) / 2 / TILE)];
+  const mods = stores.modules.map(m => ({ m, t: tileOf(m) })).sort((a, b) => a.t[1] - b.t[1] || a.t[0] - b.t[0] || a.m.x0 - b.m.x0 || a.m.z0 - b.m.z0);
+  const arr = new Float32Array(mods.length * 12), tiles = [];
+  mods.forEach(({ m, t }, i) => {
+    const left = m.ox * (m.z1 - m.z0) - m.oz * (m.x1 - m.x0) > 0 ? 16 : 0; // outward is left of x0→x1: (dz, -dx)
+    arr.set([m.x0, m.z0, m.y0, m.height, m.x1, m.z1, m.y1, m.seed, m.kind, m.flags | left, m.sign, m.board + m.ink * 8 + m.awning * 64], i * 12);
+    const last = tiles[tiles.length - 1];
+    if (last && last[0] === t[0] && last[1] === t[1]) last[3]++; else tiles.push([t[0], t[1], i, 1]);
+  });
+  const body = Buffer.from(arr.buffer);
+  writeFileSync(join(out, 'stores.bin.deflate'), deflateSync(body, { level: 9 }));
+  writeFileSync(join(out, 'stores.json'), JSON.stringify({ version: VERSION, tile: TILE, count: mods.length, texts: stores.texts, tiles, sha256: createHash('sha256').update(body).digest('hex') }) + '\n');
 }
 
 export function writeStreet(res, { out, logFile }) {
@@ -117,6 +143,7 @@ export function writeStreet(res, { out, logFile }) {
     sha256: createHash('sha256').update(body).digest('hex'),
   };
   writeFileSync(join(out, 'street.json'), JSON.stringify(index) + '\n');
+  if (res.stores) writeStores(res.stores, out);
   mkdirSync(dirname(logFile), { recursive: true });
   writeFileSync(logFile, JSON.stringify(log, null, 1) + '\n');
   return { bytes: bin.length, vertices: index.vertices, triangles: index.indices / 3 };

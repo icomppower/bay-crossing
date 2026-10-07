@@ -6619,6 +6619,31 @@
    "12": 574
   }
  },
+ "stores": {
+  "buildings": 9935,
+  "edges": 75952,
+  "facing": 36453,
+  "modules": 64221,
+  "withPoi": 1589,
+  "poiAssigned": 2697,
+  "poiUnplaced": 132,
+  "residential": 20766,
+  "byDistrict": {
+   "sausalito": 6744,
+   "embarcadero": 44542,
+   "wharf": 2542,
+   "chinatown": 3641,
+   "northbeach": 6752
+  },
+  "byKind": {
+   "0": 27139,
+   "1": 11380,
+   "2": 1811,
+   "3": 13492,
+   "4": 10399
+  },
+  "signs": 26098
+ },
  "surfaces": {
   "0": {
    "tris": 247728,

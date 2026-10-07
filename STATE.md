@@ -15,7 +15,7 @@
 | G8 Street data | PASS | 2026-10-07 | OSM streets SF 9.5 MB + Sausalito 0.6 MB (Overpass), DataSF 12,846 trees (PDDL read from metadata), cached + checksummed; 7/7 negatives |
 | G9 Road mesh | PASS | 2026-10-07 | 99.53 % of drivable centerline meshed (floor frozen 99.0 %), max building penetration 0.09 m, 1,505 junctions watertight, mesh area = region area, byte-identical offline ×2 = shipped; 6/6 negatives |
 | G10 Sidewalks + walkability | PASS | 2026-10-07 | 2,183 built-up road sides with curb + sidewalk (D66); real Player walks Ferry Building → Pier 39 (1,887 m) on the street mesh, 0 frames off / under; 3/3 negatives |
-| G11 Storefront band | TODO | — | run 2 |
+| G11 Storefront band | PASS | 2026-10-07 | 64,221 modules; 36,407 / 36,411 street-facing edges carry them (floor frozen 97 %); 133 sign strings, all generic, none an OSM name; byte-identical ×2 = shipped; 5/5 negatives |
 | G12 Props | TODO | — | run 2 |
 | G12b Crowd | TODO | — | run 2 |
 | G13 Street-level budget | TODO | — | run 2 |

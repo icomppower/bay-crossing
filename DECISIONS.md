@@ -303,3 +303,21 @@ Harbor Engine conversion. Later decisions are appended with a one-line reason.
   vertex, 13.9 MB deflated) and is drawn as one draw call: the runtime rewrites the index buffer with the tiles within
   450 m when that set changes. The walker stands on the drawn triangles (src/street/Ground.js wraps the terrain the
   Player reads). Reason: draw-call headroom under the frozen 126 cap is about 40.
+- **D68** Storefront modules (G11, D49): every edge ≥ 2.5 m of a non-landmark building ≥ 3.5 m tall with walkway or
+  road within 3 m in front of at least half of it gets 4–5 m modules (pipelines/street/stores.mjs). Category: the
+  OSM shop / amenity / tourism features inside the footprint or within 6 m of it (the nearest one claims a module
+  within 8 m, the rest take turns; upper-level businesses skipped), else the district mix (signs.mjs: Embarcadero
+  commercial, Fisherman's Wharf, Chinatown, North Beach, Sausalito). Houses under 18 m on residential streets with no
+  category get garage and front doors, no sign. Fire escapes and bay windows (D56) are placed on mid-rise street faces
+  for G12. Reason: the brief's module rules, with houses kept residential.
+- **D69** Signs (D50) are drawn with Canvas 2D in the system's fonts: OffscreenCanvas in a worker in the browser, and
+  @napi-rs/canvas (prebuilt Skia, devDependency) on the main thread in headless Node, so gates and shots see the same
+  signs. The atlas holds one white-on-transparent cell per distinct string (r8, 133 strings, 4 mip levels); the
+  shader colours board and ink per module, neon glows at night. Chinatown signs lead with one Chinese character in a
+  CJK face (PingFang TC / Hiragino / Noto CJK). Reason: a hand-built stroke font would not do Chinese justice.
+- **D70** Facade depth (D51): the run-1 building material's window grid gets a parallax recess (0.22 m) appended
+  to its WGSL at attach time — the jamb and head show darker by the view angle; towers' curtain walls stay flush.
+  Off on the mobile tier (D53).
+- **D71** The street layer precompiles its pipelines when it attaches (App.precompile(); the renderer skips a draw
+  while its pipeline compiles in the background, and a shader error is reported instead of silently drawing
+  nothing) and hooks the frame after that (precompile() restarts the game hook).
