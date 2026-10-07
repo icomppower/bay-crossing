@@ -1,0 +1,8 @@
+Run 2 — Street level: DONE 2026-10-07
+G0–G5, G7 and G8–G13 (incl. G12b) green in one clean ./verify.sh run (G6, G14 advisory green).
+G9  roads: 99.53 % of drivable centerline meshed, 1505 junctions watertight
+G10 sidewalks: 2183 built-up road sides with curb + sidewalk; Ferry Building → Pier 39 walk 1881 m on the surface
+G11 storefronts: 99.9 % of 47139 street-facing edges, 133 generic sign strings
+G12 props: 12844 trees (DataSF 12846), lamps 24–36 m, 13 instanced types; street layer 229k triangles (cap 260,359)
+G12b crowd: ≥ 271 visible or near (floor 156), 17000 on the walkable surface
+G13 budget: street path 60.4 fps p95, 778 MB; G5 path with street 49.0 fps p95 (floor 40, cap 862 MB)

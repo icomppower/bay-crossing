@@ -28,3 +28,4 @@ Hong Kong run entries are archived in `docs/archive-hong-kong.md`.
 | 2026-10-07 | G13 | PASS | 30 | Street path 58.5 fps p95, G5 path with street 48.6 fps; GPU 763–776 MB under the 862 cap |
 | 2026-10-07 | G14 | PASS (advisory) | 60 | First shots: single-file crowds, flat bay windows (winding), cartoon trees, unlit night, bare promenade → lane widths + offsets, primitive winding, lamp lights, NAIP paved fill (D74, D77) |
 | 2026-10-07 | full verify | RED | 120 | G1 (earcut undeclared), then G10 (curbIndex left unexported in gates/lib/route.mjs; then 1 walk frame 6 cm under a 0.2 m walkway pinhole: Ground.heightAt now bridges pinholes like at()) and G12 (street layer 262,177 > 260,359 after the paved fill and lanes: cars and palms cast shadows only within 70 m, like trees → 229,195) |
+| 2026-10-07 | full verify | GREEN — DONE | 125 | All required gates green in one clean run; G13 street path 60.4 fps p95, G12 street layer 229k triangles |

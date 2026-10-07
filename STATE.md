@@ -23,8 +23,8 @@
 
 ## Current
 
-**Run 2 (street level)** started 2026-10-07 on branch `street-level` (SPEC.md "Run 2 — Street level", D45–D60).
-Baseline before the run: full `./verify.sh` green (G0–G5, G7; G6 advisory).
+**Run 2 (street level): DONE 2026-10-07.** G0–G5, G7 and G8–G13 (incl. G12b) green in one clean `./verify.sh` run
+(G6, G14 advisory green); see `DONE-run2`. Decisions D45–D77; branch `street-level` → `main`.
 
 ### Run 1
 
