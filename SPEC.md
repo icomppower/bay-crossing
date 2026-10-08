@@ -46,3 +46,51 @@ are measured at first run, written to `SPEC-THRESHOLDS.md`, then frozen.
 - **G7 Baseline-limits compile** (added 2026-09-26, D41): the real App on an adapter with only WebGPU's default
   limits and no optional features; every pipeline compiles and every frame validates, all tiers, ferry + fly.
 - **DONE** = G0–G5 and G7 green in one clean `verify.sh` run. Create file `DONE`.
+
+## Run 2 — Street level
+
+Brief: Notion page "Bay Crossing — Street-Level Pass SPEC.md" (3f21f269eaea8159bb35dcda9e3bcdc2), branch
+`street-level`, merged to `main` only when DONE. Its §3 decisions are D45–D57 in `DECISIONS.md` (renumbered +1:
+D44 was already taken by the Harbor Engine conversion).
+
+### 1. Objective
+
+Make the existing run-1 slice (Embarcadero ~Pier 1 → Pier 39, Sausalito waterfront strip) read as a city **at
+eye level**. Today, walking mode shows a grey textured plane, window-grid boxes down to the ground, and no
+street furniture. Target: real streets with lanes, markings, curbs and sidewalks; a ground-floor storefront band;
+code-drawn signs; instanced street props; an instanced pedestrian crowd. Same slice — no map expansion this run.
+
+### 4. Environment and guardrails
+
+Same as run 1: Mac mini M4, 16 GB; one browser instance; never Blender and the dev server at once; no subagents;
+commit and update `STATE.md` after every gate; never lower a threshold to pass; all raw downloads cached in
+`data/raw/` with checksums; pipelines read from cache.
+
+### 5. Gates (verify.sh)
+
+Each gate must first **fail on a negative fixture** before a positive run counts. *Calibrate* = measure at first
+run, write to `SPEC-THRESHOLDS.md`, then freeze.
+
+- **G8 Street data:** OSM roads + POIs and DataSF trees for the slice fetched by script, cached, checksummed,
+  licences in `CREDITS.md`. Negative fixture: a corrupted cache file fails the checksum.
+- **G9 Road mesh:** ≥ 95% of OSM drivable centerline length in the slice is meshed (*calibrate*, floor 95%); no
+  road polygon overlaps a building footprint by more than 0.5 m; intersections watertight; byte-identical across
+  two runs from cache. Negative fixture: dropping 10% of ways fails coverage.
+- **G10 Sidewalks + walkability:** every road edge in built-up blocks has a curb and sidewalk; a scripted walk
+  from the Ferry Building to Pier 39 along the Embarcadero sidewalk completes without leaving the walkable surface
+  or falling through. Negative fixture: a sidewalk gap must fail the walk.
+- **G11 Storefront band:** ≥ 80% of street-facing building edges in the slice carry a ground-floor module
+  (*calibrate*); sign strings are all from the generic category list. Negative fixture: an injected brand name
+  fails. Byte-identical reruns.
+- **G12 Props:** the street-tree count in the slice matches DataSF within 5%; lamp spacing within the configured
+  range; every prop type is drawn instanced; draw calls and triangles within run-1 caps (*calibrate* any new cap).
+- **G12b Crowd:** ≥ 150 pedestrians visible-or-near on the street-level path at `low` (*calibrate*); every
+  pedestrian stays on a walkable surface for a 60 s scripted run; crowd is drawn instanced; same seed → same
+  placement. Negative fixture: a pedestrian spawned on the road must fail.
+- **G13 Budget:** with the crowd enabled, run G5's measurement on a new scripted street-level camera path (Ferry
+  Building plaza → Pier 39 at walking height) at `low`: p95 ≥ 40 fps at 1080p, GPU memory ≤ 862 MB, no swap. The
+  existing G5 path must stay green.
+- **G14 Look (advisory):** fixed-seed headless shots at Ferry Building plaza, Embarcadero at Pier 7 and Sausalito
+  Bridgeway — midday and night — plus before/after pairs against run 1, in `shots/street/`, for human review.
+- **DONE (run 2)** = G0–G5, G7 and G8–G13 (including G12b) green in one clean `verify.sh` run. Create file
+  `DONE-run2`.

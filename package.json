@@ -11,6 +11,9 @@
     "engine:update": "node node_modules/harbor-engine/bin/harbor-engine.mjs update"
   },
   "devDependencies": {
+    "@napi-rs/canvas": "^1.0.10",
+    "clipper-lib": "^6.4.2",
+    "earcut": "^3.2.4",
     "vite": "^8.3.0"
   },
   "license": "MIT",

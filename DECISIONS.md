@@ -224,3 +224,139 @@ are in `docs/archive-hong-kong.md`.
   repo keeps `map.json`, `hooks.js` (SF building sources, landmark prep), `pipelines/` (fetch list, GTFS prep,
   Blender script), baked `public/` and gates G0–G7; the runtime, generic pipelines and gate libraries are the
   engine's. Extraction proven by engine gate E0: data byte-identical, G0–G7 green, G6 shots bit-exact.
+
+## Run 2 — Street level (2026-10-07)
+
+Seeded from the run-2 brief's §3, which numbered them D44–D56; renumbered +1 here because D44 already records the
+Harbor Engine conversion. Later decisions are appended with a one-line reason.
+
+- **D45** Road width = OSM `width`, else `lanes` × 3.3 m, else a default per `highway` class. Every default used
+  is logged with the way ID.
+- **D46** Roads are meshed from centerlines with proper intersection polygons (no overlapping strips). Markings:
+  centre line, lane dividers, crosswalks at intersections with `crossing` tags or signalised nodes. Embarcadero
+  streetcar tracks drawn as rail decals if OSM has them.
+- **D47** Curb 15 cm. Sidewalk width from `sidewalk:width`, else a default per road class. Sidewalk fills the gap
+  to the building line where it is under 6 m.
+- **D48** The NAIP ground colour stays for parks and open ground; under roads and sidewalks it is replaced by the
+  road/sidewalk materials.
+- **D49** Storefront band: a 4–5 m ground-floor module on every building edge facing a street within 3 m. Module =
+  glass, door, awning or roller shutter, sign board. Style picked from the OSM category in that footprint, else a
+  district default (Embarcadero commercial, Fisherman's Wharf tourist, Sausalito waterfront). Upper floors keep
+  run-1 facades.
+- **D50** Signs are **drawn by code** into a sign atlas (Canvas 2D or GPU text), seeded, in a worker — no sign
+  image files. Text is **generic category text only** ("CAFE", "SEAFOOD", "BOOKS"…), English; bilingual
+  English/Chinese in Chinatown. SF sign forms: flat fascia boards, vertical blade signs, painted window lettering,
+  neon on bars at night. No real business names, brand names or logos. Run-1 landmark signs are unchanged.
+- **D51** Facade depth for upper floors via normal/parallax in the shader — not extra geometry — so draw calls and
+  triangles stay inside run-1 caps.
+- **D52** Props, all GPU-instanced: street trees (DataSF positions), street lamps, hydrants, Muni poles, benches,
+  parked cars along kerbs where `parking:lane` allows or as a logged default. Procedural spacing uses a fixed
+  seed.
+- **D53** `mobile` tier: props within 60 m only, no parked cars, no parallax. `low` is the gated tier, as in run 1.
+- **D54** Pedestrians: an instanced crowd (GPU-skinned or vertex-animated walk + idle loops, a handful of
+  body/clothing variants, seeded) walking along sidewalks and clustering at crosswalks; denser at the Ferry
+  Building and Pier 39. No collision AI beyond staying on walkable surfaces. No vehicle traffic and no quests in
+  this run.
+- **D55** Run-1 gates and frozen thresholds stay as they are. G5's floor and memory cap apply to the new
+  street-level path as well.
+- **D56** SF street cues (all cheap decals or instanced props): painted curbs (red / yellow / green / white /
+  blue), ladder crosswalks, Embarcadero streetcar tracks, overhead Muni wires on streets that have them, green
+  street-name blades on poles, parking meters, fire escapes and bay windows on mid-rises, red lanterns over
+  Chinatown streets if the slice reaches them.
+- **D57** Camera and light: walking camera lowered to over-the-shoulder at ~1.7–2.2 m behind the player;
+  street-level shots default to golden hour and evening fog, with storefront windows lit at dusk and night.
+- **D58** Drivable = OSM `highway` motorway … residential, their `_link`s, `living_street`, `service` (not parking
+  aisles or drive-throughs) and `busway`, at ground level: tunnels, bridges and `layer` ≠ 0 ways are not meshed
+  onto the terrain and are left out of G9's coverage base. Reason: the ground mesh drapes on the DEM, which has no
+  decks or tunnels.
+- **D59** The DataSF Street Tree List licence is read from the dataset's own metadata (`/api/views/tkzw-k3nq.json`,
+  cached as `datasf-street-trees-meta.json`) and G8 fails unless it says ODC PDDL. Reason: §2 asks for the licence
+  to be verified by script.
+- **D60** Overpass street queries are sent with a User-Agent (Overpass answers 406 without one) and are not pinned
+  to a date: a dated (attic) query ran Overpass out of memory and came back empty. The cached file is the snapshot
+  (`osm3s.timestamp_osm_base`, 2026-10-07); `fetch.mjs` drops a cached Overpass reply that carries an error remark
+  or no elements, so a failed fetch is never cached. Reason: reproducibility comes from the cache, as in run 1.
+- **D61** Street draping: surfaces are clipped to 6 m cells on the terrain's texel-centre grid and their vertices sit
+  on the terrain plus their lift (road +3 cm, paint +4.2 cm, walkways a 15 cm curb above the road within 8 m of one,
+  +6 cm further away). A flat triangle can pass under a bump of the bilinear terrain, so each 6 m cell keeps the
+  largest deficit of its triangles and every vertex is raised by the largest of the cells it touches: the street
+  clears the terrain and road and walkway rise together (the curb stays 15 cm). The raise is capped at 15 cm; past
+  it (a street meeting a retaining wall or stairs the 3 m DEM draws as a slope) the terrain shows through locally
+  (21k triangles, 0.12 km², logged). Reason: an exact 3 m drape tripled the mesh (3.3M triangles), and the plain
+  6 m drape dipped up to 1.6 m under the terrain.
+- **D62** Streets drape on a pit-filled copy of the terrain (priority flood from the domain edge): closed lidar pits
+  such as the Embarcadero station stairwells under Market and Mission are bridged, and water is what stays below
+  +0.3 m after filling. Reason: the pits read as water and cut holes in the sidewalk.
+- **D63** Every junction leg carries a walkable crossing band (4 m, no paint) unless a marked crosswalk is within
+  15 m: California treats each intersection leg as a legal crosswalk, marked or not. Crossing bands span roads and
+  the tram trackway. Reason: G10's walk had to step onto plain asphalt at unmarked junction legs.
+- **D64** Driveways: service road is walkable where it crosses a gap under 8 m in the walkways (a 4 m closing of
+  them). Reason: sidewalks run across driveways in SF; pier and lot entrances cut the Embarcadero sidewalk.
+- **D65** Footways count as walkway within 20 m of a road (promenades, plaza links); park paths further in keep the
+  ground colour (D48). Reason: thin park paths were a third of the walkway triangles for no street-level gain.
+- **D66** G10's "every road edge in built-up blocks": a side of a sidewalk-bearing road class facing buildings within
+  35 m, sampled every 5 m away from junction ends and inside the slice; samples with a building within 1.8 m of the
+  carriageway edge (alleys whose class-default width reaches the building line, D45) and median sides (another
+  carriageway or busway right past the kerb) are counted and left out; a side may miss walkway at max( 1, 10 % ) of
+  its samples; a curb is a 15 ± 3 cm curb face within 1.5 m. Reason: the measured cases are data limits, not gaps.
+- **D67** The street surface ships as one mesh in 100 m tiles (positions f32, normals snorm8, data u8: 20 bytes a
+  vertex, 13.9 MB deflated) and is drawn as one draw call: the runtime rewrites the index buffer with the tiles within
+  450 m when that set changes. The walker stands on the drawn triangles (src/street/Ground.js wraps the terrain the
+  Player reads). Reason: draw-call headroom under the frozen 126 cap is about 40.
+- **D68** Storefront modules (G11, D49): every edge ≥ 2.5 m of a non-landmark building ≥ 3.5 m tall with walkway or
+  road within 3 m in front of at least half of it gets 4–5 m modules (pipelines/street/stores.mjs). Category: the
+  OSM shop / amenity / tourism features inside the footprint or within 6 m of it (the nearest one claims a module
+  within 8 m, the rest take turns; upper-level businesses skipped), else the district mix (signs.mjs: Embarcadero
+  commercial, Fisherman's Wharf, Chinatown, North Beach, Sausalito). Houses under 18 m on residential streets with no
+  category get garage and front doors, no sign. Fire escapes and bay windows (D56) are placed on mid-rise street faces
+  for G12. Reason: the brief's module rules, with houses kept residential.
+- **D69** Signs (D50) are drawn with Canvas 2D in the system's fonts: OffscreenCanvas in a worker in the browser, and
+  @napi-rs/canvas (prebuilt Skia, devDependency) on the main thread in headless Node, so gates and shots see the same
+  signs. The atlas holds one white-on-transparent cell per distinct string (r8, 133 strings, 4 mip levels); the
+  shader colours board and ink per module, neon glows at night. Chinatown signs lead with one Chinese character in a
+  CJK face (PingFang TC / Hiragino / Noto CJK). Reason: a hand-built stroke font would not do Chinese justice.
+- **D70** Facade depth (D51): the run-1 building material's window grid gets a parallax recess (0.22 m) appended
+  to its WGSL at attach time — the jamb and head show darker by the view angle; towers' curtain walls stay flush.
+  Off on the mobile tier (D53).
+- **D71** The street layer precompiles its pipelines when it attaches (App.precompile(); the renderer skips a draw
+  while its pipeline compiles in the background, and a shader error is reported instead of silently drawing
+  nothing) and hooks the frame after that (precompile() restarts the game hook).
+- **D72** G12's street-layer triangle cap (`G12.streetTriangles`, frozen 260,359) is measured by counting the street
+  meshes' submitted triangles (instances × template or draw range, plus three shadow cascades for casters), not as
+  the frame difference with and without the layer: that difference mixed in unrelated frame-to-frame changes (−40k
+  at aerial-city, +208k at a view with no street in it). The frozen value is unchanged; its text already says what
+  is counted. Reason: the first measurement was noise.
+- **D73** Props (D52, D56), all instanced, one draw per type (pipelines/street/props.mjs, src/street/Props.js): all
+  12,844 DataSF trees at their positions (species → broad / columnar / palm / small; DBH → size; palms their own
+  draw), Sausalito trees seeded every 15 m along Bridgeway (OSM maps none there, logged); OSM street lamps plus seeded
+  lamps every 24–36 m (per side, seeded) where none stands within half the spacing; Muni trolley poles every 35 m
+  and overhead wire pairs at 5.8 m on streets OSM tags `trolley_wire=yes` (a pole replaces a lamp within 4 m);
+  parked cars every 6.4 m in the kerb lane where OSM parking tags allow, else on residential / tertiary / secondary /
+  unclassified sides by default (1,847 sides logged), a fifth of the slots free, none within 9 m of a crossing;
+  parking meters beside them on commercial streets; green street-name blades (real street names, SF abbreviations,
+  their own small atlas) and hydrants (white, red or blue bonnet) at junction corners; OSM benches; red lanterns
+  strung every 9 m across Grant Avenue in Chinatown; fire escapes and bay windows on mid-rise street faces. Only the
+  trees within 70 m, palms and cars cast shadows (the frame triangle cap). Street-layer materials stay out of the
+  refraction pass (they never reach the water), and storefronts cast no shadows.
+- **D74** Paved open space: gaps under 40 m between walkways, roads and buildings (a 20 m closing) that the 1 m NAIP
+  imagery shows as hard surface (≥ 75 % of samples not green-excess, none over water) become plaza (0.92 km²: the
+  Embarcadero promenade, the Ferry Building plaza, forecourts and lots); lawns and parks keep the ground colour (D48).
+  Reason: OSM maps the promenade and plazas as thin footways, which left bare ground at the featured places.
+- **D75** Crowd (D54, pipelines/street/crowd.mjs, src/street/Crowd.js): 17,000 pedestrians (low tier; a third on
+  mobile; ?crowd=n), seed 1975 (?seed=), walk lanes 1.5 / 3.3 / 5.1 / 7 m out from the road edge (the inner ones
+  only where the walkway is that wide), spread across each lane's clear width; lanes and crossings are kept only
+  where the walkway is under them (a conservative 0.25 m raster, eroded one cell, sampled every 0.2 m along lanes
+  and 0.1 m along crossings). Density weights: the Embarcadero within 60 m ×30, the Ferry Building and Pier 39 ×20,
+  the Wharf and Chinatown ×3–4. Walkers stop now and then, wait 2–16 s at the kerb, and cross on the band. Drawn:
+  the nearest 360 in view (frustum) or within 15 m, one instanced figure (13 bones, procedural walk / idle), those
+  within 30 m casting shadows. Reason: G12b's 150 floor along the waterfront path, and walkers that stay on the
+  walkway by construction.
+- **D76** Street meshing robustness: earcut results are checked by area and replaced by slab trapezoids where earcut
+  was wrong (it produced overlapping triangles on holes in small cell pieces); `polygons()` is strictly simple for
+  triangulation only (it is slow on big sets); the walkway outline is cleaned to 2 cm (10 cm opened slivers at the
+  kerb). The runtime ground ignores paint / rail decals and curb faces, closes slivers under 5 cm and pinholes under
+  0.4 m that walkway surrounds. Reason: the crowd's 60 s walkability run found each of these.
+- **D77** Night: the street lamps and trolley poles drawn near the camera are registered as the engine's local
+  lights (downward spots, 260 at 8 m, range 24 m; the engine shades the nearest 8). Over-the-shoulder walking camera
+  (D57): 2 m behind, 0.45 m right, 1.7 m up, the walker drawn as instance 0 of the crowd; the boom shortens where no
+  street is under it; V toggles first / third person. G14's golden hour is 17:36 with haze ×2.2 ("evening fog").

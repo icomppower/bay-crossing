@@ -1,7 +1,8 @@
 // Bay Crossing's raw sources (SOURCES); the engine's fetchSources() downloads them into data/raw/ and writes
-// MANIFEST.sha256 + sources.json. Cached files are never re-downloaded unless --force.
+// MANIFEST.sha256 + sources.json. Cached files are never re-downloaded unless --force. SOURCES is run 1's list
+// (G0); STREET_SOURCES is run 2's (G8); the CLI fetches both.
 //   node pipelines/data/fetch.mjs [--force]
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { toUTM } from 'harbor-engine/tools/geo/utm.mjs';
@@ -141,4 +142,60 @@ export const SOURCES = [
   },
 ];
 
-if (isMain(import.meta.url)) await fetchSources(SOURCES, { userAgent: 'bay-crossing-data-fetch/1.0' });
+// Run 2 (street level, G8): roads, crossings, signals, lamps, rails, storefront categories and trees for the two
+// building boxes, plus the DataSF Street Tree List and its licence metadata (checked by G8, D59). The cached file
+// is the snapshot (its osm3s.timestamp_osm_base records the date); a dated attic query runs Overpass out of
+// memory (D60).
+const streetQuery = b => 'data=' + encodeURIComponent(`[out:json][timeout:180];(
+  way["highway"](${b.south},${b.west},${b.north},${b.east});
+  node["highway"~"^(traffic_signals|crossing|street_lamp|stop|give_way)$"](${b.south},${b.west},${b.north},${b.east});
+  way["railway"~"^(tram|light_rail)$"](${b.south},${b.west},${b.north},${b.east});
+  nwr["shop"](${b.south},${b.west},${b.north},${b.east});
+  nwr["amenity"](${b.south},${b.west},${b.north},${b.east});
+  nwr["tourism"](${b.south},${b.west},${b.north},${b.east});
+  node["natural"="tree"](${b.south},${b.west},${b.north},${b.east});
+);out body geom qt;`);
+const ODBL = { licence: 'ODbL 1.0 — © OpenStreetMap contributors', licenceUrl: 'https://www.openstreetmap.org/copyright' };
+export const STREET_SOURCES = [
+  {
+    file: 'osm-streets-sf.json', key: 'osm-streets-sf', ...ODBL, url: 'https://overpass-api.de/api/interpreter', body: streetQuery(sf),
+    title: `OpenStreetMap streets over the SF building box: highway ways (lanes, width, sidewalk, oneway, surface, parking), crossings, signals, street lamps, tram rails, shop / amenity / tourism features, trees (Overpass API)`,
+  },
+  {
+    file: 'osm-streets-sausalito.json', key: 'osm-streets-sausalito', ...ODBL, url: 'https://overpass-api.de/api/interpreter', body: streetQuery(sa),
+    title: `OpenStreetMap streets over the Sausalito building box: the same features as osm-streets-sf.json (Overpass API)`,
+  },
+  {
+    file: 'datasf-street-trees.json', key: 'datasf-street-trees',
+    title: 'San Francisco Street Tree List (DataSF tkzw-k3nq, San Francisco Public Works): tree positions and species inside the SF building box',
+    licence: 'ODC PDDL 1.0 (public domain dedication)', licenceUrl: 'http://opendatacommons.org/licenses/pddl/1.0/',
+    url: 'https://data.sf.gov/resource/tkzw-k3nq.json?' + new URLSearchParams({
+      $select: 'treeid,legalstatus,species,planttype,siteinfo,dbhrange,latitude,longitude',
+      $where: `latitude between ${sf.south} and ${sf.north} and longitude between ${sf.west} and ${sf.east}`,
+      $order: 'treeid', $limit: '50000',
+    }),
+  },
+  {
+    file: 'datasf-street-trees-meta.json', key: 'datasf-street-trees-meta',
+    title: 'DataSF dataset metadata for the Street Tree List (tkzw-k3nq): licence, columns, publisher; G8 reads the licence from it',
+    licence: 'ODC PDDL 1.0 (public domain dedication)', licenceUrl: 'http://opendatacommons.org/licenses/pddl/1.0/',
+    url: 'https://data.sf.gov/api/views/tkzw-k3nq.json',
+  },
+];
+
+// Overpass answers some failures with HTTP 200 and an empty result plus a "remark" (out of memory, timeout):
+// such a cached file is removed so the next run fetches it again.
+function dropFailedOverpass() {
+  for (const s of STREET_SOURCES) {
+    const p = join(root, 'data/raw', s.file);
+    if (!s.url.includes('overpass') || !existsSync(p)) continue;
+    const j = JSON.parse(readFileSync(p, 'utf8'));
+    if (j.remark && /error/i.test(j.remark) || !(j.elements?.length)) { console.warn(`${s.file}: Overpass failed (${j.remark || 'no elements'}), refetching`); rmSync(p); }
+  }
+}
+
+if (isMain(import.meta.url)) {
+  dropFailedOverpass();
+  await fetchSources([...SOURCES, ...STREET_SOURCES], { userAgent: 'bay-crossing-data-fetch/1.0' });
+  dropFailedOverpass();
+}
