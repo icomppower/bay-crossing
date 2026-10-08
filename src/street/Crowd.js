@@ -187,8 +187,10 @@ export class CrowdSim {
 
 }
 
-// ---- the figure: boxes and a head, with a bone id per vertex (pivots in the shader)
-function figure() {
+// ---- the figure, with a bone id per vertex (pivots in the shader: hips 0.9, knees 0.47, shoulders 1.45, elbows 1.17;
+// forward is -z). detail = true: the near figure, smooth lofted limbs, a rounded head, shaped torso, hands and calves;
+// false: tapered boxes on the same joints for the far crowd.
+function figure( detail ) {
 
 	const P = [], N = [], B = [];
 	const quad = ( a, b, c, d, n, bone ) => { for ( const p of [ a, b, c, a, c, d ] ) { P.push( ...p ); N.push( ...n ); B.push( bone ); } };
@@ -202,22 +204,90 @@ function figure() {
 		if ( caps ) { quad( hi[ 0 ], hi[ 1 ], hi[ 2 ], hi[ 3 ], [ 0, 1, 0 ], bone ); quad( lo[ 3 ], lo[ 2 ], lo[ 1 ], lo[ 0 ], [ 0, - 1, 0 ], bone ); }
 
 	};
-	seg( 0, 0, 0.86, 1.02, 0.17, 0.11, 0.17, 0.11, 0 );            // 0 hips
-	seg( 0, 0, 1.0, 1.47, 0.16, 0.11, 0.2, 0.12, 1 );               // 1 torso
-	seg( 0, 0, 1.47, 1.53, 0.05, 0.05, 0.05, 0.05, 2, false );      // 2 neck
-	seg( 0, 0.01, 1.53, 1.78, 0.085, 0.1, 0.08, 0.095, 2 );         // 2 head
-	for ( const [ sx, up, lo ] of [ [ - 1, 3, 4 ], [ 1, 5, 6 ] ] ) {
+	// a smooth loft through elliptical rings [ y, half width, half depth, cx, cz ] (bottom to top); a ring of zero size
+	// closes the end to a point, open ends get a flat cap
+	const loft = ( rings, sides, bone ) => {
 
-		seg( sx * 0.235, 0, 1.17, 1.45, 0.045, 0.05, 0.05, 0.055, up );   // upper arm
-		seg( sx * 0.235, 0, 0.9, 1.17, 0.035, 0.04, 0.045, 0.045, lo );   // forearm + hand
+		const R = rings.map( ( [ y, w, d, cx = 0, cz = 0 ] ) => ( { y, w, d, cx, cz } ) );
+		const vtx = ( i, k ) => {
 
-	}
+			const r = R[ i ], a = k / sides * Math.PI * 2, ca = Math.cos( a ), sa = Math.sin( a );
+			const lo = R[ Math.max( 0, i - 1 ) ], hi = R[ Math.min( R.length - 1, i + 1 ) ];
+			let nx = ca * r.d, nz = sa * r.w, l = Math.hypot( nx, nz ) || 1; nx /= l; nz /= l;
+			const ny = - ( ( hi.w + hi.d ) - ( lo.w + lo.d ) ) / 2 / ( ( hi.y - lo.y ) || 1 );
+			let n = [ nx, ny, nz ];
+			if ( r.w + r.d < 1e-6 ) n = [ 0, i === 0 ? - 1 : 1, 0 ];
+			l = Math.hypot( ...n ); n = n.map( c => c / l );
+			return { p: [ r.cx + ca * r.w, r.y, r.cz + sa * r.d ], n };
 
-	for ( const [ sx, th, sh, ft ] of [ [ - 1, 7, 8, 9 ], [ 1, 10, 11, 12 ] ] ) {
+		};
+		const tri = ( ...v ) => { for ( const { p, n } of v ) { P.push( ...p ); N.push( ...n ); B.push( bone ); } };
+		for ( let i = 0; i + 1 < R.length; i ++ ) for ( let k = 0; k < sides; k ++ ) {
 
-		seg( sx * 0.095, 0, 0.47, 0.9, 0.06, 0.065, 0.075, 0.08, th );   // thigh
-		seg( sx * 0.095, 0, 0.07, 0.47, 0.045, 0.05, 0.06, 0.065, sh );  // shin
-		seg( sx * 0.095, - 0.06, 0.0, 0.08, 0.05, 0.13, 0.045, 0.1, ft ); // foot (forward is -z)
+			const a = vtx( i, k ), b = vtx( i, k + 1 ), c = vtx( i + 1, k + 1 ), d = vtx( i + 1, k );
+			if ( R[ i ].w + R[ i ].d > 1e-6 ) tri( a, b, c );
+			if ( R[ i + 1 ].w + R[ i + 1 ].d > 1e-6 ) tri( a, c, d );
+
+		}
+
+		for ( const [ i, up ] of [ [ 0, - 1 ], [ R.length - 1, 1 ] ] ) {
+
+			const r = R[ i ];
+			if ( r.w + r.d < 1e-6 ) continue;
+			const c = { p: [ r.cx, r.y, r.cz ], n: [ 0, up, 0 ] };
+			for ( let k = 0; k < sides; k ++ ) { const a = vtx( i, k ), b = vtx( i, k + 1 ); tri( c, { p: a.p, n: c.n }, { p: b.p, n: c.n } ); }
+
+		}
+
+	};
+
+	if ( ! detail ) {
+
+		seg( 0, 0, 0.86, 1.02, 0.16, 0.1, 0.16, 0.1, 0 );               // 0 hips
+		seg( 0, 0, 1.0, 1.47, 0.15, 0.1, 0.19, 0.11, 1 );                // 1 torso
+		seg( 0, 0, 1.47, 1.55, 0.045, 0.045, 0.045, 0.045, 2, false );   // 2 neck
+		seg( 0, 0, 1.55, 1.78, 0.075, 0.095, 0.08, 0.1, 2 );             // 2 head
+		for ( const [ sx, up, lo ] of [ [ - 1, 3, 4 ], [ 1, 5, 6 ] ] ) {
+
+			seg( sx * 0.215, 0, 1.17, 1.45, 0.04, 0.045, 0.048, 0.052, up ); // upper arm
+			seg( sx * 0.22, 0, 0.76, 1.17, 0.025, 0.035, 0.04, 0.042, lo );   // forearm + hand
+
+		}
+
+		for ( const [ sx, th, sh, ft ] of [ [ - 1, 7, 8, 9 ], [ 1, 10, 11, 12 ] ] ) {
+
+			seg( sx * 0.09, 0, 0.47, 0.92, 0.05, 0.055, 0.075, 0.08, th );    // thigh
+			seg( sx * 0.09, 0, 0.07, 0.47, 0.035, 0.04, 0.05, 0.055, sh );   // shin
+			seg( sx * 0.09, - 0.06, 0.0, 0.08, 0.045, 0.13, 0.04, 0.1, ft ); // foot
+
+		}
+
+	} else {
+
+		// pelvis and torso: hips, waist, chest, shoulders sloping to the neck
+		loft( [ [ 0.8, 0, 0 ], [ 0.83, 0.11, 0.08 ], [ 0.9, 0.165, 0.105 ], [ 1.02, 0.158, 0.1 ] ], 8, 0 );
+		loft( [ [ 1.0, 0.158, 0.1 ], [ 1.1, 0.148, 0.095 ], [ 1.24, 0.172, 0.11, 0, - 0.008 ], [ 1.35, 0.19, 0.115, 0, - 0.01 ], [ 1.43, 0.195, 0.1 ], [ 1.48, 0.14, 0.075 ], [ 1.51, 0.06, 0.05 ] ], 8, 1 );
+		loft( [ [ 1.48, 0.05, 0.052 ], [ 1.59, 0.045, 0.047 ] ], 6, 2 );
+		// head: jaw and chin forward and narrow, the skull rounder and set back
+		loft( [ [ 1.545, 0, 0, 0, - 0.02 ], [ 1.565, 0.045, 0.05, 0, - 0.025 ], [ 1.6, 0.07, 0.085, 0, - 0.01 ], [ 1.65, 0.08, 0.1 ], [ 1.7, 0.082, 0.102, 0, 0.005 ], [ 1.75, 0.07, 0.088, 0, 0.008 ], [ 1.78, 0.042, 0.055, 0, 0.008 ], [ 1.792, 0, 0, 0, 0.008 ] ], 8, 2 );
+		seg( 0, - 0.1, 1.61, 1.67, 0.013, 0.012, 0.009, 0.006, 2 );   // nose
+		for ( const [ sx, up, lo ] of [ [ - 1, 3, 4 ], [ 1, 5, 6 ] ] ) {
+
+			const x = sx * 0.205;
+			loft( [ [ 1.17, 0.04, 0.043, x ], [ 1.31, 0.046, 0.05, x ], [ 1.42, 0.054, 0.056, x ], [ 1.48, 0, 0, x ] ], 6, up );
+			loft( [ [ 0.885, 0.026, 0.03, x * 1.04 ], [ 0.96, 0.03, 0.033, x * 1.03 ], [ 1.09, 0.041, 0.043, x * 1.01 ], [ 1.18, 0.04, 0.043, x ] ], 6, lo );
+			loft( [ [ 0.72, 0, 0, x * 1.06, - 0.005 ], [ 0.75, 0.016, 0.03, x * 1.06, - 0.005 ], [ 0.83, 0.02, 0.042, x * 1.05 ], [ 0.89, 0.024, 0.03, x * 1.04 ] ], 6, lo ); // hand
+
+		}
+
+		for ( const [ sx, th, sh, ft ] of [ [ - 1, 7, 8, 9 ], [ 1, 10, 11, 12 ] ] ) {
+
+			const x = sx * 0.09;
+			loft( [ [ 0.46, 0.046, 0.05, x ], [ 0.6, 0.056, 0.062, x ], [ 0.78, 0.07, 0.076, x ], [ 0.93, 0.078, 0.085, x ] ], 6, th );
+			loft( [ [ 0.07, 0.032, 0.036, x ], [ 0.2, 0.036, 0.041, x, 0.004 ], [ 0.36, 0.05, 0.056, x, 0.01 ], [ 0.48, 0.046, 0.05, x ] ], 6, sh );
+			seg( x, - 0.045, 0.0, 0.075, 0.04, 0.115, 0.035, 0.075, ft ); // shoe
+
+		}
 
 	}
 
@@ -241,7 +311,7 @@ export function crowdMaterial() {
 		modules: [ noiseModule ],
 		underwaterLighting: 'none',
 		attributes: { aBone: 'f32', iA: 'vec4f', iB: 'vec4f' },
-		varyings: { vBone: 'f32', vVar: 'f32', vY: 'f32' },
+		varyings: { vBone: 'f32', vVar: 'f32', vY: 'f32', vNz: 'f32' },
 		vertex: /* wgsl */`
 	// instance: iA = (x, y, z, yaw), iB = (phase, stride 0..1 (0 = standing), variant, scale)
 	let bone = u32( v.aBone + 0.5 );
@@ -254,18 +324,20 @@ export function crowdMaterial() {
 	// body proportions by variant: height, girth
 	let tall = 0.92 + 0.16 * fract( vr * 0.0731 );
 	let wide = 0.9 + 0.25 * fract( vr * 0.0517 );
-	// legs: hip swing, knee bend; arms: counter swing, elbow bend
+	// legs: hip swing (hipA > 0 swings the leg back), knee bend (the shin folds back, most while the leg swings
+	// forward); arms: swing against the leg on the same side, the forearm bent forward at the elbow
 	let left = p.x < 0.0;
 	let legS = select( - 1.0, 1.0, left ) * sw;
-	let hipA = 0.42 * legS * walk;
-	let kneeA = ( 0.15 + 0.55 * max( 0.0, - cos( ph + select( 3.1416, 0.0, left ) ) ) ) * walk;
-	let armA = - 0.32 * legS * walk;
-	let elbowA = 0.25 + 0.15 * walk;
-	// limbs rotate about x (pitch) round their joints: knees, then hips; elbows, then shoulders
+	let hipA = 0.4 * legS * walk;
+	let kneeA = ( 0.08 + 0.75 * max( 0.0, - cos( ph + select( 3.1416, 0.0, left ) ) ) ) * walk;
+	let armA = 0.3 * legS * walk;
+	let elbowA = 0.12 + 0.2 * walk + 0.12 * max( 0.0, legS ) * walk;
+	// limbs rotate about x (pitch) round their joints: knees, then hips; elbows, then shoulders. A rotation by a
+	// positive angle carries a point below the joint forward (-z)
 	if ( bone >= 7u ) {
 		let hip = vec3f( p.x, 0.9, 0.0 ); let knee = vec3f( p.x, 0.47, 0.0 );
 		if ( bone == 8u || bone == 9u || bone == 11u || bone == 12u ) {
-			let d = p - knee; let c = cos( kneeA ); let s2 = sin( kneeA );
+			let d = p - knee; let c = cos( - kneeA ); let s2 = sin( - kneeA );
 			p = knee + vec3f( d.x, c * d.y - s2 * d.z, s2 * d.y + c * d.z );
 			n = vec3f( n.x, c * n.y - s2 * n.z, s2 * n.y + c * n.z );
 		}
@@ -275,7 +347,7 @@ export function crowdMaterial() {
 	} else if ( bone >= 3u ) {
 		let sh = vec3f( p.x, 1.45, 0.0 ); let el = vec3f( p.x, 1.17, 0.0 );
 		if ( bone == 4u || bone == 6u ) {
-			let d = p - el; let c = cos( - elbowA ); let s2 = sin( - elbowA );
+			let d = p - el; let c = cos( elbowA ); let s2 = sin( elbowA );
 			p = el + vec3f( d.x, c * d.y - s2 * d.z, s2 * d.y + c * d.z );
 			n = vec3f( n.x, c * n.y - s2 * n.z, s2 * n.y + c * n.z );
 		}
@@ -283,12 +355,23 @@ export function crowdMaterial() {
 		p = sh + vec3f( d.x, c * d.y - s2 * d.z, s2 * d.y + c * d.z );
 		n = vec3f( n.x, c * n.y - s2 * n.z, s2 * n.y + c * n.z );
 	}
-	// bob while walking, a slow sway while standing
-	p.y += 0.035 * abs( cos( ph ) ) * walk;
+	// the upper body leans a little into the walk and the shoulders turn against the hips
+	if ( bone >= 1u && bone <= 6u ) {
+		let lean = 0.02 + 0.05 * walk;
+		let d = p - vec3f( 0.0, 1.0, 0.0 ); let c = cos( - lean ); let s2 = sin( - lean );
+		p = vec3f( 0.0, 1.0, 0.0 ) + vec3f( d.x, c * d.y - s2 * d.z, s2 * d.y + c * d.z );
+		n = vec3f( n.x, c * n.y - s2 * n.z, s2 * n.y + c * n.z );
+		let tw = - 0.1 * sw * walk; let ct = cos( tw ); let st = sin( tw );
+		p = vec3f( ct * p.x + st * p.z, p.y, - st * p.x + ct * p.z );
+		n = vec3f( ct * n.x + st * n.z, n.y, - st * n.x + ct * n.z );
+	}
+	// bob while walking (lowest as the feet pass), a slow sway while standing
+	p.y += 0.03 * abs( cos( ph ) ) * walk;
 	p.x += 0.015 * sin( frame.time * 0.7 + vr ) * ( 1.0 - walk ) * step( 0.9, p.y );
 	p = vec3f( p.x * wide, p.y * tall, p.z * wide ) * v.iB.w;
 	let cy = cos( v.iA.w ); let sy = sin( v.iA.w );
 	o.vY = v.position.y;
+	o.vNz = v.normal.z;
 	v.position = v.iA.xyz + vec3f( cy * p.x + sy * p.z, p.y, - sy * p.x + cy * p.z );
 	v.normal = vec3f( cy * n.x + sy * n.z, n.y, - sy * n.x + cy * n.z );
 	o.vBone = v.aBone;
@@ -310,8 +393,8 @@ export function crowdMaterial() {
 	let hair = hairs[ ( iv / 576u ) % 5u ];
 	let jacket = ( ( iv / 2880u ) % 2u ) == 1u;
 	var alb = top; var rough = 0.85;
-	if ( bone == 2u ) { alb = select( skin, hair, y > 1.7 || ( y > 1.62 && in.N.y < -0.2 ) ); }
-	else if ( bone == 4u || bone == 6u ) { alb = select( select( top, skin, y < 1.0 ), skin, ! jacket && y < 1.1 ); }
+	if ( bone == 2u ) { alb = select( skin, hair, y > 1.72 || ( y > 1.6 && in.vs.vNz > 0.3 ) || ( y > 1.69 && abs( in.vs.vNz ) < 0.5 ) ); }
+	else if ( bone == 4u || bone == 6u ) { alb = select( select( top, skin, y < 0.895 ), skin, ! jacket && y < 1.1 ); }
 	else if ( bone == 0u ) { alb = bottom; }
 	else if ( bone >= 7u ) { alb = select( bottom, vec3f( 0.05, 0.045, 0.04 ), bone == 9u || bone == 12u || y < 0.09 ); rough = select( 0.85, 0.5, bone == 9u || bone == 12u ); }
 	s.albedo = alb * ( 0.85 + 0.25 * stNoise( vec2f( vr, y * 12.0 ) ) );
@@ -325,10 +408,9 @@ export class CrowdView {
 
 	constructor() {
 
-		const t = figure();
-		this.template = t;
 		const make = ( shadows ) => {
 
+			const t = figure( shadows );
 			const g = new InstancedBufferGeometry();
 			g.setAttribute( 'position', new BufferAttribute( t.position, 3 ) );
 			g.setAttribute( 'normal', new BufferAttribute( t.normal, 3 ) );
