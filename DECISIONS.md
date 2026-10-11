@@ -399,3 +399,7 @@ Harbor Engine conversion. Later decisions are appended with a one-line reason.
   (the detail model has no such types); Chinatown gets balconies.
 - **D92** Street-facing walls are those a run-2 storefront module lies on (≥ 40 % of the length): the modules were
   placed on exactly the street faces (G11 99.9 %), and the street mesh needs `data/raw/`-free code either way.
+- **D93** One sign per business, not per module: at load, a storefront module keeps its sign only if no kept module of
+  the same category lies within 30 m (clinic, bank, pharmacy, hotel, theatre, lobby…) or 12 m (shops, food); the rest
+  show a blank board without blade sign or neon (src/street/signRuns.js). Reason: a single clinic tag in OSM put
+  CLINIC / DENTIST boards over whole block faces (181 DENTIST boards → 33). The baked stores data is unchanged (G11).

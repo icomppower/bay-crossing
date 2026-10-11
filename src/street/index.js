@@ -6,6 +6,7 @@ import { StreetGround, streetTerrain } from './Ground.js';
 import { StreetStores, signAtlasImage } from './Stores.js';
 import { patchBuildingFacades } from './Facades.js';
 import { attachFacades } from '../facades/index.js';
+import { thinSignRuns } from './signRuns.js';
 import { StreetProps } from './Props.js';
 import { Vector3, Color } from 'harbor-engine/src/engine/index.js';
 import { CrowdSim, CrowdView } from './Crowd.js';
@@ -68,6 +69,8 @@ export async function attachStreet( app, { base = BASE, data = null } = {} ) {
 	app.scene.add( street.surface.mesh );
 	// storefronts: their sign atlas is drawn by code (in a worker in the browser)
 	const stores = await loadStores( base );
+	// one sign per business frontage, not one per module (a clinic's boards no longer fill a block face)
+	thinSignRuns( stores.modules, stores.index.texts );
 	street.stores = new StreetStores( stores, await signAtlasImage( stores.index.texts ) );
 	app.scene.add( street.stores.mesh );
 	// street props (one instanced draw per type); the street-name blades read their own small atlas
