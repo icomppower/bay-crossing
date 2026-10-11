@@ -27,6 +27,28 @@ const H = await bootApp( { width: W, height: Hh, query: `?fly&noAudio&tier=low&c
 const app = H.app;
 const st = await attachStreet( app );
 const stats = [];
+if ( a.includes( '--waypoints' ) ) {
+
+	// the game's own waypoints (map.json): eye → at, one shot each per time of day
+	const { readFileSync } = await import( 'node:fs' );
+	const wps = JSON.parse( readFileSync( new URL( '../../map.json', import.meta.url ), 'utf8' ) ).waypoints;
+	for ( const [ k, w ] of wps.entries() ) for ( const tn of times ) {
+
+		const t = TIMES[ tn ];
+		app.settings.timeOfDay = t.hour;
+		if ( app.haze ) app.haze.density.value = 1.6;
+		const [ ex, ey, ez ] = w.eye, [ ax, ay, az ] = w.at;
+		app.fly.setPose( new Vector3( ex, ey, ez ), Math.atan2( - ( ax - ex ), - ( az - ez ) ), Math.atan2( ay - ey, Math.hypot( ax - ex, az - ez ) ) );
+		for ( let i = 0; i < + val( '--frames', 12 ); i ++ ) { app.frame( 1 / 30 ); if ( i % 4 === 3 ) await H.settle(); }
+		const file = join( out, `wp${ k }-${ tn }.png` );
+		writePNG( file, W, Hh, await H.readPixels() );
+		console.log( JSON.stringify( { k, name: w.name, time: tn, file } ) );
+
+	}
+
+	process.exit( 0 );
+
+}
 if ( a.includes( '--budget' ) ) {
 
 	// the G2c / G12 fixed views: draws and triangles per frame with the facade pass (compare with SPEC-THRESHOLDS)
