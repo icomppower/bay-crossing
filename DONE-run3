@@ -1,0 +1,11 @@
+Run 3 — Facades: DONE 2026-10-11
+G0–G5, G7, G8–G13 (incl. G12b) and G15–G20 (incl. G18b) green in one clean ./verify.sh run on the M4 (G6, G14 advisory green; G21 advisory flagged).
+Storefronts rebaked with real businesses (D94): 2,677 OSM businesses, 2,677 signs, no district fill.
+G13 budget: street path 55.6 fps p95, 795 MB; G5 path with street 46.8 fps p95, 807 MB (floor 40, cap 862), no swap
+G15 heights: 118 building files byte-identical to run 2; 10,309 buildings
+G16 classification: 8 archetypes, 64.0 % by rules alone
+G17 alignment: 197,535 walls, window rows = floors; 95,098 windowed walls in whole bays
+G18 / G18b: flat roofs dressed 100 %, Victorian bays 97.7 %, pre-war fire escapes 83 %; no HK-only detail; 17,681 Victorian lots with bays
+G19 materials: all by code, 4 families on the path; lit at night 39.9 % residential, 45.7 % office
+G20 facade budget: inside frozen caps
+G21 look (advisory): shots in shots/facades/; Pier 7 midday/golden and Sausalito golden/night read close to run 2

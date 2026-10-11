@@ -26,12 +26,12 @@
 | G18 Depth elements | PASS | 2026-10-11 | near the path: flat roofs dressed 100 % (frozen 98 %), pre-war faces with fire escapes 83.3 % (frozen 81 %); slice: Victorian faces with bays 97.7 % (frozen 95 %); 3/3 negatives |
 | G18b SF look | PASS | 2026-10-11 | no HK-only detail types; balconies only in Chinatown; 17,681 Victorian lots all with bays; 4,471 adjacent Victorian pairs, none sharing a colour; tops = run 2; 4/4 negatives |
 | G19 Materials + windows | PASS | 2026-10-11 | no facade textures (all by code); 4 material families on the path (stucco, brick, siding, ashlar); lit at night residential 39.9 %, office 45.7 %; 4/4 negatives |
-| G20 Facade budget | PENDING (M4) | 2026-10-11 | near band ≤ 61,432 triangles along the path (cap frozen 76,790); fixed views with facades (lavapipe count): +7 draws / +10.8k triangles at worst (embarcadero-street 74 draws, 1,797,599 triangles; caps 126 / 1,953,488); the fps / memory half runs G13 on the M4 — not measurable in the cloud workspace (no GPU) |
-| G21 Facade look (advisory) | PARTIAL | 2026-10-11 | software renders (lavapipe, 960×540, crowd off) of telegraph-hill, telegraph-hill-close, jackson-square, embarcadero-pier7 × midday / golden / night + run-2 before pairs (midday, night) in shots/facades/; glass and car speckle is software-render noise; full set and night exposure to be judged on the M4 |
+| G20 Facade budget | PASS | 2026-10-11 | M4, idle, 1080p low: street path 55.6 fps p95 / 795 MB, G5 path with street 46.8 fps p95 / 807 MB (floor 40, cap 862), no swap; near band ≤ 61,432 triangles (cap 76,790); draws and triangles inside run-1 caps |
+| G21 Facade look (advisory) | FAIL (advisory) | 2026-10-11 | M4 shots in shots/facades/ for human review; flagged as close to run 2: embarcadero-pier7 midday + golden, sausalito-bridgeway golden + night (difference < 3) |
 
 ## Current
 
-**Run 3 (facades): built on branch `facades`, not merged.** G15–G19 (incl. G18b) green with negatives. Open: G20's fps / GPU-memory half and a full `./verify.sh` need the M4 (`./verify.sh g13 g20 g21`, then the full run); G21 shots partly rendered in software (shots/facades/).
+**Run 3 (facades): DONE 2026-10-11.** G0–G5, G7, G8–G13 (incl. G12b) and G15–G20 (incl. G18b) green in one clean `./verify.sh` run on the M4, with storefronts rebaked as real businesses (D94: 2,677 businesses, 2,677 signs); see `DONE-run3`. G21 advisory flags four wide shots as close to run 2 (Pier 7, Sausalito) for human review.
 
 **Run 2 (street level): DONE 2026-10-07.** G0–G5, G7 and G8–G13 (incl. G12b) green in one clean `./verify.sh` run
 (G6, G14 advisory green); see `DONE-run2`. Decisions D45–D77; branch `street-level` → `main`.

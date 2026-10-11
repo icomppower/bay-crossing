@@ -1,36 +1,148 @@
 {
  "stats": [
   {
+   "name": "ferry-plaza",
+   "time": "midday",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/ferry-plaza-midday.png",
+   "detailTriangles": 8236,
+   "draws": 89,
+   "triangles": 1793541
+  },
+  {
+   "name": "ferry-plaza",
+   "time": "golden",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/ferry-plaza-golden.png",
+   "detailTriangles": 8236,
+   "draws": 88,
+   "triangles": 1803377
+  },
+  {
+   "name": "ferry-plaza",
+   "time": "night",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/ferry-plaza-night.png",
+   "detailTriangles": 8236,
+   "draws": 89,
+   "triangles": 1795164
+  },
+  {
+   "name": "embarcadero-pier7",
+   "time": "midday",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/embarcadero-pier7-midday.png",
+   "detailTriangles": 30112,
+   "draws": 97,
+   "triangles": 1871237
+  },
+  {
+   "name": "embarcadero-pier7",
+   "time": "golden",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/embarcadero-pier7-golden.png",
+   "detailTriangles": 30112,
+   "draws": 93,
+   "triangles": 1834507
+  },
+  {
    "name": "embarcadero-pier7",
    "time": "night",
-   "file": "shots/facades/embarcadero-pier7-night.png",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/embarcadero-pier7-night.png",
    "detailTriangles": 30112,
-   "draws": 77,
-   "triangles": 1491219
+   "draws": 99,
+   "triangles": 1867434
+  },
+  {
+   "name": "jackson-square",
+   "time": "midday",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/jackson-square-midday.png",
+   "detailTriangles": 55496,
+   "draws": 84,
+   "triangles": 2052858
+  },
+  {
+   "name": "jackson-square",
+   "time": "golden",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/jackson-square-golden.png",
+   "detailTriangles": 55496,
+   "draws": 78,
+   "triangles": 2014413
   },
   {
    "name": "jackson-square",
    "time": "night",
-   "file": "shots/facades/jackson-square-night.png",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/jackson-square-night.png",
    "detailTriangles": 55496,
    "draws": 84,
    "triangles": 2087968
   },
   {
    "name": "telegraph-hill",
-   "time": "night",
-   "file": "shots/facades/telegraph-hill-night.png",
+   "time": "midday",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/telegraph-hill-midday.png",
    "detailTriangles": 86166,
-   "draws": 63,
-   "triangles": 2129080
+   "draws": 85,
+   "triangles": 2760096
+  },
+  {
+   "name": "telegraph-hill",
+   "time": "golden",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/telegraph-hill-golden.png",
+   "detailTriangles": 86166,
+   "draws": 85,
+   "triangles": 2820029
+  },
+  {
+   "name": "telegraph-hill",
+   "time": "night",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/telegraph-hill-night.png",
+   "detailTriangles": 86166,
+   "draws": 88,
+   "triangles": 2787700
+  },
+  {
+   "name": "telegraph-hill-close",
+   "time": "midday",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/telegraph-hill-close-midday.png",
+   "detailTriangles": 79628,
+   "draws": 87,
+   "triangles": 2668960
+  },
+  {
+   "name": "telegraph-hill-close",
+   "time": "golden",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/telegraph-hill-close-golden.png",
+   "detailTriangles": 79628,
+   "draws": 87,
+   "triangles": 2719198
   },
   {
    "name": "telegraph-hill-close",
    "time": "night",
-   "file": "shots/facades/telegraph-hill-close-night.png",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/telegraph-hill-close-night.png",
    "detailTriangles": 79628,
    "draws": 91,
    "triangles": 2655275
+  },
+  {
+   "name": "sausalito-bridgeway",
+   "time": "midday",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/sausalito-bridgeway-midday.png",
+   "detailTriangles": 8478,
+   "draws": 46,
+   "triangles": 1302594
+  },
+  {
+   "name": "sausalito-bridgeway",
+   "time": "golden",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/sausalito-bridgeway-golden.png",
+   "detailTriangles": 8478,
+   "draws": 46,
+   "triangles": 1302594
+  },
+  {
+   "name": "sausalito-bridgeway",
+   "time": "night",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/sausalito-bridgeway-night.png",
+   "detailTriangles": 8478,
+   "draws": 44,
+   "triangles": 1278274
   }
  ],
  "errors": [],

@@ -1,17 +1,49 @@
 {
  "stats": [
   {
+   "name": "ferry-plaza",
+   "time": "midday",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/before-ferry-plaza-midday.png",
+   "detailTriangles": 0,
+   "draws": 81,
+   "triangles": 1776305
+  },
+  {
+   "name": "ferry-plaza",
+   "time": "golden",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/before-ferry-plaza-golden.png",
+   "detailTriangles": 0,
+   "draws": 80,
+   "triangles": 1786141
+  },
+  {
+   "name": "ferry-plaza",
+   "time": "night",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/before-ferry-plaza-night.png",
+   "detailTriangles": 0,
+   "draws": 81,
+   "triangles": 1777928
+  },
+  {
    "name": "embarcadero-pier7",
    "time": "midday",
-   "file": "/home/claude/bay-crossing/shots/facades/before-embarcadero-pier7-midday.png",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/before-embarcadero-pier7-midday.png",
    "detailTriangles": 0,
-   "draws": 67,
-   "triangles": 1440889
+   "draws": 83,
+   "triangles": 1804295
+  },
+  {
+   "name": "embarcadero-pier7",
+   "time": "golden",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/before-embarcadero-pier7-golden.png",
+   "detailTriangles": 0,
+   "draws": 79,
+   "triangles": 1767565
   },
   {
    "name": "embarcadero-pier7",
    "time": "night",
-   "file": "/home/claude/bay-crossing/shots/facades/before-embarcadero-pier7-night.png",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/before-embarcadero-pier7-night.png",
    "detailTriangles": 0,
    "draws": 85,
    "triangles": 1800492
@@ -19,15 +51,23 @@
   {
    "name": "jackson-square",
    "time": "midday",
-   "file": "/home/claude/bay-crossing/shots/facades/before-jackson-square-midday.png",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/before-jackson-square-midday.png",
    "detailTriangles": 0,
-   "draws": 51,
-   "triangles": 1599794
+   "draws": 69,
+   "triangles": 1952338
+  },
+  {
+   "name": "jackson-square",
+   "time": "golden",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/before-jackson-square-golden.png",
+   "detailTriangles": 0,
+   "draws": 63,
+   "triangles": 1913893
   },
   {
    "name": "jackson-square",
    "time": "night",
-   "file": "/home/claude/bay-crossing/shots/facades/before-jackson-square-night.png",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/before-jackson-square-night.png",
    "detailTriangles": 0,
    "draws": 69,
    "triangles": 1987448
@@ -35,15 +75,23 @@
   {
    "name": "telegraph-hill",
    "time": "midday",
-   "file": "/home/claude/bay-crossing/shots/facades/before-telegraph-hill-midday.png",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/before-telegraph-hill-midday.png",
    "detailTriangles": 0,
-   "draws": 53,
-   "triangles": 1966912
+   "draws": 71,
+   "triangles": 2533740
+  },
+  {
+   "name": "telegraph-hill",
+   "time": "golden",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/before-telegraph-hill-golden.png",
+   "detailTriangles": 0,
+   "draws": 71,
+   "triangles": 2593673
   },
   {
    "name": "telegraph-hill",
    "time": "night",
-   "file": "/home/claude/bay-crossing/shots/facades/before-telegraph-hill-night.png",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/before-telegraph-hill-night.png",
    "detailTriangles": 0,
    "draws": 74,
    "triangles": 2561344
@@ -51,18 +99,50 @@
   {
    "name": "telegraph-hill-close",
    "time": "midday",
-   "file": "/home/claude/bay-crossing/shots/facades/before-telegraph-hill-close-midday.png",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/before-telegraph-hill-close-midday.png",
    "detailTriangles": 0,
-   "draws": 57,
-   "triangles": 1905974
+   "draws": 73,
+   "triangles": 2462766
+  },
+  {
+   "name": "telegraph-hill-close",
+   "time": "golden",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/before-telegraph-hill-close-golden.png",
+   "detailTriangles": 0,
+   "draws": 73,
+   "triangles": 2513004
   },
   {
    "name": "telegraph-hill-close",
    "time": "night",
-   "file": "/home/claude/bay-crossing/shots/facades/before-telegraph-hill-close-night.png",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/before-telegraph-hill-close-night.png",
    "detailTriangles": 0,
    "draws": 77,
    "triangles": 2449081
+  },
+  {
+   "name": "sausalito-bridgeway",
+   "time": "midday",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/before-sausalito-bridgeway-midday.png",
+   "detailTriangles": 0,
+   "draws": 40,
+   "triangles": 1277160
+  },
+  {
+   "name": "sausalito-bridgeway",
+   "time": "golden",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/before-sausalito-bridgeway-golden.png",
+   "detailTriangles": 0,
+   "draws": 40,
+   "triangles": 1277160
+  },
+  {
+   "name": "sausalito-bridgeway",
+   "time": "night",
+   "file": "/Users/johnny/claude/bay-crossing-fresh/shots/facades/before-sausalito-bridgeway-night.png",
+   "detailTriangles": 0,
+   "draws": 38,
+   "triangles": 1252840
   }
  ],
  "errors": [],
