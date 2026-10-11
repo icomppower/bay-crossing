@@ -9,3 +9,15 @@
 - [x] G4 Ferry — Ferry Building → Sausalito, cited schedule range, draft clearance on route
 - [x] G5 M4 budget — scripted camera path at `low`, fps floor, GPU memory cap, no swap
 - [x] G6 Look (advisory) — golden hour / blue hour / night shots in `shots/`
+
+## Run 3 — Facades
+
+- [x] G15 Heights frozen
+- [x] G16 Classification
+- [x] G17 Floor + bay alignment
+- [x] G18 Depth elements
+- [x] G18b SF look (no HK drift)
+- [x] G19 Materials + windows
+- [ ] G20 Facade budget — near-band cap frozen and green; fps / memory half on the M4
+- [ ] G21 Look (advisory) — full set on the M4 (software renders of 4 views in shots/facades/)
+- [ ] Full `./verify.sh` on the M4 → `DONE-run3` → merge `facades` → `main`
