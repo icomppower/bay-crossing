@@ -360,3 +360,42 @@ Harbor Engine conversion. Later decisions are appended with a one-line reason.
   lights (downward spots, 260 at 8 m, range 24 m; the engine shades the nearest 8). Over-the-shoulder walking camera
   (D57): 2 m behind, 0.45 m right, 1.7 m up, the walker drawn as instance 0 of the crowd; the boom shortens where no
   street is under it; V toggles first / third person. G14's golden hour is 17:36 with haze ×2.2 ("evening fog").
+
+## Run 3 — Facades (Notion F1–F14)
+
+- **D78 (F1)** Heights, footprints and landmark meshes are frozen: `public/buildings/` is not rebuilt; the facade pass
+  only adds vertex attributes, recolours walls in the browser and adds detail geometry. Reason: the run-1 massing is
+  right; G15 proves it stays so.
+- **D79 (F2)** Archetype per building (src/facades/model.js classify): Sausalito district → sausalito; class tower
+  (LiDAR > 60 m) → tower; base at the water line in the pier band, > 1,200 m² and < 26 m → pier shed; Chinatown box →
+  chinatown; FiDi box → office (large or tall) else mid-rise; Jackson Square / northeast waterfront / Wharf / South Beach
+  boxes, < 30 m and > 350 m² → brick warehouse; house class (≤ 15 m) under 450 m² → Victorian; else mid-rise / office by
+  size. District boxes are lat/lon rectangles written from the street plan. No OSM `building:levels` or land use: the
+  raw OSM cache is not in the repo and Overpass is unreachable from the build workspace (logged as fallback in G16).
+- **D80 (F3)** Floors: ground 3.0 (Victorian, Sausalito) / 4.0 (mid-rise, Chinatown) / 4.6 (warehouse) / 5.0 (office) /
+  6.0 (tower) / 7.0 m (pier); upper floors 2.9–4.5 m, whole floors fitted to the wall height (top − base) under a top
+  band of 0.4–2.4 m.
+- **D81 (F4)** Bays: each wall between two corner piers (0–0.8 m) splits into whole bays near the archetype width
+  (1.35 m Victorian … 6 m pier sheds; towers a fixed 1.5 m module); walls too short for one bay stay blank.
+- **D82 (F5)** Top band: Victorian / office frieze with dentils, warehouse brick band, tower spandrel crown; office
+  belt course over a rusticated two-floor base; street-facing ground floors stay the run-2 storefront band.
+- **D83 (F6)** Near band 150 m (60 m mobile): cornices, parapets with coping, stacked bay windows, fire escapes,
+  balconies, roof boxes, water tanks and gables are instanced geometry streamed by 100 m tile; beyond it the shader's
+  traced reveals carry the depth. The run-2 street props' bay windows and fire escapes are switched off (replaced).
+- **D84 (F7)** Materials by code in the facade shader (lap siding, shingle, running-bond brick with soldier-course
+  heads, ashlar with rustication, stucco, curtain wall); no texture files at all, so no CC0 scans were needed. Colours:
+  seeded SF palettes per archetype; towers keep their run-1 glass tint.
+- **D85 (F8)** Windows: recessed by 0.04–0.3 m (ray traced to the glass plane: jambs, head and sill show), interior
+  mapping (box room per window: back wall with door / picture, side walls, floor, ceiling), blinds on ~38 %, sky-lit by
+  day (frame.skyIrradiance), lit at night with a seeded share of 40 % (residential) / 46 % (office), warm / cool.
+- **D86 (F9)** Roofs: flat roofs get 1–6 boxes (HVAC; the first a stair penthouse above 12 m), ~1 in 3 older brick /
+  mid-rises a redwood water tank on legs; Sausalito small rectangular houses a gable.
+- **D87 (F10)** Landmarks keep their run-1 meshes (they are not in the building tiles).
+- **D88 (F11)** Mobile: near band 60 m; the shader is the same (interior mapping is cheap: a few planes per pixel).
+- **D89 (F12)** Port order followed: window shader → layouts → weathering → detail.
+- **D90 (F13)** SF recipes as in the brief; Victorians get one stacked bay per 25 ft (7.6 m) lot on each street face,
+  bracketed cornice, sash windows; adjacent Victorians never share a palette colour (resolved over shared walls).
+- **D91 (F14)** No AC boxes, laundry poles, grilles, projecting neon or rooftop billboard frames are generated anywhere
+  (the detail model has no such types); Chinatown gets balconies.
+- **D92** Street-facing walls are those a run-2 storefront module lies on (≥ 40 % of the length): the modules were
+  placed on exactly the street faces (G11 99.9 %), and the street mesh needs `data/raw/`-free code either way.

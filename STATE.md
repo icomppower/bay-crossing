@@ -20,8 +20,18 @@
 | G12b Crowd | PASS | 2026-10-07 | ≥ 174 pedestrians visible or near all along the Ferry Building → Pier 39 path (floor frozen 156); 17,000 stay on the walkable surface for 60 s; instanced; seeded; 4/4 negatives |
 | G13 Street-level budget | PASS | 2026-10-07 | street path 58.5 fps p95 / 763 MB; G5 path with the street layer 48.6 fps / 776 MB (floor 40, cap 862), no swap; 3/3 negatives |
 | G14 Street look (advisory) | PASS | 2026-10-07 | shots/street/: Ferry plaza, Embarcadero at Pier 7, Sausalito Bridgeway × midday / night / golden fog, + run-1 before pairs |
+| G15 Heights frozen | PASS | 2026-10-11 | 118 files of public/buildings/ byte-identical to run 2 (gates/fixtures/buildings-run2.sha256); 10,309 buildings read back; 2/2 negatives |
+| G16 Classification | PASS | 2026-10-11 | 10,309 buildings: Victorian 5,971, mid-rise 1,198, warehouse 489, office 209, tower 144, pier 18, Sausalito 1,823, Chinatown 457; 64.0 % by rules alone (cap frozen 67 %); model identical ×2; 2/2 negatives |
+| G17 Floor + bay alignment | PASS | 2026-10-11 | 197,535 walls: shader window rows = floors on all; 95,098 windowed walls in whole bays between corner piers; 2/2 negatives |
+| G18 Depth elements | PASS | 2026-10-11 | near the path: flat roofs dressed 100 % (frozen 98 %), pre-war faces with fire escapes 83.3 % (frozen 81 %); slice: Victorian faces with bays 97.7 % (frozen 95 %); 3/3 negatives |
+| G18b SF look | PASS | 2026-10-11 | no HK-only detail types; balconies only in Chinatown; 17,681 Victorian lots all with bays; 4,471 adjacent Victorian pairs, none sharing a colour; tops = run 2; 4/4 negatives |
+| G19 Materials + windows | PASS | 2026-10-11 | no facade textures (all by code); 4 material families on the path (stucco, brick, siding, ashlar); lit at night residential 39.9 %, office 45.7 %; 4/4 negatives |
+| G20 Facade budget | PENDING (M4) | 2026-10-11 | near band ≤ 61,432 triangles along the path (cap frozen 76,790); the fps / memory half runs G13 on the M4 — not measurable in the cloud workspace (no GPU) |
+| G21 Facade look (advisory) | — | | run 3 |
 
 ## Current
+
+**Run 3 (facades): in progress on branch `facades`.**
 
 **Run 2 (street level): DONE 2026-10-07.** G0–G5, G7 and G8–G13 (incl. G12b) green in one clean `./verify.sh` run
 (G6, G14 advisory green); see `DONE-run2`. Decisions D45–D77; branch `street-level` → `main`.

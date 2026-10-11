@@ -5,6 +5,7 @@ import { StreetSurface } from './Surface.js';
 import { StreetGround, streetTerrain } from './Ground.js';
 import { StreetStores, signAtlasImage } from './Stores.js';
 import { patchBuildingFacades } from './Facades.js';
+import { attachFacades } from '../facades/index.js';
 import { StreetProps } from './Props.js';
 import { Vector3, Color } from 'harbor-engine/src/engine/index.js';
 import { CrowdSim, CrowdView } from './Crowd.js';
@@ -69,12 +70,14 @@ export async function attachStreet( app, { base = BASE, data = null } = {} ) {
 	const stores = await loadStores( base );
 	street.stores = new StreetStores( stores, await signAtlasImage( stores.index.texts ) );
 	app.scene.add( street.stores.mesh );
-	patchBuildingFacades( app );
 	// street props (one instanced draw per type); the street-name blades read their own small atlas
 	const props = await loadProps( base );
 	const names = await signAtlasImage( props.index.names, { cellW: 256, cellH: 32, cols: 8, font: 'bold {s}px "Helvetica Neue", Helvetica, Arial, sans-serif' } );
 	street.props = new StreetProps( props, names );
 	for ( const m of street.props.meshes ) app.scene.add( m );
+	// run 3: SF facades (archetypes, floors and bays, interiors, near-band detail); ?facades=0 keeps the run-2 facade
+	street.facades = await attachFacades( app, { modules: stores.modules, street } );
+	if ( ! street.facades ) patchBuildingFacades( app );
 	// the crowd (seeded; ?crowd=0 turns it off) and the over-the-shoulder walker
 	const qs = app.qs || new URLSearchParams();
 	const crowd = await loadCrowd( base );
@@ -108,6 +111,7 @@ export async function attachStreet( app, { base = BASE, data = null } = {} ) {
 		street.surface.update( a.camera );
 		street.stores.update( a.camera );
 		street.props.update( a.camera );
+		if ( street.facades ) street.facades.update( a.camera );
 		updateLamps();
 
 	};

@@ -10,7 +10,7 @@ import { mipChain } from './signDraw.js';
 // detail come from the shaders. Each type streams the instances of the 100 m tiles within its radius.
 
 // ---- template building: positions, normals and a part id (f32) per vertex, non-indexed triangles
-class T {
+export class T {
 
 	constructor() { this.p = []; this.n = []; this.k = []; }
 	tri( a, b, c, part ) {
