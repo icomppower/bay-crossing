@@ -137,7 +137,7 @@ const SHADE = {
 				let lit = step( 0.58, h ) * frame.night;
 				// the room behind (darker by day, lit at night), seen through glass with a soft reflection
 				alb = mix( vec3f( 0.62, 0.58, 0.52 ), vec3f( 0.72, 0.68, 0.6 ), h ) * ( 0.2 + 0.15 * fy ); rough = 0.05;
-				emit = vec3f( 1.0, 0.72, 0.42 ) * 1.8 * lit;
+				emit = vec3f( 1.0, 0.72, 0.42 ) * 0.85 * lit;
 				if ( h < 0.3 && fy > 0.6 ) { alb = vec3f( 0.84, 0.82, 0.76 ) * 0.7; rough = 0.8; emit = emit * 0.6; } // blind
 			}
 		} else if ( fy < 0.22 ) {

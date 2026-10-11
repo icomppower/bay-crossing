@@ -250,7 +250,7 @@ const SURFACE = /* wgsl */`
 					let lit = step( 1.0 - litShare, h3 ) * frame.night;
 					let fall = exp( - hd * 0.3 );
 					let lampC = select( vec3f( 1.0, 0.72, 0.42 ), vec3f( 0.85, 0.9, 1.0 ), office );
-					let lamp = lampC * 2.4 * ( 0.45 + 0.55 * select( exp( - hd * 0.12 ), 1.0, t == ty && ry > 0.0 ) );
+					let lamp = lampC * 1.0 * ( 0.45 + 0.55 * select( exp( - hd * 0.12 ), 1.0, t == ty && ry > 0.0 ) );
 					// day: the room is seen through the glass as a darker, depth-faded version of itself (part of the
 					// albedo, so it is lit with the facade whatever the exposure); night: lit rooms glow
 					var roomAlb = rc * ( 0.18 + 0.32 * fall );
@@ -260,7 +260,7 @@ const SURFACE = /* wgsl */`
 					if ( blind ) {
 						let fab = select( vec3f( 0.86, 0.84, 0.78 ), vec3f( 0.75, 0.62, 0.5 ), h1 > 0.6 );
 						roomAlb = fab * 0.7;
-						roomEmit = fab * lampC * 1.6 * lit;
+						roomEmit = fab * lampC * 0.7 * lit;
 						if ( abs( fract( ly * 18.0 ) - 0.5 ) < 0.08 && office ) { roomAlb = roomAlb * 0.75; }
 					}
 					// Fresnel: grazing views show more reflection, less room

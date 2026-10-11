@@ -34,3 +34,4 @@ Hong Kong run entries are archived in `docs/archive-hong-kong.md`.
 | 2026-10-11 | G18b | FAIL → PASS | 30 | Balconies on Chinatown-class buildings reaching outside the box (now only walls inside it); 211 Victorian lots without bays (a 2.4 m height cut-off vs the gate's floor rule — both use floorsOf now); 35 adjacent Victorian pairs in one colour (the neighbour search missed neighbours filed by a far centroid: wider search + a repair pass) |
 | 2026-10-11 | G15–G19 | PASS | 15 | All CPU-side run-3 gates green with negatives |
 | 2026-10-11 | budget (lavapipe count) | — | 20 | Fixed views with vs without facades: +7 draws, +10.8k triangles at worst (embarcadero-street 74 draws / 1.80 M triangles; run-1 caps 126 / 1.95 M). Frame rate not measurable here |
+| 2026-10-11 | G21 (partial, software) | — | 60 | 12 after + 8 before shots; night windows blew out to white → room lamps 2.4 → 1.0, blinds 1.6 → 0.7, bay rooms 1.8 → 0.85 |

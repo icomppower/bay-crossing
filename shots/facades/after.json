@@ -1,0 +1,62 @@
+{
+ "stats": [
+  {
+   "name": "embarcadero-pier7",
+   "time": "night",
+   "file": "shots/facades/embarcadero-pier7-night.png",
+   "detailTriangles": 30112,
+   "draws": 77,
+   "triangles": 1491219
+  },
+  {
+   "name": "jackson-square",
+   "time": "night",
+   "file": "shots/facades/jackson-square-night.png",
+   "detailTriangles": 55496,
+   "draws": 84,
+   "triangles": 2087968
+  },
+  {
+   "name": "telegraph-hill",
+   "time": "night",
+   "file": "shots/facades/telegraph-hill-night.png",
+   "detailTriangles": 86166,
+   "draws": 63,
+   "triangles": 2129080
+  },
+  {
+   "name": "telegraph-hill-close",
+   "time": "night",
+   "file": "shots/facades/telegraph-hill-close-night.png",
+   "detailTriangles": 79628,
+   "draws": 91,
+   "triangles": 2655275
+  }
+ ],
+ "errors": [],
+ "facadeLog": {
+  "byArch": {
+   "victorian": 5971,
+   "midrise": 1198,
+   "warehouse": 489,
+   "office": 209,
+   "tower": 144,
+   "pier": 18,
+   "sausalito": 1823,
+   "chinatown": 457
+  },
+  "fallback": 6601,
+  "total": 10309,
+  "detail": {
+   "victorianLots": 18113,
+   "victorianLotsWithBay": 17681,
+   "streetFaces": 47305,
+   "preWarStreetFaces": 7823,
+   "preWarFireEscapes": 6848,
+   "flatRoofs": 2474,
+   "flatRoofsDressed": 2141,
+   "tanks": 386,
+   "gables": 300
+  }
+ }
+}

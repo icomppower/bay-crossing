@@ -27,7 +27,7 @@
 | G18b SF look | PASS | 2026-10-11 | no HK-only detail types; balconies only in Chinatown; 17,681 Victorian lots all with bays; 4,471 adjacent Victorian pairs, none sharing a colour; tops = run 2; 4/4 negatives |
 | G19 Materials + windows | PASS | 2026-10-11 | no facade textures (all by code); 4 material families on the path (stucco, brick, siding, ashlar); lit at night residential 39.9 %, office 45.7 %; 4/4 negatives |
 | G20 Facade budget | PENDING (M4) | 2026-10-11 | near band ≤ 61,432 triangles along the path (cap frozen 76,790); fixed views with facades (lavapipe count): +7 draws / +10.8k triangles at worst (embarcadero-street 74 draws, 1,797,599 triangles; caps 126 / 1,953,488); the fps / memory half runs G13 on the M4 — not measurable in the cloud workspace (no GPU) |
-| G21 Facade look (advisory) | — | | run 3 |
+| G21 Facade look (advisory) | PARTIAL | 2026-10-11 | software renders (lavapipe, 960×540, crowd off) of telegraph-hill, telegraph-hill-close, jackson-square, embarcadero-pier7 × midday / golden / night + run-2 before pairs (midday, night) in shots/facades/; glass and car speckle is software-render noise; full set and night exposure to be judged on the M4 |
 
 ## Current
 

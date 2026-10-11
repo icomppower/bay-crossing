@@ -1,0 +1,70 @@
+{
+ "stats": [
+  {
+   "name": "embarcadero-pier7",
+   "time": "midday",
+   "file": "/home/claude/bay-crossing/shots/facades/before-embarcadero-pier7-midday.png",
+   "detailTriangles": 0,
+   "draws": 67,
+   "triangles": 1440889
+  },
+  {
+   "name": "embarcadero-pier7",
+   "time": "night",
+   "file": "/home/claude/bay-crossing/shots/facades/before-embarcadero-pier7-night.png",
+   "detailTriangles": 0,
+   "draws": 85,
+   "triangles": 1800492
+  },
+  {
+   "name": "jackson-square",
+   "time": "midday",
+   "file": "/home/claude/bay-crossing/shots/facades/before-jackson-square-midday.png",
+   "detailTriangles": 0,
+   "draws": 51,
+   "triangles": 1599794
+  },
+  {
+   "name": "jackson-square",
+   "time": "night",
+   "file": "/home/claude/bay-crossing/shots/facades/before-jackson-square-night.png",
+   "detailTriangles": 0,
+   "draws": 69,
+   "triangles": 1987448
+  },
+  {
+   "name": "telegraph-hill",
+   "time": "midday",
+   "file": "/home/claude/bay-crossing/shots/facades/before-telegraph-hill-midday.png",
+   "detailTriangles": 0,
+   "draws": 53,
+   "triangles": 1966912
+  },
+  {
+   "name": "telegraph-hill",
+   "time": "night",
+   "file": "/home/claude/bay-crossing/shots/facades/before-telegraph-hill-night.png",
+   "detailTriangles": 0,
+   "draws": 74,
+   "triangles": 2561344
+  },
+  {
+   "name": "telegraph-hill-close",
+   "time": "midday",
+   "file": "/home/claude/bay-crossing/shots/facades/before-telegraph-hill-close-midday.png",
+   "detailTriangles": 0,
+   "draws": 57,
+   "triangles": 1905974
+  },
+  {
+   "name": "telegraph-hill-close",
+   "time": "night",
+   "file": "/home/claude/bay-crossing/shots/facades/before-telegraph-hill-close-night.png",
+   "detailTriangles": 0,
+   "draws": 77,
+   "triangles": 2449081
+  }
+ ],
+ "errors": [],
+ "facadeLog": null
+}
