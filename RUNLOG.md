@@ -36,3 +36,4 @@ Hong Kong run entries are archived in `docs/archive-hong-kong.md`.
 | 2026-10-11 | budget (lavapipe count) | — | 20 | Fixed views with vs without facades: +7 draws, +10.8k triangles at worst (embarcadero-street 74 draws / 1.80 M triangles; run-1 caps 126 / 1.95 M). Frame rate not measurable here |
 | 2026-10-11 | G21 (partial, software) | — | 60 | 12 after + 8 before shots; night windows blew out to white → room lamps 2.4 → 1.0, blinds 1.6 → 0.7, bay rooms 1.8 → 0.85 |
 | 2026-10-11 | signs | — | 15 | Owner: "so many dentist?" — one tagged clinic filled whole block faces; D93 thins repeated categories at load: 14,080 of 32,947 signed modules go blank, DENTIST 181 → 33 |
+| 2026-10-11 | businesses | — | 60 | Owner: "fix on reality, distinct look per business" — D94 pipeline (one business per OSM POI; synthetic test test/stores-businesses.mjs PASS; needs the M4 to rebake public/street/), D95 per-category shopfront looks live on the old data now |

@@ -8,7 +8,8 @@
     "test": "node test/waypoints.mjs && node test/signs.mjs",
     "verify": "./verify.sh",
     "fetch-data": "node pipelines/data/fetch.mjs",
-    "engine:update": "node node_modules/harbor-engine/bin/harbor-engine.mjs update"
+    "engine:update": "node node_modules/harbor-engine/bin/harbor-engine.mjs update",
+    "test:stores": "node test/stores-businesses.mjs"
   },
   "devDependencies": {
     "@napi-rs/canvas": "^1.0.10",

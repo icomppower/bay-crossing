@@ -2,6 +2,7 @@ import { InstancedBufferGeometry, BufferAttribute, InstancedInterleavedBuffer, I
 import { Material } from 'harbor-engine/src/engine/render/Material.js';
 import { Texture } from 'harbor-engine/src/engine/gpu/Texture.js';
 import { noiseModule } from './wgsl.js';
+import { shopModule } from './shopStyles.js';
 import { drawSigns, mipChain, CELL_W, CELL_H, COLS } from './signDraw.js';
 
 // The storefront band (D49, D50, D57): one instanced draw of a module template over every ground-floor module near
@@ -71,7 +72,7 @@ export function storesMaterial( atlas, rows ) {
 	return new Material( {
 		name: 'street-stores',
 		underwaterLighting: 'none', // above the water: kept out of the refraction pass
-		modules: [ noiseModule ],
+		modules: [ noiseModule, shopModule ],
 		attributes: { aPart: 'f32', iA: 'vec4f', iB: 'vec4f', iC: 'vec4f' },
 		varyings: { vL: 'vec4f', vI: 'vec4f', vS: 'vec4f' },
 		textures: { signAtlas: atlas },
@@ -121,6 +122,10 @@ export function storesMaterial( atlas, rows ) {
 	let boardC = pal & 7u;
 	let inkC = ( pal >> 3u ) & 7u;
 	let awnC = ( pal >> 6u ) & 7u;
+	// the business this module belongs to (D94 / D95): its look comes from its category
+	let cat = pal >> 9u;
+	let biz = cat > 0u;
+	let st = shopStyle( cat );
 
 	// sign atlas lookup (once, in uniform control flow): the board front, the blade (text runs down it) or the
 	// window lettering band
@@ -157,16 +162,27 @@ export function storesMaterial( atlas, rows ) {
 			let mull = abs( fract( x / max( Lw / max( floor( Lw / 1.6 ), 1.0 ), 0.5 ) + 0.5 ) - 0.5 ) * max( Lw / max( floor( Lw / 1.6 ), 1.0 ), 0.5 );
 			let frameLine = min( min( mull, abs( y - 2.9 ) ), select( 9.0, min( abs( dx ), abs( dx - 1.1 ) ), y < 2.4 ) );
 			let glass = y > 0.45 && frameLine > 0.05;
-			if ( glass ) {
+			let frosted = biz && glass && y < st.frost && ! inDoor;
+			if ( frosted ) {
+				// frosted lower glass (clinics, salons): milky, faintly lit from behind
+				alb = vec3f( 0.78, 0.8, 0.8 ); rough = 0.55; metal = 0.0;
+				emit = st.nightC * ( 0.02 + 0.35 * night );
+			} else if ( glass && biz ) {
 				alb = vec3f( 0.03, 0.035, 0.04 ); rough = 0.05; metal = 0.1;
-				emit = interior * ( 0.06 + 1.6 * night * lit ) * select( 1.0, 0.7, inDoor );
+				let open = step( 0.1, fract( seed * 13.7 ) ); // most businesses are lit after dusk
+				emit = shopInside( st, x, y, Lw, seed ) * ( st.day + st.nightK * 0.5 * night * open ) * select( 1.0, 0.7, inDoor );
+				if ( ( flags & 4u ) != 0u && ! inDoor ) { alb = mix( alb, vec3f( 0.75, 0.55, 0.15 ), ink ); rough = mix( rough, 0.4, ink ); metal = mix( metal, 0.8, ink ); emit *= 1.0 - ink; }
+			} else if ( glass ) {
+				alb = vec3f( 0.03, 0.035, 0.04 ); rough = 0.05; metal = 0.1;
+				// no business here: an empty or dim unit
+				emit = interior * ( 0.02 + 0.5 * night * lit * 0.4 ) * select( 1.0, 0.7, inDoor );
 				// painted window lettering (gold)
 				if ( ( flags & 4u ) != 0u && ! inDoor ) { alb = mix( alb, vec3f( 0.75, 0.55, 0.15 ), ink ); rough = mix( rough, 0.4, ink ); metal = mix( metal, 0.8, ink ); emit *= 1.0 - ink; }
 			} else if ( y <= 0.45 ) {
-				alb = boards[ boardC ] * 0.8 + 0.05;
+				alb = select( boards[ boardC ] * 0.8 + 0.05, st.bulkhead, biz );
 				rough = 0.6;
 			} else {
-				alb = vec3f( 0.06, 0.06, 0.065 ); rough = 0.4; metal = 0.7;
+				alb = select( vec3f( 0.06, 0.06, 0.065 ), st.frame, biz ); rough = 0.4; metal = select( 0.7, st.frameMetal, biz );
 			}
 		} else if ( kind == 1u ) {
 			// lobby: stone surround, a glass double door in the middle
@@ -202,18 +218,26 @@ export function storesMaterial( atlas, rows ) {
 	} else if ( part == 1u ) {
 		alb = wallC * 0.7; rough = 0.9;
 	} else if ( part == 2u ) {
-		alb = wallC; rough = 0.8;
+		alb = select( wallC, st.pilaster * ( 0.9 + 0.15 * stNoise( vec2f( x, y ) * 5.0 ) ), biz && cat != 4u && cat != 26u ); rough = 0.8;
 	} else if ( part == 3u || part == 5u ) {
-		let board = boards[ boardC ];
+		let board = select( boards[ boardC ], st.board, biz );
+		let inkCol = select( inks[ inkC ], st.ink, biz );
 		let neon = ( flags & 8u ) != 0u;
-		alb = mix( board, select( inks[ inkC ], neonC[ inkC ] * 0.35, neon ), ink );
+		alb = mix( board, select( inkCol, neonC[ inkC ] * 0.35, neon ), ink );
 		rough = mix( 0.5, 0.35, ink );
 		if ( neon ) { emit = neonC[ inkC ] * ink * ( 0.4 + 6.0 * night ); }
-		else { emit = inks[ inkC ] * ink * 0.6 * night; }
+		else { emit = inkCol * ink * 0.6 * night; }
+		// theatre marquee: a ring of bulbs round the board
+		if ( cat == 10u && part == 3u ) {
+			let ry = ( y - 0.8 * H ) / ( 0.17 * H );
+			let edge = min( min( x, Lw - x ), min( ry, 1.0 - ry ) * 0.17 * H );
+			let bulb = edge < 0.12 && length( vec2f( fract( ( x + y ) / 0.25 ) - 0.5, 0.0 ) ) < 0.22;
+			if ( bulb ) { alb = vec3f( 0.95, 0.9, 0.7 ); emit = vec3f( 1.0, 0.85, 0.5 ) * ( 0.6 + 4.0 * night ); }
+		}
 	} else {
 		// awning canvas, striped on some
 		let stripe = step( 0.5, fract( x / 0.45 ) ) * step( 0.55, fract( seed * 17.0 ) );
-		alb = mix( awns[ awnC ], vec3f( 0.8, 0.78, 0.72 ), stripe );
+		alb = select( mix( awns[ awnC ], vec3f( 0.8, 0.78, 0.72 ), stripe ), mix( st.awnA, st.awnB, step( 0.5, fract( x / 0.45 ) ) * st.stripe ), biz );
 		rough = 0.95;
 		s.translucency = vec3f( 0.3 );
 	}

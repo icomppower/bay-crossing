@@ -21,6 +21,8 @@ const W = + val( '--w', 1280 ), Hh = + val( '--h', 720 );
 const only = val( '--only', '' ).split( ',' ).filter( Boolean );
 const times = val( '--times', 'midday,golden,night' ).split( ',' );
 // extra views: --view name,lat,lon,lookLat,lookLon,lookHeight (repeatable; replaces the fixed list)
+// local views: --lview name,x,z,lookX,lookZ,lookHeight (BayFrame metres)
+const lviews = a.map( ( s, i ) => a[ i - 1 ] === '--lview' ? s.split( ',' ) : null ).filter( Boolean ).map( ( [ n, ...v ] ) => [ n, ...v.map( Number ) ] );
 const extra = a.map( ( s, i ) => a[ i - 1 ] === '--view' ? s.split( ',' ) : null ).filter( Boolean ).map( ( [ n, ...v ] ) => [ n, ...v.map( Number ) ] );
 mkdirSync( out, { recursive: true } );
 const H = await bootApp( { width: W, height: Hh, query: `?fly&noAudio&tier=low&crowd=0&seed=1975${ before ? '&facades=0' : '' }` } );
@@ -70,10 +72,10 @@ if ( a.includes( '--budget' ) ) {
 	process.exit( 0 );
 
 }
-for ( const [ name, lat, lon, tlat, tlon, ty ] of extra.length ? extra : VIEWS ) {
+for ( const [ name, lat, lon, tlat, tlon, ty, isLocal ] of lviews.length ? lviews.map( ( v ) => [ ...v, true ] ) : extra.length ? extra : VIEWS ) {
 
 	if ( only.length && ! only.includes( name ) ) continue;
-	const p = toLocal( ...toUTM( lat, lon ) ), q = toLocal( ...toUTM( tlat, tlon ) );
+	const p = isLocal ? { x: lat, z: lon } : toLocal( ...toUTM( lat, lon ) ), q = isLocal ? { x: tlat, z: tlon } : toLocal( ...toUTM( tlat, tlon ) );
 	let x = p.x, z = p.z, y0 = null;
 	for ( let r = 0; r <= 15 && y0 === null; r += 0.5 ) for ( let k = 0; k < 16; k ++ ) { const px = p.x + Math.cos( k / 16 * 6.283 ) * r, pz = p.z + Math.sin( k / 16 * 6.283 ) * r, g = st.ground.at( px, pz ); if ( g && g.walkable ) { x = px; z = pz; y0 = g.y; break; } }
 	if ( y0 === null ) y0 = app.terrainData.heightAt( x, z );

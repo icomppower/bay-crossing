@@ -127,13 +127,13 @@ export function writeStores(stores, out) {
   const arr = new Float32Array(mods.length * 12), tiles = [];
   mods.forEach(({ m, t }, i) => {
     const left = m.ox * (m.z1 - m.z0) - m.oz * (m.x1 - m.x0) > 0 ? 16 : 0; // outward is left of x0→x1: (dz, -dx)
-    arr.set([m.x0, m.z0, m.y0, m.height, m.x1, m.z1, m.y1, m.seed, m.kind, m.flags | left, m.sign, m.board + m.ink * 8 + m.awning * 64], i * 12);
+    arr.set([m.x0, m.z0, m.y0, m.height, m.x1, m.z1, m.y1, m.seed, m.kind, m.flags | left, m.sign, m.board + m.ink * 8 + m.awning * 64 + (m.catId || 0) * 512], i * 12);
     const last = tiles[tiles.length - 1];
     if (last && last[0] === t[0] && last[1] === t[1]) last[3]++; else tiles.push([t[0], t[1], i, 1]);
   });
   const body = Buffer.from(arr.buffer);
   writeFileSync(join(out, 'stores.bin.deflate'), deflateSync(body, { level: 9 }));
-  writeFileSync(join(out, 'stores.json'), JSON.stringify({ version: VERSION, tile: TILE, count: mods.length, texts: stores.texts, tiles, sha256: createHash('sha256').update(body).digest('hex') }) + '\n');
+  writeFileSync(join(out, 'stores.json'), JSON.stringify({ version: VERSION, tile: TILE, count: mods.length, texts: stores.texts, businesses: stores.log.businesses, categories: true, tiles, sha256: createHash('sha256').update(body).digest('hex') }) + '\n');
 }
 
 // props.bin.deflate: per type (props.json `types`, in TYPES order), 8 Float32 an instance (pipelines/street/props.mjs),

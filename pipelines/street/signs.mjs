@@ -61,3 +61,15 @@ export const DISTRICTS = [
   { name: 'wharf', south: 37.8055, north: 37.8110, west: -122.4235, east: -122.4080 },
   { name: 'northbeach', south: 37.7975, north: 37.8045, west: -122.4130, east: -122.4045 },
 ];
+
+// Business categories as numbers for the storefront data (run 3, D94): module palette = board + ink·8 + awning·64 +
+// category·512 (0 = no business: an unlabelled or residential frontage). Order is part of the data format: append only.
+export const CATEGORIES = Object.keys(SIGN_TEXT);
+export const CATEGORY_ID = Object.fromEntries(CATEGORIES.map((c, i) => [c, i + 1]));
+// one business's look, shared by the pipeline (what is baked) and the runtime (older data): awning or not, blade
+// sign / neon likelihood. Awnings on food, hotels, grocers, florists and Chinatown shops; none on banks, clinics,
+// pharmacies, bars, galleries, jewellers, electronics or lobbies.
+export const AWNING = new Set(['cafe', 'restaurant', 'chinese', 'seafood', 'fishmarket', 'bakery', 'icecream', 'grocery', 'hotel', 'flowers', 'tea', 'wine', 'gifts', 'fastfood']);
+export const NEON = new Set(['bar', 'theatre', 'chinese', 'fastfood']);
+// typical frontage of one business (m) — a POI claims about this much of its building's street face
+export const FRONTAGE = { restaurant: 9, chinese: 9, seafood: 10, cafe: 6, fastfood: 7, icecream: 5, bar: 8, bank: 10, pharmacy: 10, theatre: 14, clinic: 7, bakery: 6, books: 7, clothing: 7, jewelry: 5, grocery: 14, fishmarket: 8, tea: 5, wine: 6, gifts: 6, flowers: 5, salon: 5, herbs: 5, electronics: 6, sports: 9, shop: 6, hotel: 9, gallery: 8, lobby: 5 };

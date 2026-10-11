@@ -1,22 +1,22 @@
 // Storefront band (D49, D50, D56): a 4–5 m ground-floor module on every building edge that faces the street
 // (walkway or road within 3 m in front of it). A module is glass, a door, an awning or a roller shutter and a sign
-// board; its category comes from the OSM shop / amenity / tourism features in or in front of the footprint, else
-// from the district default (Embarcadero commercial, Fisherman's Wharf tourist, Chinatown, North Beach, Sausalito
-// waterfront); houses on residential streets get garage doors and front doors instead, no signs. Sign text is
-// generic category text only (signs.mjs). Seeded by position: the same cache gives the same storefronts.
+// board. Businesses are real (run 3, D94): every OSM shop / amenity / tourism feature in or in front of a footprint is
+// one business that claims the street-facing modules nearest it, about its category's typical frontage (signs.mjs
+// FRONTAGE) along one edge, with one sign, one awning colour and one board for the whole business. Frontage no business
+// claims stays unlabelled (a plain shopfront, a lobby door or a shutter), never an invented shop; houses on
+// residential streets get garage doors and front doors, no signs. Sign text is generic category text only.
 import { storeCategory } from './osm.mjs';
 import { polygons, Region, union } from './geom.mjs';
-import { SIGN_TEXT, SIGN_ZH, DISTRICT_MIX, DISTRICTS } from './signs.mjs';
+import { SIGN_TEXT, SIGN_ZH, DISTRICTS, CATEGORY_ID, AWNING, NEON, FRONTAGE } from './signs.mjs';
 
 export const KIND = { shop: 0, door: 1, shutter: 2, garage: 3, home: 4 };
 const COMMERCIAL_ROADS = /^(primary|secondary|tertiary|trunk|pedestrian)(_link)?$/;
 
 const rand = (...k) => { let h = 2166136261; for (const v of k.join(',')) { h ^= v.charCodeAt(0); h = Math.imul(h, 16777619); } return ((h >>> 0) % 1000003) / 1000003; };
-const pickWeighted = (mix, r) => { const e = Object.entries(mix), tot = e.reduce((a, [, w]) => a + w, 0); let x = r * tot; for (const [k, w] of e) { if ((x -= w) < 0) return k; } return e[e.length - 1][0]; };
 
 export function buildStores(ctx, roads, walks) {
   const { local } = ctx;
-  const log = { buildings: 0, edges: 0, facing: 0, modules: 0, withPoi: 0, poiAssigned: 0, poiUnplaced: 0, residential: 0, byDistrict: {}, byKind: {}, signs: 0 };
+  const log = { buildings: 0, edges: 0, facing: 0, modules: 0, withPoi: 0, poiAssigned: 0, poiUnplaced: 0, residential: 0, byDistrict: {}, byKind: {}, signs: 0, businesses: 0, poiNoFrontage: 0, unlabelled: 0, byCategory: {} };
   const street = new Region(polygons(union(walks.walkAll, union(roads.R, roads.T)), false));
   const districts = DISTRICTS.map(d => ({ ...d, ring: [[d.south, d.west], [d.south, d.east], [d.north, d.east], [d.north, d.west]].map(([la, lo]) => local(la, lo)) }));
   const distRegions = districts.map(d => ({ name: d.name, r: new Region([[d.ring]]) }));
@@ -69,7 +69,9 @@ export function buildStores(ctx, roads, walks) {
     for (const [i, r] of cand) { if (inRing(r, x, z)) { best = i; bd = 0; break; } const d = ringDist(r, x, z); if (d < bd) { bd = d; best = i; } }
     if (best === null) { log.poiUnplaced++; continue; }
     if (!poisOf.has(best)) poisOf.set(best, []);
-    poisOf.get(best).push({ cat, x, z });
+    // a sign text the tag itself names, where it does (a dentist says DENTIST, a bank BANK), else the category's list
+    const hint = { dentist: 'DENTIST', clinic: 'CLINIC', doctors: 'CLINIC', bank: 'BANK', pharmacy: 'PHARMACY', cinema: 'CINEMA', theatre: 'THEATRE', bakery: 'BAKERY', florist: 'FLORIST', books: 'BOOKS', hotel: 'HOTEL', hostel: 'INN', motel: 'INN', guest_house: 'INN', ice_cream: 'ICE CREAM', hairdresser: 'SALON', barber: 'BARBER', nails: 'NAILS', jewelry: 'JEWELRY', shoes: 'SHOES', wine: 'WINE', alcohol: 'LIQUORS', deli: 'DELI', supermarket: 'MARKET', greengrocer: 'PRODUCE', bicycle: 'BIKES', gallery: 'GALLERY', art: 'ART' }[e.tags.amenity || e.tags.shop || e.tags.tourism];
+    poisOf.get(best).push({ cat, x, z, id: e.type[0] + e.id, hint });
     log.poiAssigned++;
   }
 
@@ -80,7 +82,7 @@ export function buildStores(ctx, roads, walks) {
     log.buildings++;
     const pois = poisOf.get(bi) || [];
     if (pois.length) log.withPoi++;
-    let poiTurn = 0;
+    const bmods = [];
     b.polys.forEach((poly, pi) => {
       const ring = poly[0];
       // outward side: the ring's orientation (area sign)
@@ -111,36 +113,15 @@ export function buildStores(ctx, roads, walks) {
         for (let k = 0; k < nm; k++) {
           const seed = rand(b.id, pi, i, k);
           const x0 = p[0] + dx * L * k / nm, z0 = p[1] + dz * L * k / nm, x1 = p[0] + dx * L * (k + 1) / nm, z1 = p[1] + dz * L * (k + 1) / nm;
-          let kind, cat = null, text = null, zh = null;
-          if (residential) {
-            kind = seed < 0.45 ? KIND.garage : seed < 0.8 ? KIND.home : KIND.door;
-          } else {
-            // the POI nearest this module claims it first, then the building's POIs take turns
-            if (pois.length) {
-              const near = pois.map(o => [Math.hypot(o.x - (x0 + x1) / 2, o.z - (z0 + z1) / 2), o]).sort((u, v) => u[0] - v[0])[0];
-              cat = near[0] < 8 ? near[1].cat : pois[poiTurn++ % pois.length].cat;
-            } else cat = pickWeighted(DISTRICT_MIX[district], rand(b.id, pi, i, k, 'cat'));
-            kind = cat === 'lobby' ? KIND.door : seed < 0.86 ? KIND.shop : seed < 0.94 ? KIND.door : KIND.shutter;
-            if (kind === KIND.shop || (kind === KIND.door && rand(b.id, i, k, 'lob') < 0.35)) {
-              const list = kind === KIND.door ? SIGN_TEXT.lobby : SIGN_TEXT[cat] || SIGN_TEXT.shop;
-              if (rand(b.id, i, k, 'sign') < 0.9) {
-                text = list[Math.floor(rand(b.id, i, k, 'txt') * list.length)];
-                if (district === 'chinatown' && SIGN_ZH[cat] && kind === KIND.shop) zh = SIGN_ZH[cat];
-              }
-            }
-          }
           const r = s => rand(b.id, pi, i, k, s);
-          const awningP = { wharf: 0.6, sausalito: 0.5, chinatown: 0.5, northbeach: 0.5, embarcadero: 0.3 }[district];
-          const flags =
-            (kind === KIND.shop && r('aw') < awningP ? 1 : 0) |                                                // awning
-            (text && kind === KIND.shop && r('bl') < (/^(bar|cafe|restaurant|chinese|hotel|theatre)$/.test(cat) ? 0.45 : 0.15) ? 2 : 0) | // blade sign
-            (text && kind === KIND.shop && r('wl') < 0.3 ? 4 : 0) |                                           // window lettering
-            (text && /^(bar|cafe|restaurant|chinese|theatre|hotel|fastfood)$/.test(cat) && r('ne') < 0.5 ? 8 : 0); // neon
-          const label = text ? (zh ? `${zh} ${text}` : text) : null;
-          if (label) log.signs++;
-          modules.push({ x0, z0, x1, z1, ox, oz, kind, flags, sign: label ? textId(label) : -1, height: residential ? 3.0 : b.h > 60 ? 5.0 : 4.5,
-            board: Math.floor(r('bd') * 8), ink: Math.floor(r('ink') * 6), awning: Math.floor(r('awc') * 6), seed: Math.round(seed * 1e6) / 1e6, district, cat });
-          log.byKind[kind] = (log.byKind[kind] || 0) + 1;
+          let kind;
+          if (residential) kind = seed < 0.45 ? KIND.garage : seed < 0.8 ? KIND.home : KIND.door;
+          else kind = seed < 0.55 ? KIND.shop : seed < 0.85 ? KIND.door : KIND.shutter; // unlabelled until a business claims it
+          const m = { x0, z0, x1, z1, ox, oz, kind, flags: 0, sign: -1, height: residential ? 3.0 : b.h > 60 ? 5.0 : 4.5,
+            board: Math.floor(r('bd') * 8), ink: Math.floor(r('ink') * 6), awning: Math.floor(r('awc') * 6), seed: Math.round(seed * 1e6) / 1e6, district, cat: null, catId: 0,
+            edge: pi + ':' + i, k, len: L / nm, mx: (x0 + x1) / 2, mz: (z0 + z1) / 2 };
+          modules.push(m);
+          if (!residential) bmods.push(m);
           log.byDistrict[district] = (log.byDistrict[district] || 0) + 1;
         }
         // D56: fire escapes and bay windows on residential / mid-rise street faces (instanced props, G12)
@@ -151,7 +132,53 @@ export function buildStores(ctx, roads, walks) {
         }
       }
     });
+    assignBusinesses(b, pois, bmods, log, textId);
+    for (const m of bmods) if (!m.catId) log.unlabelled++;
   });
+  for (const m of modules) log.byKind[m.kind] = (log.byKind[m.kind] || 0) + 1;
   log.modules = modules.length;
   return { modules, texts: [...texts.keys()], extras, log };
+}
+
+// Each POI of a building becomes one business (D94): it takes the free street-facing module nearest to it, then
+// grows along that edge (alternating sides) until it has about its category's frontage; later POIs take what is left.
+// The whole business shares one look; its one sign sits on the module nearest the POI.
+function assignBusinesses(b, pois, bmods, log, textId) {
+  if (!pois.length || !bmods.length) return;
+  const byEdge = new Map();
+  for (const m of bmods) { if (!byEdge.has(m.edge)) byEdge.set(m.edge, []); byEdge.get(m.edge).push(m); }
+  for (const list of byEdge.values()) list.sort((p, q) => p.k - q.k);
+  const ordered = pois.slice().sort((p, q) => (p.id < q.id ? -1 : p.id > q.id ? 1 : 0));
+  for (const poi of ordered) {
+    const free = bmods.filter(m => !m.catId).map(m => [Math.hypot(m.mx - poi.x, m.mz - poi.z), m]).sort((u, v) => u[0] - v[0] || u[1].k - v[1].k);
+    if (!free.length) { log.poiNoFrontage++; continue; }
+    const anchor = free[0][1], row = byEdge.get(anchor.edge), at = row.indexOf(anchor);
+    const want = FRONTAGE[poi.cat] || 6, claim = [anchor];
+    let got = anchor.len, lo = at - 1, hi = at + 1, turn = 0;
+    while (got < want - 0.5) {
+      const order = turn++ % 2 === 0 ? ['hi', 'lo'] : ['lo', 'hi'];
+      let grew = false;
+      for (const sideName of order) {
+        const j = sideName === 'hi' ? hi : lo, m = row[j];
+        if (m && !m.catId && !claim.includes(m)) { claim.push(m); got += m.len; if (sideName === 'hi') hi++; else lo--; grew = true; break; }
+      }
+      if (!grew) break;
+    }
+    const br = s => rand(poi.id, s);
+    const cat = poi.cat, catId = CATEGORY_ID[cat] || CATEGORY_ID.shop;
+    const board = Math.floor(br('bd') * 8), ink = Math.floor(br('ink') * 6), awning = Math.floor(br('awc') * 6);
+    const list = SIGN_TEXT[cat] || SIGN_TEXT.shop;
+    const text = poi.hint && list.includes(poi.hint) ? poi.hint : list[Math.floor(br('txt') * list.length)];
+    const zh = anchor.district === 'chinatown' && SIGN_ZH[cat] ? SIGN_ZH[cat] : null;
+    const label = zh ? `${zh} ${text}` : text;
+    for (const m of claim) {
+      m.cat = cat; m.catId = catId; m.board = board; m.ink = ink; m.awning = awning;
+      m.kind = cat === 'lobby' ? KIND.door : KIND.shop;
+      m.flags = AWNING.has(cat) ? 1 : 0;
+    }
+    anchor.sign = textId(label);
+    anchor.flags |= (/^(bar|cafe|restaurant|chinese|hotel|theatre)$/.test(cat) && br('bl') < 0.5 ? 2 : 0) | (br('wl') < 0.3 ? 4 : 0) | (NEON.has(cat) ? 8 : 0);
+    log.signs++; log.businesses++;
+    log.byCategory[cat] = (log.byCategory[cat] || 0) + 1;
+  }
 }

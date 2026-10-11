@@ -403,3 +403,16 @@ Harbor Engine conversion. Later decisions are appended with a one-line reason.
   the same category lies within 30 m (clinic, bank, pharmacy, hotel, theatre, lobby…) or 12 m (shops, food); the rest
   show a blank board without blade sign or neon (src/street/signRuns.js). Reason: a single clinic tag in OSM put
   CLINIC / DENTIST boards over whole block faces (181 DENTIST boards → 33). The baked stores data is unchanged (G11).
+- **D94** Storefronts are real businesses only (pipelines/street/stores.mjs): each OSM shop / amenity / tourism feature
+  in or in front of a footprint is one business; it takes the free street-facing module nearest it and grows along
+  that edge to about its category's frontage (signs.mjs FRONTAGE: café 6 m … grocery 14 m); one sign per business, on
+  the module nearest the POI, its text from the tag where the tag names it (a dentist says DENTIST, a bank BANK); one
+  board, awning and look across the whole business. Frontage no business claims stays unlabelled (plain shopfront,
+  lobby door or shutter); the district mixes no longer invent shops. Category is baked into the module palette
+  (+ id·512, signs.mjs CATEGORY_ID, append-only). Reason: owner asked for "a fix on reality" — before this, 2,697 OSM
+  POIs became 32,947 signs (≈ 90 % invented). Needs the OSM cache (data/raw/) to rebake: run on the M4.
+- **D95** Shopfront look per business category (src/street/shopStyles.js): board and lettering colours, awning
+  (plain / striped), frame material, pilasters, bulkhead, frosted glass (clinics to 1.8 m, salons to 0.9 m), what shows
+  through the window (shelves, tables under pendant lamps, spot-lit displays, a counter, a dark bar) and the night light
+  (warm / cool / neutral). Data baked before D94 gets its categories from its sign texts at load (signRuns.js
+  categorizeOldStores) so the looks apply now; D93's thinning then only runs on that older data.
