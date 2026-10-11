@@ -21,5 +21,6 @@
   "type": "module",
   "dependencies": {
     "harbor-engine": "github:icomppower/harbor-engine#v1.0.0"
-  }
+  },
+  "packageManager": "pnpm@12.10.1"
 }

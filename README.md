@@ -53,8 +53,8 @@ It needs a browser with WebGPU (a recent Chrome, Edge or Safari, including iOS 2
 ## Run locally
 
 ```
-npm install
-npm run dev          # http://127.0.0.1:5189
+pnpm install
+pnpm dev          # http://127.0.0.1:5189
 ```
 
 ## Data pipeline and checks
@@ -62,7 +62,7 @@ npm run dev          # http://127.0.0.1:5189
 The shipped tiles in `public/` are built from cached downloads by deterministic scripts:
 
 ```
-npm run fetch-data               # 9 sources into data/raw/ (gitignored), with a checksum manifest
+pnpm fetch-data               # 9 sources into data/raw/ (gitignored), with a checksum manifest
 node tools/terrain/build.mjs     # → public/terrain
 node tools/buildings/build.mjs   # → public/buildings
 node tools/landmarks/build.mjs   # → public/landmarks (needs Blender 5.x; BLENDER=/path/to/blender)
